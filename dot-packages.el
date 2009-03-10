@@ -1,6 +1,13 @@
 (add-to-list 'load-path (concat emacs-root "site-lisp"))
 (setq packages-root (concat emacs-root "site-lisp/"))
 
+;; == OS-specific setup ==
+(if (eq system-type 'windows-nt)
+    (load-file (concat emacs-root "dot-windows.el")))
+
+
+;; == Other packages ==
+
 ;; CSS
 (autoload 'css-mode "css-mode")
 (setq auto-mode-alist

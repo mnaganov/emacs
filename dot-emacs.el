@@ -93,10 +93,6 @@ thatuses 'font-lock-warning-face'."
 (font-lock-add-keywords 'javascript-mode (font-lock-width-keyword 80))
 (font-lock-add-keywords 'js2-mode (font-lock-width-keyword 80))
 
-;; Start shell and server
-(shell)
-(server-start)
-
 
 ;; == Set up bundled Emacs packages ==
 
@@ -127,6 +123,11 @@ thatuses 'font-lock-warning-face'."
 
 (setq custom-file (concat emacs-root "dot-custom.el"))
 (load custom-file)
+
+
+;; == Start up commands ==
+(shell)
+(server-start)
 
 
 ;; == Project stuff ==
