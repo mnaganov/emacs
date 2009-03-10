@@ -1,14 +1,19 @@
 (add-to-list 'load-path (concat emacs-root "site-lisp"))
 (setq packages-root (concat emacs-root "site-lisp/"))
 
-;; Gambit Scheme
-(require 'gambit)
+;; CSS
+(autoload 'css-mode "css-mode")
+(setq auto-mode-alist
+     (cons '("\\.css\\'" . css-mode) auto-mode-alist))
 
 ;; Haskell
 (load (concat packages-root "haskell-mode-2.4/haskell-site-file"))
 (add-hook 'haskell-mode-hook 'turn-on-haskell-doc-mode)
 (add-hook 'haskell-mode-hook 'turn-on-haskell-indent)
 (add-hook 'haskell-mode-hook 'font-lock-mode)
+
+;; Gambit Scheme
+(require 'gambit)
 
 ;; GIT VC support
 (add-to-list 'load-path (concat packages-root "git"))
