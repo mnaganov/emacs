@@ -28,3 +28,10 @@
             (add-hook 'after-revert-hook 'js2-mode-reset nil t)))
 (if use-google-stuff
     (require 'js2-google))
+
+;; Yasnippet
+(add-to-list 'load-path (concat packages-root "yasnippet-0.5.6"))
+(require 'yasnippet)
+;; (setq yas/extra-mode-hooks '(nxml-mode-hook js2-mode-hook))
+(yas/initialize)
+(yas/load-directory (concat packages-root "yasnippet-0.5.6/snippets"))
