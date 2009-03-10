@@ -123,6 +123,12 @@ thatuses 'font-lock-warning-face'."
 (load-file (concat emacs-root "dot-packages.el"))
 
 
+;; == Set up customizations ==
+
+(setq custom-file (concat emacs-root "dot-custom.el"))
+(load custom-file)
+
+
 ;; == Project stuff ==
 
 (if (not (eq use-project nil))
