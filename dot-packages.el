@@ -18,3 +18,13 @@
 (global-auto-revert-mode)
 ;; Buffer for Git
 (shell (generate-new-buffer "=git="))
+
+;; JS2
+(autoload 'js2-mode (format "js2-emacs%d" emacs-major-version) nil t)
+(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
+(add-hook 'js2-mode-hook
+          (lambda ()
+            (make-local-hook 'after-revert-hook)
+            (add-hook 'after-revert-hook 'js2-mode-reset nil t)))
+(if use-google-stuff
+    (require 'js2-google))

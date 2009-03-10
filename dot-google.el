@@ -18,3 +18,6 @@
  "\\`\\([\\/][\\/]\\|/net/\\|/home/\\|/afs/\\)\\'"
  locate-dominating-stop-dir-regexp
  "\\`\\(?:[\\/][\\/]\\|/\\(?:net\\|afs\\|home\\|\\.\\.\\.\\)/\\)\\'")
+
+;; Internal plugins dir
+(add-to-list 'load-path "/home/build/eng/elisp/gnuemacs")
