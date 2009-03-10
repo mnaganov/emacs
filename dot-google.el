@@ -18,6 +18,3 @@
  "\\`\\([\\/][\\/]\\|/net/\\|/home/\\|/afs/\\)\\'"
  locate-dominating-stop-dir-regexp
  "\\`\\(?:[\\/][\\/]\\|/\\(?:net\\|afs\\|home\\|\\.\\.\\.\\)/\\)\\'")
-
-;; Turn off P4
-(p4-toggle-vc-mode-off)

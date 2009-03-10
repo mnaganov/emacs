@@ -1,5 +1,8 @@
 ;; Project V8 stuff
 
+;; Turn off P4
+(p4-toggle-vc-mode-off)
+
 ;; Compile command
 (setq compile-command-history
       '("scons sample=shell"

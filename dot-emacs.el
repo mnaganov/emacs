@@ -6,8 +6,29 @@
 
 ;; == My stuff ==
 
+;; Set up the keyboard so the delete key on both the regular keyboard
+;; and the keypad delete the character under the cursor and to the right
+;; under X, instead of the default, backspace behavior.
+(global-set-key [delete] 'delete-char)
+(global-set-key [kp-delete] 'delete-char)
+
+;; Turn on font-lock mode
+(global-font-lock-mode t)
+
 ;; When setting mark, highlight selection
 (setq transient-mark-mode t)
+
+;; Always end a file with a newline
+(setq require-final-newline t)
+
+;; Stop at the end of the file, not just add lines
+(setq next-line-add-newlines nil)
+
+(when window-system
+  ;; enable wheelmouse support by default
+  (mwheel-install)
+  ;; use extended compound-text coding for X clipboard
+  (set-selection-coding-system 'compound-text-with-extensions))
 
 ;; Paren match highlighting
 (show-paren-mode t)
