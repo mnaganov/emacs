@@ -34,9 +34,16 @@
 (if use-google-stuff
     (require 'js2-google))
 
+;; NXML
+(add-to-list 'load-path (concat packages-root "nxml-mode"))
+(load "rng-auto.el")
+(setq auto-mode-alist
+      (cons '("\\.\\(xml\\|xsl\\|rng\\|xhtml\\|gxp\\)\\'" . nxml-mode)
+	    auto-mode-alist))
+
 ;; Yasnippet
 (add-to-list 'load-path (concat packages-root "yasnippet-0.5.6"))
 (require 'yasnippet)
-;; (setq yas/extra-mode-hooks '(nxml-mode-hook js2-mode-hook))
+(setq yas/extra-mode-hooks '(nxml-mode-hook js2-mode-hook))
 (yas/initialize)
 (yas/load-directory (concat packages-root "yasnippet-0.5.6/snippets"))
