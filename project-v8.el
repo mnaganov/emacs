@@ -11,13 +11,11 @@
 (setq compile-command
    "scons sample=shell")
 
-;; Find-grep
-(setq grep-find-history
-      '("find . -type f \\( -name \"*.js\" -or -name \"*.h\" -or -name \"*.cc\" \\) -exec grep -nH -e  {} /dev/null \\;"
-        "find . -type f \\( -name \"*.h\" -or -name \"*.cc\" \\) -exec grep -nH -e  {} /dev/null \\;"))
+;; Use Ack instead of Find-grep
+(require 'ack)
 
 ;; Keybindings
-(global-set-key [f6] 'find-grep)
+(global-set-key [f6] 'ack)
 (global-set-key [f7] 'compile)
 (global-set-key [f8] 'recompile)
 
