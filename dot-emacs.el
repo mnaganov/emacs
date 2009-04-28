@@ -36,6 +36,9 @@
 ;; Enable CUA key bindings: C-z/x/c/v
 (cua-mode t)
 
+;; Fixing Cut and Paste under X
+(setq x-select-enable-clipboard t)
+
 ;; Auto-scroll in *compilation* buffer
 (setq compilation-scroll-output t)
 
