@@ -57,6 +57,9 @@
 ;; Show column number in mode line
 (column-number-mode 1)
 
+;; Rebind buffers list to Ibuffer
+(global-set-key (kbd "C-x C-b") 'ibuffer)
+
 ;; Put autosave files (ie #foo#) in one place, *not* scattered all over the
 ;; file system! (The make-autosave-file-name function is invoked to determine
 ;; the filename of an autosave file.)
