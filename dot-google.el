@@ -1,15 +1,19 @@
 ;; Google stuff
 
-;; Make Emacs start blazing fast!
-(load-file (concat emacs-root "elisp-cache.el"))
-(let ((nfsdir "/home/build/public/eng/elisp")
-      (cachedir (concat emacs-root ".elisp-cache")))
-   (setq load-path (append load-path (list cachedir nfsdir)))
-   (require 'elisp-cache)
-   (elisp-cache nfsdir cachedir))
+(setq google-elisp-root use-google-stuff)
+
+;; Make Emacs start blazing fast! (but not on Windows)
+(if (not (eq system-type 'windows-nt))
+    ((load-file (concat emacs-root "elisp-cache.el"))
+     (let ((nfsdir google-elisp-root)
+           (cachedir (concat emacs-root ".elisp-cache")))
+       (setq load-path (append load-path (list cachedir nfsdir)))
+       (require 'elisp-cache)
+       (elisp-cache nfsdir cachedir))))
 
 ;; The main file
-(load-file "/home/build/public/eng/elisp/google.el")
+
+(load-file (concat google-elisp-root "/google.el"))
 (require 'googlemenu)
 
 ;; Preventing Emacs from gratuitously frobbing around in network mounts
@@ -20,4 +24,4 @@
  "\\`\\(?:[\\/][\\/]\\|/\\(?:net\\|afs\\|home\\|\\.\\.\\.\\)/\\)\\'")
 
 ;; Internal plugins dir
-(add-to-list 'load-path "/home/build/eng/elisp/gnuemacs")
+(add-to-list 'load-path (concat google-elisp-root "/gnuemacs"))
