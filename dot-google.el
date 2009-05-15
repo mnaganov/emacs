@@ -4,12 +4,12 @@
 
 ;; Make Emacs start blazing fast! (but not on Windows)
 (if (not (eq system-type 'windows-nt))
-    ((load-file (concat emacs-root "elisp-cache.el"))
-     (let ((nfsdir google-elisp-root)
-           (cachedir (concat emacs-root ".elisp-cache")))
-       (setq load-path (append load-path (list cachedir nfsdir)))
-       (require 'elisp-cache)
-       (elisp-cache nfsdir cachedir))))
+    (progn (load-file (concat emacs-root "elisp-cache.el"))
+           (let ((nfsdir google-elisp-root)
+                 (cachedir (concat emacs-root ".elisp-cache")))
+             (setq load-path (append load-path (list cachedir nfsdir)))
+             (require 'elisp-cache)
+             (elisp-cache nfsdir cachedir))))
 
 ;; The main file
 
