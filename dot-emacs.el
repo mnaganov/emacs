@@ -66,7 +66,11 @@
 ;; Put autosave files (ie #foo#) in one place, *not* scattered all over the
 ;; file system! (The make-autosave-file-name function is invoked to determine
 ;; the filename of an autosave file.)
-(defvar autosave-dir (concat "/tmp/emacs_autosaves/" (user-login-name) "/"))
+(defvar autosave-dir nil)
+(setq autosave-dir
+      (if (eq system-type 'windows-nt)
+          (concat (getenv "TEMP") "\\emacs_autosaves\\")
+          (concat temp-root "/emacs_autosaves/" (user-login-name) "/")))
 (make-directory autosave-dir t)
 
 (defun auto-save-file-name-p (filename)
