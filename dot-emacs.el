@@ -70,7 +70,7 @@
 (setq autosave-dir
       (if (eq system-type 'windows-nt)
           (concat (getenv "TEMP") "\\emacs_autosaves\\")
-          (concat temp-root "/emacs_autosaves/" (user-login-name) "/")))
+          (concat "/tmp/emacs_autosaves/" (user-login-name) "/")))
 (make-directory autosave-dir t)
 
 (defun auto-save-file-name-p (filename)
