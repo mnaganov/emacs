@@ -5,11 +5,16 @@
     (p4-toggle-vc-mode-off))
 
 ;; Compile command
-(setq compile-command-history
-      '("scons sample=shell"
-        "scons mode=debug sample=shell"))
+(require 'compile)
+
+(setq compile-history
+      '("scons -j4 sample=shell"
+        "scons -j4 mode=debug sample=shell"
+        "tools/test.py -j4"
+        "tools/test.py -j4 --mode=debug"))
+
 (setq compile-command
-   "scons sample=shell")
+   "scons -j4 sample=shell")
 
 ;; Use Ack instead of Find-grep
 (require 'ack)
