@@ -20,7 +20,13 @@
 (require 'ack)
 
 ;; Keybindings
-(global-set-key [f6] 'ack)
+(if (eq system-type 'windows-nt)
+    ;; ack hangs in cygwin under emacs, use good 'ol find-grep instead
+    (progn
+     (global-set-key [f6] 'find-grep)
+     (custom-set-variables
+      '(grep-find-command "gnu-find . -type f \\( -name \"*.cc\" -or -name \"*.h\" \\) -print0 | xargs -0 -e grep -nH -e ")))
+    (global-set-key [f6] 'ack))
 (global-set-key [f7] 'compile)
 (global-set-key [f8] 'recompile)
 
