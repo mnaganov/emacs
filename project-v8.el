@@ -42,6 +42,8 @@ root. Returns path to file or nil if file not found"
   (get-closest-file-path-crawler
    (expand-file-name default-directory) file (expand-file-name "/")))
 
+(setq cc-search-directories '("." "./src"))
+
 ;; Crawl up to dir with SConstruct when opening source file
 (add-hook 'c-mode-common-hook
           (lambda()
