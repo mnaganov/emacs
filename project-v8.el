@@ -20,6 +20,7 @@
 (require 'ack)
 
 ;; Keybindings
+(global-set-key [f5] '(lambda () (interactive) (revert-buffer nil t)))
 (global-set-key [f6] 'ack)
 (global-set-key [f7] 'compile)
 (global-set-key [f8] 'recompile)
