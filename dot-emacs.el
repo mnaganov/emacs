@@ -103,7 +103,6 @@ thatuses 'font-lock-warning-face'."
 (font-lock-add-keywords 'javascript-mode (font-lock-width-keyword 80))
 (font-lock-add-keywords 'js2-mode (font-lock-width-keyword 80))
 
-
 ;; == Set up bundled Emacs packages ==
 
 ;; ido
@@ -122,6 +121,11 @@ thatuses 'font-lock-warning-face'."
 (setq uniquify-separator "|")
 (setq uniquify-after-kill-buffer t)
 (setq uniquify-ignore-buffers-ru "^\\*")
+
+;; Support ANSI control sequences in shell
+(require 'ansi-color)
+(add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
+(setq comint-prompt-read-only t)
 
 
 ;; == Set up external packages ==
