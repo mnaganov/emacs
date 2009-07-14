@@ -1,9 +1,5 @@
 ;; Project V8 stuff
 
-;; Turn off P4
-(if use-google-stuff
-    (p4-toggle-vc-mode-off))
-
 ;; Compile command
 (require 'compile)
 
