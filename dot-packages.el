@@ -1,3 +1,30 @@
+;; == Set up bundled Emacs packages ==
+
+;; ido
+(require 'ido)
+(ido-mode t)
+(setq ido-enable-flex-matching t) ;; fuzzy matching
+
+;; Move between windows using M-Arrows
+(require 'windmove)
+(windmove-default-keybindings 'meta)
+
+;; When opening another file with the same name, instead of <N> suffix,
+;; use directory name
+(require 'uniquify)
+(setq uniquify-buffer-name-style 'reverse)
+(setq uniquify-separator "|")
+(setq uniquify-after-kill-buffer t)
+(setq uniquify-ignore-buffers-ru "^\\*")
+
+;; Support ANSI control sequences in shell
+(require 'ansi-color)
+(add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
+(setq comint-prompt-read-only t)
+
+
+;; == Set up external packages ==
+
 (add-to-list 'load-path (concat emacs-root "site-lisp"))
 (setq packages-root (concat emacs-root "site-lisp/"))
 
