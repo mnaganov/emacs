@@ -8,6 +8,9 @@
 
 ;; == Other packages ==
 
+;; Don't trim whitespace on non-normalized files
+(require 'safe-whitespace)
+
 ;; CSS
 (autoload 'css-mode "css-mode")
 (setq auto-mode-alist
