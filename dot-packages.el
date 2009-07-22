@@ -22,6 +22,9 @@
 (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
 (setq comint-prompt-read-only t)
 
+;; Show whitespace and tabs
+(require 'whitespace)
+(whitespace-global-mode t)
 
 ;; == Set up external packages ==
 
