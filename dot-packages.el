@@ -24,7 +24,7 @@
 
 ;; Show whitespace and tabs
 (require 'whitespace)
-(whitespace-global-mode t)
+(global-whitespace-mode t)
 
 ;; == Set up external packages ==
 
