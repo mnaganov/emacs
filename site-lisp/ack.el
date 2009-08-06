@@ -52,6 +52,7 @@ in the --type argument to the ack command")
     ((java-mode) . "java")
     ((js2-mode) . "js")
     ((lisp-mode) . "lisp")
+    ((python-mode) . "python")
     ((perl-mode cperl-mode yaml-mode) . "perl"))
   "alist describing how to fill in the '--type=' argument to ack")
 
