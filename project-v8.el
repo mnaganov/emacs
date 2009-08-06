@@ -27,9 +27,6 @@
 (global-set-key [f7] 'compile)
 (global-set-key [f8] 'recompile)
 
-;; Delete trailing whitespace when saving buffer
-;; (add-hook 'before-save-hook '(lambda () (delete-trailing-whitespace)))
-
 ;; Functions to find project-wide files from inner project directories
 (defun get-closest-file-path-crawler (dir file root)
   "Helper function for get-closest-file-path. Searches given FILE

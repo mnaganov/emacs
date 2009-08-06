@@ -22,10 +22,6 @@
 (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
 (setq comint-prompt-read-only t)
 
-;; Show whitespace and tabs
-(require 'whitespace)
-(global-whitespace-mode t)
-
 ;; == Set up external packages ==
 
 (add-to-list 'load-path (concat emacs-root "site-lisp"))
@@ -37,9 +33,6 @@
 
 
 ;; == Other packages ==
-
-;; Don't trim whitespace on non-normalized files
-(require 'safe-whitespace)
 
 ;; CSS
 (autoload 'css-mode "css-mode")
@@ -106,7 +99,7 @@
 (load "rng-auto.el")
 (setq auto-mode-alist
       (cons '("\\.\\(xml\\|xsl\\|rng\\|xhtml\\|gxp\\)\\'" . nxml-mode)
-	    auto-mode-alist))
+            auto-mode-alist))
 
 
 ;; Yasnippet
