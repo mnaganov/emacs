@@ -63,6 +63,10 @@
 ;; Rebind buffers list to Ibuffer
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 
+;; Mute sound
+(setq bell-volume 0)
+(setq sound-alist nil)
+
 ;; Put autosave files (ie #foo#) in one place, *not* scattered all over the
 ;; file system! (The make-autosave-file-name function is invoked to determine
 ;; the filename of an autosave file.)
