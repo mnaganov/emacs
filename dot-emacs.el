@@ -79,8 +79,8 @@
       (concat "/tmp/" name "/" (user-login-name) "/")))
 
 ;; Save / restore desktop
-(setq desktop-dirname (generate-temp-dir-name "emacs_desktop"))
-(make-directory desktop-dirname t)
+(setq desktop-path (list (generate-temp-dir-name "emacs_desktop")))
+(make-directory (car desktop-path) t)
 (desktop-save-mode t)
 (setq desktop-save t)
 (setq desktop-restore-eager 10)
