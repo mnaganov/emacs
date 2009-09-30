@@ -79,11 +79,11 @@
       (concat "/tmp/" name "/" (user-login-name) "/")))
 
 ;; Save / restore desktop
-(setq desktop-dirname (generate-temp-dir-name "emacs_desktop"))
-(make-directory desktop-dirname t)
-(desktop-save-mode t)
-(setq desktop-save t)
-(setq desktop-restore-eager 10)
+;; (make-directory (generate-temp-dir-name "emacs_desktop") t)
+;; (setq desktop-path '((generate-temp-dir-name "emacs_desktop")))
+;; (desktop-save-mode t)
+;; (setq desktop-save t)
+;; (setq desktop-restore-eager 10)
 
 ;; Put autosave files (ie #foo#) in one place, *not* scattered all over the
 ;; file system! (The make-autosave-file-name function is invoked to determine
