@@ -67,18 +67,29 @@
 (setq bell-volume 0)
 (setq sound-alist nil)
 
+;; Quit without annoying confirmation
 (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
-        "Prevent annoying \"Active processes exist\" query when you quit Emacs."
-        (flet ((process-list ())) ad-do-it))
+  "Prevent annoying \"Active processes exist\" query when you quit Emacs."
+  (flet ((process-list ())) ad-do-it))
+
+(defun generate-temp-dir-name (name)
+  "Generate a name for a temporary dir"
+  (if (eq system-type 'windows-nt)
+      (concat (getenv "TEMP") "\\" name "\\")
+      (concat "/tmp/" name "/" (user-login-name) "/")))
+
+;; Save / restore desktop
+(setq desktop-dirname (generate-temp-dir-name "emacs_desktop"))
+(make-directory desktop-dirname t)
+(desktop-save-mode t)
+(setq desktop-save t)
+(setq desktop-restore-eager 10)
 
 ;; Put autosave files (ie #foo#) in one place, *not* scattered all over the
 ;; file system! (The make-autosave-file-name function is invoked to determine
 ;; the filename of an autosave file.)
 (defvar autosave-dir nil)
-(setq autosave-dir
-      (if (eq system-type 'windows-nt)
-          (concat (getenv "TEMP") "\\emacs_autosaves\\")
-          (concat "/tmp/emacs_autosaves/" (user-login-name) "/")))
+(setq autosave-dir (generate-temp-dir-name "emacs_autosaves"))
 (make-directory autosave-dir t)
 
 (defun auto-save-file-name-p (filename)
@@ -94,7 +105,7 @@
 ;; Put backup files (ie foo~) in one place too. (The backup-directory-alist
 ;; list contains regexp=>directory mappings; filenames matching a regexp are
 ;; backed up in the corresponding directory. Emacs will mkdir it if necessary.)
-(defvar backup-dir (concat "/tmp/emacs_backups/" (user-login-name) "/"))
+(defvar backup-dir (generate-temp-dir-name "emacs_backups"))
 (setq backup-directory-alist (list (cons "." backup-dir)))
 
 ;; 80 (100 or whatever) chars warning
