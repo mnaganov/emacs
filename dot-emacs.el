@@ -76,7 +76,9 @@
   "Generate a name for a temporary dir"
   (if (eq system-type 'windows-nt)
       (concat (getenv "TEMP") "\\" name "\\")
-      (concat "/tmp/" name "/" (user-login-name) "/")))
+      (if (eq system-type 'darwin)
+          (concat "/Users/" (user-login-name) "/." name "/")
+          (concat "/tmp/" name "/" (user-login-name) "/"))))
 
 ;; Save / restore desktop
 (setq desktop-path (list (generate-temp-dir-name "emacs_desktop")))

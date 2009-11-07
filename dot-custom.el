@@ -4,6 +4,7 @@
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
  '(js2-auto-indent-p nil)
+ '(js2-basic-offset 2)
  '(js2-cleanup-whitespace nil)
  '(js2-indent-on-enter-key nil)
  '(js2-mirror-mode nil)
