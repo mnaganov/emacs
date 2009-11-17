@@ -7,7 +7,10 @@
       '("scons -j4 sample=shell"
         "scons -j4 mode=debug sample=shell"
         "tools/test.py -j4"
-        "tools/test.py -j4 --mode=debug"))
+        "tools/test.py -j4 --mode=debug"
+        "WebKitTools/Scripts/build-webkit"
+        "WebKitTools/Scripts/build-webkit --debug"
+        "WebKitTools/Scripts/run-webkit-tests LayoutTests/inspector/ LayoutTests/fast/profiler/"))
 
 (setq compile-command
    "scons -j4 sample=shell")
