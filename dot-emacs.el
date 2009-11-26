@@ -67,6 +67,15 @@
 (setq bell-volume 0)
 (setq sound-alist nil)
 
+;; Show full path to file in frame title
+(setq-default frame-title-format
+              (list '((buffer-file-name
+                       " %f"
+                       (dired-directory
+                        dired-directory
+                        (revert-buffer-function " %b" ("%b - Dir:  " default-directory)))))))
+
+
 ;; Quit without annoying confirmation
 (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
   "Prevent annoying \"Active processes exist\" query when you quit Emacs."
