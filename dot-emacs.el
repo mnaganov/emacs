@@ -48,6 +48,9 @@
 ;; Disable toolbar
 (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
 
+;; Disable default "kill emacs" binding. Usually I press it incidentally.
+(global-unset-key "\C-x\C-c")
+
 ;; Don't use TAB for indenting
 (setq-default indent-tabs-mode nil)
 
