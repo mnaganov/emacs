@@ -48,6 +48,9 @@
 ;; Disable toolbar
 (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
 
+;; Disable default "kill emacs" binding. Usually I press it incidentally.
+(global-unset-key "\C-x\C-c")
+
 ;; Don't use TAB for indenting
 (setq-default indent-tabs-mode nil)
 
@@ -67,6 +70,15 @@
 (setq bell-volume 0)
 (setq sound-alist nil)
 
+;; Show full path to file in frame title
+(setq-default frame-title-format
+              (list '((buffer-file-name
+                       " %f"
+                       (dired-directory
+                        dired-directory
+                        (revert-buffer-function " %b" ("%b - Dir:  " default-directory)))))))
+
+
 ;; Quit without annoying confirmation
 (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
   "Prevent annoying \"Active processes exist\" query when you quit Emacs."
@@ -76,14 +88,16 @@
   "Generate a name for a temporary dir"
   (if (eq system-type 'windows-nt)
       (concat (getenv "TEMP") "\\" name "\\")
-      (concat "/tmp/" name "/" (user-login-name) "/")))
+      (if (eq system-type 'darwin)
+          (concat "/Users/" (user-login-name) "/." name "/")
+          (concat "/tmp/" name "/" (user-login-name) "/"))))
 
 ;; Save / restore desktop
-;; (make-directory (generate-temp-dir-name "emacs_desktop") t)
-;; (setq desktop-path '((generate-temp-dir-name "emacs_desktop")))
-;; (desktop-save-mode t)
-;; (setq desktop-save t)
-;; (setq desktop-restore-eager 10)
+(setq desktop-path (list (generate-temp-dir-name "emacs_desktop")))
+(make-directory (car desktop-path) t)
+(desktop-save-mode t)
+(setq desktop-save t)
+(setq desktop-restore-eager 10)
 
 ;; Put autosave files (ie #foo#) in one place, *not* scattered all over the
 ;; file system! (The make-autosave-file-name function is invoked to determine
