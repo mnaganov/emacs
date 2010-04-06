@@ -4,16 +4,16 @@
 (require 'compile)
 
 (setq compile-history
-      '("scons -j4 sample=shell"
-        "scons -j4 mode=debug sample=shell"
-        "tools/test.py -j4"
-        "tools/test.py -j4 --mode=debug"
+      '("scons -j6 sample=shell"
+        "scons -j6 mode=debug sample=shell"
+        "tools/test.py -j6"
+        "tools/test.py -j6 --mode=debug"
         "WebKitTools/Scripts/build-webkit"
         "WebKitTools/Scripts/build-webkit --debug"
         "WebKitTools/Scripts/run-webkit-tests LayoutTests/inspector/ LayoutTests/fast/profiler/"))
 
 (setq compile-command
-   "scons -j4 sample=shell")
+   "scons -j6 sample=shell")
 
 ;; Use Ack instead of Find-grep
 (require 'ack)
@@ -45,6 +45,16 @@ root. Returns path to file or nil if file not found"
   (get-closest-file-path-crawler
    (expand-file-name default-directory) file (expand-file-name "/")))
 
+(defun set-webkit-style ()
+   (setq c-basic-offset 4)
+   (setq tab-width 8)
+   (setq indent-tabs-mode nil)
+   (c-set-offset 'substatement-open 0))
+
+(defun maybe-set-webkit-style ()
+  (if (string-match "webkit" (downcase buffer-file-name))
+      (set-webkit-style)))
+
 (setq cc-search-directories '("." "./src"))
 
 ;; Crawl up to dir with SConstruct when opening source file
@@ -53,4 +63,5 @@ root. Returns path to file or nil if file not found"
             (local-set-key  (kbd "C-c o") 'ff-find-other-file)
             (let ((scons-path (get-closest-file-path "SConstruct")))
                    (if scons-path (cd scons-path)))
-                 (setq tags-revert-without-query t)))
+                 (setq tags-revert-without-query t)
+                 (maybe-set-webkit-style)))

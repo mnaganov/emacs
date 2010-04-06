@@ -61,6 +61,11 @@
 (shell (generate-new-buffer "=git="))
 
 
+;; C++ style
+(add-hook 'c-mode-common-hook 'google-set-c-style)
+(add-hook 'c-mode-common-hook 'google-make-newline-indent)
+
+
 ;; JS2
 (autoload 'js2-mode (format "js2-emacs%d" emacs-major-version) nil t)
 (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
