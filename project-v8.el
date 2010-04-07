@@ -45,15 +45,24 @@ root. Returns path to file or nil if file not found"
   (get-closest-file-path-crawler
    (expand-file-name default-directory) file (expand-file-name "/")))
 
-(defun set-webkit-style ()
+(defun set-webkit-c-style ()
    (setq c-basic-offset 4)
    (setq tab-width 8)
    (setq indent-tabs-mode nil)
    (c-set-offset 'substatement-open 0))
 
-(defun maybe-set-webkit-style ()
+(defun maybe-set-webkit-c-style ()
   (if (string-match "webkit" (downcase buffer-file-name))
-      (set-webkit-style)))
+      (set-webkit-c-style)))
+
+(defun set-webkit-js2-style ()
+   (setq js2-basic-offset 4)
+   (setq tab-width 8)
+   (setq indent-tabs-mode nil))
+
+(defun maybe-set-webkit-js2-style ()
+  (if (string-match "webkit" (downcase buffer-file-name))
+      (set-webkit-js2-style)))
 
 (setq cc-search-directories '("." "./src"))
 
@@ -63,5 +72,7 @@ root. Returns path to file or nil if file not found"
             (local-set-key  (kbd "C-c o") 'ff-find-other-file)
             (let ((scons-path (get-closest-file-path "SConstruct")))
                    (if scons-path (cd scons-path)))
-                 (setq tags-revert-without-query t)
-                 (maybe-set-webkit-style)))
+            (setq tags-revert-without-query t)
+            (maybe-set-webkit-c-style)))
+
+(add-hook 'js2-mode-hook 'maybe-set-webkit-js2-style)
