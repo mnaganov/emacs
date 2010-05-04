@@ -10,7 +10,8 @@
         "tools/test.py -j6 --mode=debug"
         "WebKitTools/Scripts/build-webkit"
         "WebKitTools/Scripts/build-webkit --debug"
-        "WebKitTools/Scripts/run-webkit-tests LayoutTests/inspector/ LayoutTests/fast/profiler/"))
+        "WebKitTools/Scripts/run-webkit-tests LayoutTests/inspector/ LayoutTests/fast/profiler/"
+        "make -j4 BUILDTYPE=Release chrome"))
 
 (setq compile-command
    "scons -j6 sample=shell")
