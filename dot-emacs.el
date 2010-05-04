@@ -136,6 +136,8 @@ thatuses 'font-lock-warning-face'."
 (font-lock-add-keywords 'javascript-mode (font-lock-width-keyword 80))
 (font-lock-add-keywords 'js2-mode (font-lock-width-keyword 80))
 
+;; Always open .h files in c++-mode.
+(add-to-list 'auto-mode-alist '("\\.h$" . c++-mode))
 
 ;; == Set up packages ==
 
