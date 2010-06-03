@@ -51,9 +51,10 @@ root. Returns path to file or nil if file not found"
    (setq indent-tabs-mode nil)
    (c-set-offset 'substatement-open 0))
 
-(defun maybe-set-webkit-c-style ()
+(defun choose-c-style ()
   (if (string-match "webkit" (downcase buffer-file-name))
-      (set-webkit-c-style)))
+      (set-webkit-c-style)
+      (google-set-c-style)))
 
 (defun set-webkit-js2-style ()
    (setq js2-basic-offset 4)
@@ -66,13 +67,13 @@ root. Returns path to file or nil if file not found"
 
 (setq cc-search-directories '("." "./src"))
 
-;; Crawl up to dir with SConstruct when opening source file
 (add-hook 'c-mode-common-hook
           (lambda()
             (local-set-key  (kbd "C-c o") 'ff-find-other-file)
+            ;; Crawl up to dir with SConstruct when opening source file
             (let ((scons-path (get-closest-file-path "SConstruct")))
                    (if scons-path (cd scons-path)))
             (setq tags-revert-without-query t)
-            (maybe-set-webkit-c-style)))
+            (choose-c-style)))
 
 (add-hook 'js2-mode-hook 'maybe-set-webkit-js2-style)

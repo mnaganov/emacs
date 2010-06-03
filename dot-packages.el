@@ -64,7 +64,8 @@
 ;; C++ style
 (unless use-google-stuff
     (require 'google-c-style)
-    (add-hook 'c-mode-common-hook 'google-set-c-style)
+    (unless (string-match "v8" use-project)
+            (add-hook 'c-mode-common-hook 'google-set-c-style))
     (add-hook 'c-mode-common-hook 'google-make-newline-indent))
 
 
