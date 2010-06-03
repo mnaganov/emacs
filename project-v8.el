@@ -52,10 +52,9 @@ root. Returns path to file or nil if file not found"
    (setq indent-tabs-mode nil)
    (c-set-offset 'substatement-open 0))
 
-(defun choose-c-style ()
+(defun maybe-set-webkit-c-style ()
   (if (string-match "webkit" (downcase buffer-file-name))
-      (set-webkit-c-style)
-      (google-set-c-style)))
+      (set-webkit-c-style)))
 
 (defun set-webkit-js2-style ()
    (setq js2-basic-offset 4)
@@ -75,6 +74,7 @@ root. Returns path to file or nil if file not found"
             (let ((scons-path (get-closest-file-path "SConstruct")))
                    (if scons-path (cd scons-path)))
             (setq tags-revert-without-query t)
-            (choose-c-style)))
+            (google-set-c-style)
+            (maybe-set-webkit-c-style)))
 
 (add-hook 'js2-mode-hook 'maybe-set-webkit-js2-style)
