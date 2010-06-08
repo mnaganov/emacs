@@ -53,7 +53,7 @@ root. Returns path to file or nil if file not found"
    (c-set-offset 'substatement-open 0))
 
 (defun maybe-set-webkit-c-style ()
-  (if (string-match "webkit" (downcase buffer-file-name))
+  (if (and (char-or-string-p buffer-file-name) (string-match "webkit" (downcase buffer-file-name)))
       (set-webkit-c-style)))
 
 (defun set-webkit-js2-style ()
@@ -62,7 +62,7 @@ root. Returns path to file or nil if file not found"
    (setq indent-tabs-mode nil))
 
 (defun maybe-set-webkit-js2-style ()
-  (if (string-match "webkit" (downcase buffer-file-name))
+  (if (and (char-or-string-p buffer-file-name) (string-match "webkit" (downcase buffer-file-name)))
       (set-webkit-js2-style)))
 
 (setq cc-search-directories '("." "./src"))
