@@ -139,19 +139,6 @@ thatuses 'font-lock-warning-face'."
 ;; Always open .h files in c++-mode.
 (add-to-list 'auto-mode-alist '("\\.h$" . c++-mode))
 
-;; Train shell to hide SSO passwords.
-(setq comint-password-prompt-regexp 
-      (concat 
-       "\\(" 
-       comint-password-prompt-regexp 
-       "\\)\\|[Ee]nter \\(same \\)?passphrase" 
-       "\\|SSO password" 
-       "\\|Enter password" 
-       "\\|Please enter the pass-phrase to decrypt these private key(s)" 
-       "\\|Enter your LDAP password for Mondrian:" 
-       "\\|Please enter your unix login (kerberos) password:"))
-(add-hook 'comint-output-filter-functions 'comint-watch-for-password-prompt)
-
 ;; == Set up packages ==
 
 (load-file (concat emacs-root "dot-packages.el"))
