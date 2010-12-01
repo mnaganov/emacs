@@ -11,7 +11,7 @@
         "WebKitTools/Scripts/build-webkit"
         "WebKitTools/Scripts/build-webkit --debug"
         "WebKitTools/Scripts/run-webkit-tests LayoutTests/inspector/ LayoutTests/fast/profiler/"
-        "make -j4 BUILDTYPE=Release chrome"))
+        "make -j20 BUILDTYPE=Release chrome"))
 
 (setq compile-command
    "scons -j6 sample=shell")
@@ -50,6 +50,7 @@ root. Returns path to file or nil if file not found"
    (setq c-basic-offset 4)
    (setq tab-width 8)
    (setq indent-tabs-mode nil)
+   (setq fill-column 120)
    (c-set-offset 'substatement-open 0))
 
 (defun maybe-set-webkit-c-style ()
@@ -59,6 +60,7 @@ root. Returns path to file or nil if file not found"
 (defun set-webkit-js2-style ()
    (setq js2-basic-offset 4)
    (setq tab-width 8)
+   (setq fill-column 120)
    (setq indent-tabs-mode nil))
 
 (defun maybe-set-webkit-js2-style ()
@@ -78,3 +80,6 @@ root. Returns path to file or nil if file not found"
             (maybe-set-webkit-c-style)))
 
 (add-hook 'js2-mode-hook 'maybe-set-webkit-js2-style)
+
+(require 'find-things-fast)
+(global-set-key '[f1] 'ftf-find-file)
