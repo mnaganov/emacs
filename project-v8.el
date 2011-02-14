@@ -8,9 +8,9 @@
         "scons -j6 mode=debug sample=shell"
         "tools/test.py -j6"
         "tools/test.py -j6 --mode=debug"
-        "WebKitTools/Scripts/build-webkit"
-        "WebKitTools/Scripts/build-webkit --debug"
-        "WebKitTools/Scripts/run-webkit-tests LayoutTests/inspector/ LayoutTests/fast/profiler/"
+        "Tools/Scripts/build-webkit"
+        "Tools/Scripts/build-webkit --debug"
+        "Tools/Scripts/run-webkit-tests LayoutTests/inspector/ LayoutTests/fast/profiler/"
         "make -j20 BUILDTYPE=Release chrome"))
 
 (setq compile-command
