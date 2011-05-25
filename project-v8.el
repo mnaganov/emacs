@@ -4,14 +4,17 @@
 (require 'compile)
 
 (setq compile-history
-      '("scons -j6 sample=shell"
-        "scons -j6 mode=debug sample=shell"
-        "tools/test.py -j6"
-        "tools/test.py -j6 --mode=debug"
+      '("scons -j8 sample=shell"
+        "scons -j8 mode=debug sample=shell"
+        "tools/test.py -j8"
+        "tools/test.py -j8 --mode=debug"
         "Tools/Scripts/build-webkit"
         "Tools/Scripts/build-webkit --debug"
+        "~/goma/goma-xcodebuild ./Tools/Scripts/build-webkit"
         "Tools/Scripts/run-webkit-tests LayoutTests/inspector/ LayoutTests/fast/profiler/"
-        "make -j20 BUILDTYPE=Release chrome"))
+        "make -j20 BUILDTYPE=Release chrome"
+        "PATH=$HOME/goma:$PATH make -j100 BUILDTYPE=Release chrome"
+        "webkit/tools/layout_tests/run_webkit_tests.sh inspector"))
 
 (setq compile-command
    "scons -j6 sample=shell")
