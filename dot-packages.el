@@ -47,6 +47,17 @@
 (add-hook 'haskell-mode-hook 'font-lock-mode)
 
 
+;; Fill-Column-Indicator
+(setq-default fill-column 80)
+(require 'fill-column-indicator)
+(add-hook 'c++-mode-hook 'fci-mode)
+(add-hook 'python-mode-hook 'fci-mode)
+(add-hook 'java-mode-hook 'fci-mode)
+(add-hook 'html-mode-hook 'fci-mode)
+(add-hook 'javascript-mode-hook 'fci-mode)
+(add-hook 'js2-mode-hook 'fci-mode)
+
+
 ;; Gambit Scheme
 (require 'gambit)
 

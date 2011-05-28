@@ -122,19 +122,6 @@
 (defvar backup-dir (generate-temp-dir-name "emacs_backups"))
 (setq backup-directory-alist (list (cons "." backup-dir)))
 
-;; 80 (100 or whatever) chars warning
-(defun font-lock-width-keyword (width)
- "Return a font-lock style keyword for a string beyond width WIDTH
-thatuses 'font-lock-warning-face'."
- `((,(format "^%s\\(.+\\)" (make-string width ?.))
-    (1 font-lock-warning-face t))))
-
-(font-lock-add-keywords 'c++-mode (font-lock-width-keyword 80))
-(font-lock-add-keywords 'python-mode (font-lock-width-keyword 80))
-(font-lock-add-keywords 'java-mode (font-lock-width-keyword 80))
-(font-lock-add-keywords 'html-mode (font-lock-width-keyword 80))
-(font-lock-add-keywords 'javascript-mode (font-lock-width-keyword 80))
-(font-lock-add-keywords 'js2-mode (font-lock-width-keyword 80))
 
 ;; Always open .h files in c++-mode.
 (add-to-list 'auto-mode-alist '("\\.h$" . c++-mode))
