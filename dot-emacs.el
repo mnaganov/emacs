@@ -63,6 +63,10 @@
 ;; Show column number in mode line
 (column-number-mode 1)
 
+;; Don't unsplit windows on ESC ESC ESC
+(defadvice keyboard-escape-quit (around my-keyboard-escape-quit activate)
+  (flet ((one-window-p (&optional nomini all-frames) t)) ad-do-it))
+
 ;; Rebind buffers list to Ibuffer
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 
