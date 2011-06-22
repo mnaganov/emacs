@@ -79,6 +79,9 @@
             (add-hook 'c-mode-common-hook 'google-set-c-style))
     (add-hook 'c-mode-common-hook 'google-make-newline-indent))
 
+;; Global
+(require 'gtags)
+(add-hook 'c-mode-common-hook '(lambda () (gtags-mode 1)))
 
 ;; JS2
 (autoload 'js2-mode (format "js2-emacs%d" emacs-major-version) nil t)
@@ -92,25 +95,25 @@
 
 
 ;; MMM
-(require 'javascript-mode)
-(add-to-list 'load-path (concat packages-root "mmm-mode-0.4.8"))
+;; (require 'javascript-mode)
+;; (add-to-list 'load-path (concat packages-root "mmm-mode-0.4.8"))
 
-(defun fix-javascript-mode ()
-  "Various personal customizations for javascript-mode."
-  (setq c-basic-offset 2)
-  (setq fill-column 80)
-  (font-lock-mode 1)
-  (local-set-key "\C-c\C-c" 'comment-region)
-  (local-set-key "\C-c\C-u" 'uncomment-region))
+;; (defun fix-javascript-mode ()
+;;   "Various personal customizations for javascript-mode."
+;;   (setq c-basic-offset 2)
+;;   (setq fill-column 80)
+;;   (font-lock-mode 1)
+;;   (local-set-key "\C-c\C-c" 'comment-region)
+;;   (local-set-key "\C-c\C-u" 'uncomment-region))
 
-(autoload 'javascript-fix-indentation "javascript-indent")
-(add-hook 'javascript-mode-hook 'javascript-fix-indentation)
-(add-hook 'javascript-mode-hook 'fix-javascript-mode)
+;; (autoload 'javascript-fix-indentation "javascript-indent")
+;; (add-hook 'javascript-mode-hook 'javascript-fix-indentation)
+;; (add-hook 'javascript-mode-hook 'fix-javascript-mode)
 
-(require 'mmm-auto)
-(setq mmm-global-mode 'maybe)
-(add-to-list 'mmm-mode-ext-classes-alist
-             '(html-mode "\\.s?html?\\'" html-js))
+;; (require 'mmm-auto)
+;; (setq mmm-global-mode 'maybe)
+;; (add-to-list 'mmm-mode-ext-classes-alist
+;;              '(html-mode "\\.s?html?\\'" html-js))
 
 
 ;; NXML
