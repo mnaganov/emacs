@@ -17,7 +17,7 @@
         "webkit/tools/layout_tests/run_webkit_tests.sh inspector"))
 
 (setq compile-command
-   "scons -j6 sample=shell")
+   "scons -j8 sample=shell")
 
 ;; Use Ack instead of Find-grep
 (require 'ack)
