@@ -70,6 +70,13 @@ root. Returns path to file or nil if file not found"
   (if (and (char-or-string-p buffer-file-name) (string-match "webkit" (downcase buffer-file-name)))
       (set-webkit-js2-style)))
 
+(defun set-android-java-style ()
+   (setq c-basic-offset 4))
+
+(defun maybe-set-android-java-style ()
+  (if (and (char-or-string-p buffer-file-name) (string-match "android" (downcase buffer-file-name)))
+      (set-android-java-style)))
+
 (setq cc-search-directories '("." "./src"))
 
 (add-hook 'c-mode-common-hook
@@ -83,6 +90,8 @@ root. Returns path to file or nil if file not found"
             (maybe-set-webkit-c-style)))
 
 (add-hook 'js2-mode-hook 'maybe-set-webkit-js2-style)
+
+(add-hook 'java-mode-hook 'maybe-set-android-java-style)
 
 (require 'find-things-fast)
 (global-set-key '[f1] 'ftf-find-file)
