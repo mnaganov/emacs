@@ -4,9 +4,9 @@
 (require 'compile)
 
 (setq compile-history
-      '("scons -j8 sample=shell"
+      '("make -j16 ia32.release"
+        "make -j16 ia32.release.check"
         "scons -j8 mode=debug sample=shell"
-        "tools/test.py -j8"
         "tools/test.py -j8 --mode=debug"
         "Tools/Scripts/build-webkit"
         "Tools/Scripts/build-webkit --debug"
@@ -17,7 +17,7 @@
         "webkit/tools/layout_tests/run_webkit_tests.sh inspector"))
 
 (setq compile-command
-   "scons -j8 sample=shell")
+   "make -j16 ia32.release")
 
 ;; Use Ack instead of Find-grep
 (require 'ack)
