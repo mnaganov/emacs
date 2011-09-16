@@ -34,12 +34,6 @@
 
 ;; == Other packages ==
 
-;; CSS
-(autoload 'css-mode "css-mode")
-(setq auto-mode-alist
-     (cons '("\\.css\\'" . css-mode) auto-mode-alist))
-
-
 ;; Haskell
 (load (concat packages-root "haskell-mode-2.4/haskell-site-file"))
 (add-hook 'haskell-mode-hook 'turn-on-haskell-doc-mode)
