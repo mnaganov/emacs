@@ -33,6 +33,9 @@
 ;; Paren match highlighting
 (show-paren-mode t)
 
+;; Whitespace highlighting
+(add-hook 'font-lock-mode-hook 'show-ws-highlight-trailing-whitespace)
+
 ;; Enable CUA key bindings: C-z/x/c/v
 (cua-mode t)
 
