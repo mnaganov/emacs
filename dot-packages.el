@@ -27,6 +27,10 @@
 (add-to-list 'load-path (concat emacs-root "site-lisp"))
 (setq packages-root (concat emacs-root "site-lisp/"))
 
+;; Whitespace highlighting
+(require 'show-wspace)
+(add-hook 'font-lock-mode-hook 'show-ws-highlight-trailing-whitespace)
+
 ;; == OS-specific setup ==
 (if (eq system-type 'windows-nt)
     (load-file (concat emacs-root "dot-windows.el")))
