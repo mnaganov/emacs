@@ -7,14 +7,7 @@
       '("make -j16 ia32.release"
         "make -j16 ia32.release.check"
         "scons -j8 mode=debug sample=shell"
-        "tools/test.py -j8 --mode=debug"
-        "Tools/Scripts/build-webkit"
-        "Tools/Scripts/build-webkit --debug"
-        "~/goma/goma-xcodebuild ./Tools/Scripts/build-webkit"
-        "Tools/Scripts/run-webkit-tests LayoutTests/inspector/ LayoutTests/fast/profiler/"
-        "make -j20 BUILDTYPE=Release chrome"
-        "PATH=$HOME/goma:$PATH make -j100 BUILDTYPE=Release chrome"
-        "webkit/tools/layout_tests/run_webkit_tests.sh inspector"))
+        "tools/test.py -j8 --mode=debug"))
 
 (setq compile-command
    "make -j16 ia32.release")
@@ -49,34 +42,6 @@ root. Returns path to file or nil if file not found"
   (get-closest-file-path-crawler
    (expand-file-name default-directory) file (expand-file-name "/")))
 
-(defun set-webkit-c-style ()
-   (setq c-basic-offset 4)
-   (setq tab-width 8)
-   (setq indent-tabs-mode nil)
-   (setq fill-column 120)
-   (c-set-offset 'substatement-open 0))
-
-(defun maybe-set-webkit-c-style ()
-  (if (and (char-or-string-p buffer-file-name) (string-match "webkit" (downcase buffer-file-name)))
-      (set-webkit-c-style)))
-
-(defun set-webkit-js2-style ()
-   (setq js2-basic-offset 4)
-   (setq tab-width 8)
-   (setq fill-column 120)
-   (setq indent-tabs-mode nil))
-
-(defun maybe-set-webkit-js2-style ()
-  (if (and (char-or-string-p buffer-file-name) (string-match "webkit" (downcase buffer-file-name)))
-      (set-webkit-js2-style)))
-
-(defun set-android-java-style ()
-   (setq c-basic-offset 4))
-
-(defun maybe-set-android-java-style ()
-  (if (and (char-or-string-p buffer-file-name) (string-match "android" (downcase buffer-file-name)))
-      (set-android-java-style)))
-
 (setq cc-search-directories '("." "./src"))
 
 (add-hook 'c-mode-common-hook
@@ -86,12 +51,7 @@ root. Returns path to file or nil if file not found"
             (let ((scons-path (get-closest-file-path "SConstruct")))
                    (if scons-path (cd scons-path)))
             (setq tags-revert-without-query t)
-            (google-set-c-style)
-            (maybe-set-webkit-c-style)))
-
-(add-hook 'js2-mode-hook 'maybe-set-webkit-js2-style)
-
-(add-hook 'java-mode-hook 'maybe-set-android-java-style)
+            (google-set-c-style)))
 
 (require 'find-things-fast)
 (global-set-key '[f1] 'ftf-find-file)
