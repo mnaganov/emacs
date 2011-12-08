@@ -74,3 +74,12 @@
 
 (require 'find-things-fast)
 (global-set-key '[f1] 'ftf-find-file)
+
+(defun open-shell-buffer (buffer-name startup-command)
+  (switch-to-buffer (shell buffer-name))
+  (set-marker comint-last-output-start (point))
+  (insert startup-command)
+  (comint-send-input nil t))
+(open-shell-buffer "=chrome=" "cd ~/chrome/src")
+(open-shell-buffer "=webkit=" "cd ~/chrome/src/third_party/WebKit")
+(open-shell-buffer "=v8=" "cd ~/chrome/src/v8")
