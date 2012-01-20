@@ -96,8 +96,16 @@
           (concat "/Users/" (user-login-name) "/." name "/")
           (concat "/tmp/" name "/" (user-login-name) "/"))))
 
+(defun generate-persistent-dir-name (name)
+  "Generate a name for a persistent storage dir"
+  (if (eq system-type 'windows-nt)
+      (concat (getenv "TEMP") "\\" name "\\") ;; FIXME
+      (if (eq system-type 'darwin)
+          (concat "/Users/" (user-login-name) "/." name "/")
+          (concat "/home/" (user-login-name) "/." name "/" system-name "/"))))
+
 ;; Save / restore desktop
-(setq desktop-path (list (generate-temp-dir-name "emacs_desktop")))
+(setq desktop-path (list (generate-persistent-dir-name "emacs_desktop")))
 (make-directory (car desktop-path) t)
 (desktop-save-mode t)
 (setq desktop-save t)
