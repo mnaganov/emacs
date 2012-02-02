@@ -147,9 +147,11 @@
 (defvar backup-dir (generate-temp-dir-name "emacs_backups"))
 (setq backup-directory-alist (list (cons "." backup-dir)))
 
-
 ;; Always open .h files in c++-mode.
 (add-to-list 'auto-mode-alist '("\\.h$" . c++-mode))
+
+;; Disable Undo for shell buffers
+(add-hook 'shell-mode-hook 'buffer-disable-undo)
 
 ;; == Set up packages ==
 

@@ -22,6 +22,12 @@
 (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
 (setq comint-prompt-read-only t)
 
+;; orgmode
+(require 'org-install)
+(define-key global-map "\C-cl" 'org-store-link)
+(define-key global-map "\C-ca" 'org-agenda)
+(setq org-log-done t)
+
 ;; == Set up external packages ==
 
 (add-to-list 'load-path (concat emacs-root "site-lisp"))
