@@ -82,6 +82,17 @@
                         dired-directory
                         (revert-buffer-function " %b" ("%b - Dir:  " default-directory)))))))
 
+;; Copy full file path of the buffer to clipboard on C-c f
+(defun kill-buffer-file-name ()
+  (interactive)
+  (kill-new (buffer-file-name)))
+(global-set-key (kbd "C-c f") 'kill-buffer-file-name)
+
+;; Copy just file name of the buffer to clipboard on C-C n
+(defun kill-buffer-file-name-nondirectory ()
+  (interactive)
+  (kill-new (file-name-nondirectory (buffer-file-name))))
+(global-set-key (kbd "C-c n") 'kill-buffer-file-name-nondirectory)
 
 ;; Quit without annoying confirmation
 (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
