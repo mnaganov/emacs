@@ -55,10 +55,13 @@
       (set-webkit-js2-style)))
 
 (defun set-android-java-style ()
-   (setq c-basic-offset 4))
+   (setq c-basic-offset 4)
+   (setq fill-column 100))
 
 (defun maybe-set-android-java-style ()
-  (if (and (char-or-string-p buffer-file-name) (string-match "android" (downcase buffer-file-name)))
+  (if (and (char-or-string-p buffer-file-name)
+           (or (string-match "android" (downcase buffer-file-name))
+               (string-match "chrome" (downcase buffer-file-name))))
       (set-android-java-style)))
 
 (add-hook 'c-mode-common-hook
