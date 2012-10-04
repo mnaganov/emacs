@@ -56,7 +56,11 @@
 
 (defun set-android-java-style ()
    (setq c-basic-offset 4)
-   (setq fill-column 100))
+   (setq fill-column 100)
+   (setq c-continued-statement-offset 8)
+   (setq c-offsets-alist '((statement-cont . ++)
+                           (arglist-intro  . ++)
+                           (arglist-cont-nonempty . ++))))
 
 (defun maybe-set-android-java-style ()
   (if (and (char-or-string-p buffer-file-name)
