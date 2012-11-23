@@ -134,3 +134,6 @@
 (setq yas/extra-mode-hooks '(nxml-mode-hook js2-mode-hook))
 (yas/initialize)
 (yas/load-directory (concat packages-root "yasnippet-0.5.6/snippets"))
+
+;; gyp
+(require 'gyp)
