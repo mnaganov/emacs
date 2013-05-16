@@ -4,19 +4,11 @@
 (require 'compile)
 
 (setq compile-history
-      '("PATH=$HOME/goma:$PATH make -j100 BUILDTYPE=Release chrome"
-        "$HOME/goma/goma-xcodebuild ./Tools/Scripts/build-webkit"
-        "make -j16 ia32.release"
-        "make -j16 ia32.release.check"
-        "scons -j8 mode=debug sample=shell"
-        "tools/test.py -j8 --mode=debug"
-        "Tools/Scripts/build-webkit"
-        "Tools/Scripts/build-webkit --debug"
-        "Tools/Scripts/run-webkit-tests LayoutTests/inspector/ LayoutTests/fast/profiler/"
-        "webkit/tools/layout_tests/run_webkit_tests.sh inspector"))
+      '("PATH=$HOME/goma:$HOME/depot_tools:$PATH ninja -j150 -l30 -C out/Release chrome"
+        "PATH=$HOME/goma:$HOME/depot_tools:$PATH ninja -j150 -l30 -C out/Debug chrome"))
 
 (setq compile-command
-   "PATH=$HOME/goma:$PATH make -j100 BUILDTYPE=Release chrome")
+   "PATH=$HOME/goma:$HOME/depot_tools:$PATH ninja -j150 -l30 -C out/Release chrome")
 
 ;; Use Ack instead of Find-grep
 (require 'ack)
