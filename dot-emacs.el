@@ -48,6 +48,9 @@
 ;; Disable toolbar
 (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
 
+;; Disable menubar
+(if (fboundp 'menu-bar-mode) (menu-bar-mode -1))
+
 ;; Disable default "kill emacs" binding. Usually I press it incidentally.
 (global-unset-key "\C-x\C-c")
 
