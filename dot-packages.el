@@ -30,6 +30,7 @@
 ;; Whitespace highlighting
 (require 'whitespace)
 (setq whitespace-style (quote (face trailing tabs empty)))
+(global-whitespace-mode 1)
 
 ;; == Set up external packages ==
 
