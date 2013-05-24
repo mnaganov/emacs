@@ -12,12 +12,6 @@
 (global-set-key [delete] 'delete-char)
 (global-set-key [kp-delete] 'delete-char)
 
-;; Turn on font-lock mode
-(global-font-lock-mode t)
-
-;; When setting mark, highlight selection
-(setq transient-mark-mode t)
-
 ;; Always end a file with a newline
 (setq require-final-newline t)
 
@@ -45,10 +39,8 @@
 ;; Disable splash screen
 (setq inhibit-splash-screen t)
 
-;; Disable toolbar
+;; Disable toolbar and menubar
 (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
-
-;; Disable menubar
 (if (fboundp 'menu-bar-mode) (menu-bar-mode -1))
 
 ;; Disable default "kill emacs" binding. Usually I press it incidentally.
@@ -65,6 +57,10 @@
 
 ;; Show column number in mode line
 (column-number-mode 1)
+
+;; Set colors for mode line and buffer separators (they are actually inverse)
+(set-face-foreground 'mode-line "white")
+(set-face-background 'mode-line "black")
 
 ;; Don't unsplit windows on ESC ESC ESC
 (defadvice keyboard-escape-quit (around my-keyboard-escape-quit activate)

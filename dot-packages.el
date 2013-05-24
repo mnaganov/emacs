@@ -8,6 +8,11 @@
 ;; Move between windows using M-Arrows
 (require 'windmove)
 (windmove-default-keybindings 'meta)
+;; This is a fallback for terminals
+(global-set-key (kbd "\e <up>") 'windmove-up)
+(global-set-key (kbd "\e <down>") 'windmove-down)
+(global-set-key (kbd "\e <left>") 'windmove-left)
+(global-set-key (kbd "\e <right>") 'windmove-right)
 
 ;; When opening another file with the same name, instead of <N> suffix,
 ;; use directory name
@@ -22,20 +27,15 @@
 (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
 (setq comint-prompt-read-only t)
 
-;; orgmode
-(require 'org-install)
-(define-key global-map "\C-cl" 'org-store-link)
-(define-key global-map "\C-ca" 'org-agenda)
-(setq org-log-done t)
+;; Whitespace highlighting
+(require 'whitespace)
+(setq whitespace-style (quote (face trailing tabs empty)))
 
 ;; == Set up external packages ==
 
 (add-to-list 'load-path (concat emacs-root "site-lisp"))
 (setq packages-root (concat emacs-root "site-lisp/"))
 
-;; Whitespace highlighting
-(require 'show-wspace)
-(add-hook 'font-lock-mode-hook 'show-ws-highlight-trailing-whitespace)
 
 ;; == OS-specific setup ==
 (if (eq system-type 'windows-nt)
@@ -70,11 +70,8 @@
 (add-to-list 'load-path (concat packages-root "git"))
 (require 'git)
 (require 'vc-git)
-(add-to-list 'vc-handled-backends 'GIT)
+(add-to-list 'vc-handled-backends 'git)
 (global-auto-revert-mode)
-;; Buffer for Git
-(shell (generate-new-buffer "=git="))
-
 
 ;; C++ style
 (unless use-google-stuff
@@ -83,10 +80,6 @@
             (add-hook 'c-mode-common-hook 'google-set-c-style))
     (add-hook 'c-mode-common-hook 'google-make-newline-indent))
 
-;; Global
-(require 'gtags)
-(add-hook 'c-mode-common-hook '(lambda () (gtags-mode 1)))
-
 ;; JS2
 (autoload 'js2-mode (format "js2-emacs%d" emacs-major-version) nil t)
 (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
@@ -94,36 +87,12 @@
 (if use-google-stuff
     (require 'js2-google))
 
-
-;; MMM
-;; (require 'javascript-mode)
-;; (add-to-list 'load-path (concat packages-root "mmm-mode-0.4.8"))
-
-;; (defun fix-javascript-mode ()
-;;   "Various personal customizations for javascript-mode."
-;;   (setq c-basic-offset 2)
-;;   (setq fill-column 80)
-;;   (font-lock-mode 1)
-;;   (local-set-key "\C-c\C-c" 'comment-region)
-;;   (local-set-key "\C-c\C-u" 'uncomment-region))
-
-;; (autoload 'javascript-fix-indentation "javascript-indent")
-;; (add-hook 'javascript-mode-hook 'javascript-fix-indentation)
-;; (add-hook 'javascript-mode-hook 'fix-javascript-mode)
-
-;; (require 'mmm-auto)
-;; (setq mmm-global-mode 'maybe)
-;; (add-to-list 'mmm-mode-ext-classes-alist
-;;              '(html-mode "\\.s?html?\\'" html-js))
-
-
 ;; NXML
 (add-to-list 'load-path (concat packages-root "nxml-mode"))
 (load "rng-auto.el")
 (setq auto-mode-alist
       (cons '("\\.\\(xml\\|xsl\\|rng\\|xhtml\\|gxp\\)\\'" . nxml-mode)
             auto-mode-alist))
-
 
 ;; Yasnippet
 (add-to-list 'load-path (concat packages-root "yasnippet-0.5.6"))

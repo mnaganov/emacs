@@ -81,4 +81,3 @@
   (comint-send-input nil t))
 (open-shell-buffer "=chrome=" "cd ~/chrome/src")
 (open-shell-buffer "=webkit=" "cd ~/chrome/src/third_party/WebKit")
-(open-shell-buffer "=v8=" "cd ~/chrome/src/v8")
