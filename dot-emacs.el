@@ -143,7 +143,7 @@
       (concat (getenv "TEMP") "\\" name "\\") ;; FIXME
       (if (eq system-type 'darwin)
           (concat "/Users/" (user-login-name) "/." name "/")
-          ((getenv "HOME") "/." name "/" system-name "/"))))
+          (concat (getenv "HOME") "/." name "/" system-name "/"))))
 
 ;; Save / restore desktop
 (setq desktop-path (list (generate-persistent-dir-name "emacs_desktop")))
