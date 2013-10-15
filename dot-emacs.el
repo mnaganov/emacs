@@ -105,6 +105,10 @@
 (setq sound-alist nil)
 
 ;; Show full path to file in frame title
+(when (and (not window-system)
+           (string-match "^xterm" (getenv "TERM")))
+      (require 'xterm-title)
+      (xterm-title-mode 1))
 (setq-default frame-title-format
               (list '((buffer-file-name
                        " %f"
