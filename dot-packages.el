@@ -3,6 +3,7 @@
 ;; ido
 (require 'ido)
 (ido-mode t)
+(ido-everywhere t)
 (setq ido-enable-flex-matching t) ;; fuzzy matching
 
 ;; Move between windows using M-Arrows
@@ -107,3 +108,9 @@
 
 ;; gyp
 (require 'gyp)
+
+;; flx-ido
+(require 'flx-ido)
+(flx-ido-mode t)
+(setq flx-ido-use-faces nil)
+(setq gc-cons-threshold 20000000)
