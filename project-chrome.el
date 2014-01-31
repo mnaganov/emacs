@@ -1,4 +1,4 @@
-;; Project V8 stuff
+;; Project Chrome stuff
 
 ;; Compile command
 (require 'compile)
@@ -60,9 +60,11 @@
                (string-match "chrome" (downcase buffer-file-name))))
       (set-android-java-style)))
 
+(load "~/chrome/src/third_party/clang_format/scripts/clang-format.el")
 (add-hook 'c-mode-common-hook
           (lambda()
             (local-set-key  (kbd "C-c o") 'ff-find-other-file)
+            (local-set-key  (kbd "C-\\") 'clang-format-region)
             (setq tags-revert-without-query t)
             (google-set-c-style)
             (maybe-set-webkit-c-style)))
