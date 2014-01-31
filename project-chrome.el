@@ -73,6 +73,10 @@
 
 (add-hook 'java-mode-hook 'maybe-set-android-java-style)
 
+(add-hook 'python-mode-hook
+          (lambda()
+            (setq python-indent 2)))
+
 (require 'find-things-fast)
 (global-set-key '[f1] 'ftf-find-file)
 
