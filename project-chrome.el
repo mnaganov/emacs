@@ -60,7 +60,7 @@
                (string-match "chrome" (downcase buffer-file-name))))
       (set-android-java-style)))
 
-(load "~/chrome/src/third_party/clang_format/scripts/clang-format.el")
+(load "~/chrome/src/third_party/clang_format/script/clang-format.el")
 (add-hook 'c-mode-common-hook
           (lambda()
             (local-set-key  (kbd "C-c o") 'ff-find-other-file)
