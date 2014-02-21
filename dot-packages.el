@@ -86,7 +86,8 @@
     (add-hook 'c-mode-common-hook 'google-make-newline-indent))
 
 ;; JS2
-(autoload 'js2-mode (format "js2-emacs%d" emacs-major-version) nil t)
+(unless (require 'js2-mode nil t)
+    (package-install 'js2-mode))
 (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
 (add-hook 'js2-mode-hook 'js2-mode-reset nil t)
 (if use-google-stuff
