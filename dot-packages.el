@@ -86,6 +86,7 @@
     (add-hook 'c-mode-common-hook 'google-make-newline-indent))
 
 ;; JS2
+(package-initialize)
 (unless (require 'js2-mode nil t)
     (package-install 'js2-mode))
 (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
