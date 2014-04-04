@@ -5,7 +5,9 @@
 
 (setq compile-history
       '("PATH=$HOME/goma:$HOME/depot_tools:$PATH ninja -j150 -l30 -C out/Release chrome"
-        "PATH=$HOME/goma:$HOME/depot_tools:$PATH ninja -j150 -l30 -C out/Debug chrome"))
+        "PATH=$HOME/goma:$HOME/depot_tools:$PATH ninja -j150 -l30 -C out/Debug chrome"
+        "PATH=$HOME/goma:$HOME/depot_tools:$PATH ninja -j150 -l30 -C out/Debug android_webview_apk android_webview_test_apk forwarder2 md5sum"
+        "PATH=$HOME/goma:$HOME/depot_tools:$PATH ninja -j150 -l30 -C out/Debug content_shell_apk content_shell_test_apk forwarder2 md5sum"))
 
 (setq compile-command
    "PATH=$HOME/goma:$HOME/depot_tools:$PATH ninja -j150 -l30 -C out/Release chrome")
