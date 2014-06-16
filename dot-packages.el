@@ -56,6 +56,14 @@
 (add-hook 'haskell-mode-hook 'font-lock-mode)
 
 
+;; JS2
+(autoload 'js2-mode (concat "js2-mode-emacs" (number-to-string emacs-major-version)) nil t)
+(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
+(add-hook 'js2-mode-hook 'js2-mode-reset nil t)
+(if use-google-stuff
+    (require 'js2-google))
+
+
 ;; Fill-Column-Indicator
 (setq-default fill-column 80)
 (require 'fill-column-indicator)
@@ -84,15 +92,6 @@
     (unless (or (string-match "chrome" use-project) (string-match "v8" use-project))
             (add-hook 'c-mode-common-hook 'google-set-c-style))
     (add-hook 'c-mode-common-hook 'google-make-newline-indent))
-
-;; JS2
-(package-initialize)
-(unless (require 'js2-mode nil t)
-    (package-install 'js2-mode))
-(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
-(add-hook 'js2-mode-hook 'js2-mode-reset nil t)
-(if use-google-stuff
-    (require 'js2-google))
 
 ;; NXML
 (add-to-list 'load-path (concat packages-root "nxml-mode"))
