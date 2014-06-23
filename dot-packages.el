@@ -93,6 +93,15 @@
             (add-hook 'c-mode-common-hook 'google-set-c-style))
     (add-hook 'c-mode-common-hook 'google-make-newline-indent))
 
+;; Fix indentation for Java annotations
+(add-hook 'java-mode-hook
+          '(lambda ()
+             "Treat Java 1.5 @-style annotations as comments."
+             (setq c-comment-start-regexp
+                   "\\(@\\|/\\(/\\|[*][*]?\\)\\)")
+             (modify-syntax-entry ?@ "< b"
+                                  java-mode-syntax-table)))
+
 ;; NXML
 (add-to-list 'load-path (concat packages-root "nxml-mode"))
 (load "rng-auto.el")
