@@ -15,6 +15,9 @@
 (global-set-key (kbd "\e <left>") 'windmove-left)
 (global-set-key (kbd "\e <right>") 'windmove-right)
 
+;; Use C-c left and C-c right to undo/redo window configuration changes
+(winner-mode 1)
+
 ;; When opening another file with the same name, instead of <N> suffix,
 ;; use directory name
 (require 'uniquify)
