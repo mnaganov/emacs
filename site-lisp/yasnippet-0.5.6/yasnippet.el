@@ -995,7 +995,7 @@ all the parameters:
       (insert ";;;;      Auto-generated code         ;;;;\n")
       (insert ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;\n")
       (insert code "\n")
-      (flet ((yas/define-snippets 
+      (cl-flet ((yas/define-snippets 
 	      (mode snippets &optional parent)
 	      (with-current-buffer bundle-buffer
 		(insert ";;; snippets for " (symbol-name mode) "\n")

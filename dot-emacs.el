@@ -87,7 +87,7 @@
 
 ;; Don't unsplit windows on ESC ESC ESC
 (defadvice keyboard-escape-quit (around my-keyboard-escape-quit activate)
-  (flet ((one-window-p (&optional nomini all-frames) t)) ad-do-it))
+  (cl-flet ((one-window-p (&optional nomini all-frames) t)) ad-do-it))
 
 ;; Rebind buffers list to Ibuffer
 (global-set-key (kbd "C-x C-b") 'ibuffer)
@@ -119,7 +119,7 @@
 ;; Quit without annoying confirmation
 (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
   "Prevent annoying \"Active processes exist\" query when you quit Emacs."
-  (flet ((process-list ())) ad-do-it))
+  (cl-flet ((process-list ())) ad-do-it))
 
 (defun generate-temp-dir-name (name)
   "Generate a name for a temporary dir"
