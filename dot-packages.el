@@ -127,3 +127,7 @@
 (flx-ido-mode t)
 (setq flx-ido-use-faces nil)
 (setq gc-cons-threshold 20000000)
+
+;; protobuf
+(require 'protobuf-mode)
+(add-to-list 'auto-mode-alist '("\\.proto$" . protobuf-mode))
