@@ -142,13 +142,6 @@
           (concat "/Users/" (user-login-name) "/." name "/")
           (concat (getenv "HOME") "/." name "/" system-name "/"))))
 
-;; Save / restore desktop
-(setq desktop-path (list (generate-persistent-dir-name "emacs_desktop")))
-(make-directory (car desktop-path) t)
-(desktop-save-mode t)
-(setq desktop-save t)
-(setq desktop-restore-eager 10)
-
 ;; Set 2x2 windows configuration
 (split-window-vertically)
 (save-selected-window
