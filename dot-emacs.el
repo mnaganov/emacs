@@ -31,11 +31,16 @@
 (unless window-system
   (when (getenv "DISPLAY")
   (defun xsel-cut-function (text &optional push)
-    (with-temp-buffer
-      (insert text)
+    ;; I used to use a temp buffer and `call-process-region` here,
+    ;; but for really large selections this could end up with some
+    ;; garbage being passed at the end of the text to the clipboard
+    ;; program. Writing the selection into the file seems to work
+    ;; better.
+    (let ((temp-file (make-temp-file "clip")))
+      (write-region text nil temp-file nil 0)
       (if (eq system-type 'darwin)
-          (call-process-region (point-min) (point-max) "pbcopy")
-          (call-process-region (point-min) (point-max) "xsel" nil 0 nil "--clipboard" "--input"))))
+          (call-process "pbcopy" temp-file)
+          (call-process "xclip" temp-file 0 nil "-in" "-selection" "clipboard"))))
   (defun xsel-paste-function ()
     ;; Find out what is current selection by xsel. If it is different
     ;; from the top of the kill-ring (car kill-ring), then return
