@@ -82,6 +82,21 @@
 (require 'find-things-fast)
 (global-set-key '[f1] 'ftf-find-file)
 
+;;; Define simple CodeSearch mode, bind it to F2
+(defvar my-cs-command '("cs --corpus=clankium   | sed -n -e 's/^clankium\\/src\\///p'" .  22)
+  "The command to be run by the cs function.")
+(define-compilation-mode my-cs-mode "CS"
+  "CodeSearch compilation mode."
+  nil)
+(defun my-cs (command-args)
+  (interactive
+   (list (read-shell-command "Run cs (like this): "
+                             my-cs-command
+                             'my-cs-history)))
+  (compilation-start command-args 'my-cs-mode))
+(global-set-key '[f2] 'my-cs)
+
+
 (defun open-shell-buffer (buffer-name startup-command)
   (switch-to-buffer (shell buffer-name))
   (set-marker comint-last-output-start (point))
