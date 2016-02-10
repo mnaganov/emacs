@@ -142,5 +142,6 @@
                "\\|SSO password"
                "\\|Enter password"
                "\\|Please enter the pass-phrase to decrypt these private key(s)"
-               "\\|Please enter your unix login (kerberos) password:"))
+               "\\|Please enter your unix login (kerberos) password:"
+               "\\|Password for"))
         (add-hook 'comint-output-filter-functions 'comint-watch-for-password-prompt))
