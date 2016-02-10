@@ -131,3 +131,16 @@
 ;; protobuf
 (require 'protobuf-mode)
 (add-to-list 'auto-mode-alist '("\\.proto$" . protobuf-mode))
+
+;; Train shell to hide SSO passwords.
+(unless use-google-stuff
+        (setq comint-password-prompt-regexp
+              (concat
+               "\\("
+               comint-password-prompt-regexp
+               "\\)\\|[Ee]nter \\(same \\)?passphrase"
+               "\\|SSO password"
+               "\\|Enter password"
+               "\\|Please enter the pass-phrase to decrypt these private key(s)"
+               "\\|Please enter your unix login (kerberos) password:"))
+        (add-hook 'comint-output-filter-functions 'comint-watch-for-password-prompt))
