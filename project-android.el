@@ -1,5 +1,16 @@
 ;; Project Android stuff
 
+;; Compile command
+(require 'compile)
+
+(setq compile-history
+      '(". build/envsetup.sh && lunch angler-eng && USE_GOMA=true make -j100 -l20"
+        ". build/envsetup.sh && lunch bullhead-eng && USE_GOMA=true make -j100 -l20"
+        ". build/envsetup.sh && lunch shamu-eng && USE_GOMA=true make -j100 -l20"
+        ". build/envsetup.sh && lunch seed-eng && USE_GOMA=true make -j100 -l20"))
+(setq compile-command
+   ". build/envsetup.sh && lunch angler-eng && USE_GOMA=true make -j100 -l20")
+
 ;; Keybindings
 
 (require 'find-things-fast)
