@@ -60,3 +60,6 @@
   (insert startup-command)
   (comint-send-input nil t))
 (open-shell-buffer "=android=" "cd ~/code")
+(open-shell-buffer "=angler=" "cd ~/code/nyc-dev && . build/envsetup.sh && lunch angler-eng && export ANDROID_SERIAL=84B0115625000687")
+(open-shell-buffer "=bullhead=" "cd ~/code/nyc-dev && . build/envsetup.sh && lunch bullhead-eng && export ANDROID_SERIAL=0060b1211cc9a54c")
+(open-shell-buffer "=seed=" "cd ~/code/nyc-dev && . build/envsetup.sh && lunch seed-eng && export ANDROID_SERIAL=1759c4f7")
