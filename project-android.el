@@ -42,8 +42,14 @@
    (c-set-offset 'arglist-intro '++)
    (c-set-offset 'arglist-cont-nonempty '++))
 
+(setq cc-other-file-alist
+      '(("\\.c"   (".h"))
+        ("\\.cpp" (".h"))
+        ("\\.h"   (".c"".cpp"))))
+(setq ff-search-directories '("." "../src" "../include" "../include/*" "../../include/*"))
 (add-hook 'c-mode-common-hook
           (lambda()
+            (local-set-key (kbd "C-c o") (lambda() (interactive) (ff-find-other-file t t)))
             (setq tags-revert-without-query t)
             (google-set-c-style)
             (set-android-coding-style)))
