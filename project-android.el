@@ -69,3 +69,4 @@
 (open-shell-buffer "=angler=" "cd ~/code/master && . build/envsetup.sh && lunch angler-eng && export ANDROID_SERIAL=84B0115625000687")
 (open-shell-buffer "=bullhead=" "cd ~/code/master && . build/envsetup.sh && lunch bullhead-eng && export ANDROID_SERIAL=0060b1211cc9a54c")
 (open-shell-buffer "=seed=" "cd ~/code/master && . build/envsetup.sh && lunch seed-eng && export ANDROID_SERIAL=1759c4f7")
+(open-shell-buffer "=shamu=" "cd ~/code/master && . build/envsetup.sh && lunch shamu-eng && export ANDROID_SERIAL=ZX1G22KMKB")
