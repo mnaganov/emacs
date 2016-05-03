@@ -132,6 +132,10 @@
 (require 'protobuf-mode)
 (add-to-list 'auto-mode-alist '("\\.proto$" . protobuf-mode))
 
+;; direx -- Directory tree browser
+(require 'direx)
+(global-set-key (kbd "C-x C-j") 'direx:jump-to-directory)
+
 ;; Train shell to hide SSO passwords.
 (unless use-google-stuff
         (setq comint-password-prompt-regexp
