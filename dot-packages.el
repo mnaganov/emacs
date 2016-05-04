@@ -45,10 +45,11 @@
 ;; == OS-specific setup ==
 (if (eq system-type 'windows-nt)
     (load-file (concat emacs-root "dot-windows.el")))
-;;(when (and (not window-system)
-;;           (string-match "^xterm" (getenv "TERM")))
-;;      (require 'xterm-title)
-;;      (xterm-title-mode 1))
+(when (not window-system)
+     (require 'xterm-frobs)
+     (defun my-xterm-title-hook ()
+       (xterm-set-window-title (format-mode-line frame-title-format)))
+     (add-hook 'post-command-hook 'my-xterm-title-hook))
 
 ;; == Other packages ==
 

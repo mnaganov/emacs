@@ -116,7 +116,7 @@
                        " %f"
                        (dired-directory
                         dired-directory
-                        (revert-buffer-function " %b" ("%b - Dir:  " default-directory)))))))
+                        (revert-buffer-function " %b" ("%b - Dir: " default-directory)))))))
 
 ;; Copy full file path of the buffer to clipboard on C-c f
 (defun kill-buffer-file-name ()
