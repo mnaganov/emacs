@@ -45,10 +45,10 @@
 ;; == OS-specific setup ==
 (if (eq system-type 'windows-nt)
     (load-file (concat emacs-root "dot-windows.el")))
-(when (and (not window-system)
-           (string-match "^xterm" (getenv "TERM")))
-      (require 'xterm-title)
-      (xterm-title-mode 1))
+;;(when (and (not window-system)
+;;           (string-match "^xterm" (getenv "TERM")))
+;;      (require 'xterm-title)
+;;      (xterm-title-mode 1))
 
 ;; == Other packages ==
 
