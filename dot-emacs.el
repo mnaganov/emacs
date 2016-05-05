@@ -93,7 +93,6 @@
 ;; (set-face-background 'mode-line-inactive "black")
 ;; (set-face-foreground 'vertical-border "white")
 ;; (set-face-background 'vertical-border "black")
-(set-face-foreground 'italic "brightblack")
 
 ;; Don't unsplit windows on ESC ESC ESC
 (defadvice keyboard-escape-quit (around my-keyboard-escape-quit activate)
