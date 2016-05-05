@@ -86,13 +86,14 @@
 ;; Show column number in mode line
 (column-number-mode 1)
 
-;; Set colors for mode line and buffer separators (they are actually inverse)
-(set-face-foreground 'mode-line "black")
-(set-face-background 'mode-line "white")
-(set-face-foreground 'mode-line-inactive "white")
-(set-face-background 'mode-line-inactive "black")
-(set-face-foreground 'vertical-border "white")
-(set-face-background 'vertical-border "black")
+;; Set colors for mode line and buffer separators
+(set-face-foreground 'mode-line "white")
+(set-face-background 'mode-line "black")
+;; (set-face-foreground 'mode-line-inactive "white")
+;; (set-face-background 'mode-line-inactive "black")
+;; (set-face-foreground 'vertical-border "white")
+;; (set-face-background 'vertical-border "black")
+(set-face-foreground 'italic "brightblack")
 
 ;; Don't unsplit windows on ESC ESC ESC
 (defadvice keyboard-escape-quit (around my-keyboard-escape-quit activate)
