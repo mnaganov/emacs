@@ -135,7 +135,14 @@
 
 ;; direx -- Directory tree browser
 (require 'direx)
-(global-set-key (kbd "C-x C-j") 'direx:jump-to-directory)
+;; Opens the directory list on the left side of the frame
+;; To close it, either use C-x 0, or C-c left-arrow.
+(defun direx-on-the-left ()
+  (interactive)
+  (select-window
+   (split-window (frame-root-window) -40 'left))
+  (switch-to-buffer (direx:jump-to-directory-noselect)))
+(global-set-key (kbd "C-x C-j") 'direx-on-the-left)
 
 ;; Train shell to hide SSO passwords.
 (unless use-google-stuff

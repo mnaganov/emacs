@@ -8,7 +8,10 @@
  '(js2-cleanup-whitespace nil)
  '(js2-indent-on-enter-key nil)
  '(js2-mirror-mode nil)
- '(ns-command-modifier (quote meta)))
+ '(ns-command-modifier (quote meta))
+ '(direx:leaf-icon " ")
+ '(direx:open-icon "\u2193")
+ '(direx:closed-icon "\u2192"))
 (custom-set-faces
   ;; custom-set-faces was added by Custom.
   ;; If you edit it by hand, you could mess it up, so be careful.
