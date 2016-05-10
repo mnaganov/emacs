@@ -135,13 +135,24 @@
 
 ;; direx -- Directory tree browser
 (require 'direx)
+(defun find-dedicated-direx-window ()
+  (let ((dedicated nil))
+    (walk-windows (function (lambda (w)
+                              (if (and (window-dedicated-p w)
+                                       (direx:buffer-live-p (window-buffer w)))
+                                  (setq dedicated w)))))
+    dedicated))
 ;; Opens the directory list on the left side of the frame
 ;; To close it, either use C-x 0, or C-c left-arrow.
 (defun direx-on-the-left ()
   (interactive)
-  (select-window
-   (split-window (frame-root-window) -40 'left))
-  (switch-to-buffer (direx:jump-to-directory-noselect)))
+  (let ((direx-wnd (find-dedicated-direx-window)) (current-dir default-directory))
+    (if (not direx-wnd)
+         (setq direx-wnd (split-window (frame-root-window) -40 'left)))
+    (set-window-dedicated-p direx-wnd nil)
+    (select-window direx-wnd)
+    (direx:find-directory-reuse current-dir)
+    (set-window-dedicated-p direx-wnd t)))
 (global-set-key (kbd "C-x C-j") 'direx-on-the-left)
 
 ;; Train shell to hide SSO passwords.
