@@ -42,14 +42,18 @@
    (c-set-offset 'arglist-intro '++)
    (c-set-offset 'arglist-cont-nonempty '++))
 
-(setq cc-other-file-alist
-      '(("\\.c"   (".h"))
-        ("\\.cpp" (".h"))
-        ("\\.h"   (".c"".cpp"))))
-(setq ff-search-directories '("." "../src" "../include" "../include/*" "../../include/*"))
+;; Smarter find-other-file that can search in the entire git repo.
+;; Great for dealing with Android irregularities in files placement.
+(require 'cff)
+(setq cff-use-helm-choice nil)
+(setq cff-interface-dirs '("include" "interface"))
+(setq cff-interface-regexps '(("^I.*\\.h$" . (lambda (base)
+                                               (concat "I" (concat base ".h"))))
+                              ("^I.*\\.hpp$" (lambda (base)
+                                               (concat "I" (concat base ".hpp"))))))
 (add-hook 'c-mode-common-hook
           (lambda()
-            (local-set-key (kbd "C-c o") (lambda() (interactive) (ff-find-other-file t t)))
+            (local-set-key (kbd "C-c o") 'cff-find-other-file)
             (setq tags-revert-without-query t)
             (google-set-c-style)
             (set-android-coding-style)))
