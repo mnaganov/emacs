@@ -109,9 +109,7 @@
 ;; NXML
 (add-to-list 'load-path (concat packages-root "nxml-mode"))
 (load "rng-auto.el")
-(setq auto-mode-alist
-      (cons '("\\.\\(xml\\|xsl\\|rng\\|xhtml\\|gxp\\)\\'" . nxml-mode)
-            auto-mode-alist))
+(add-to-list 'auto-mode-alist ("\\.\\(xml\\|xsl\\|rng\\|xhtml\\|gxp\\)\\'" . nxml-mode))
 
 ;; Yasnippet
 (add-to-list 'load-path (concat packages-root "yasnippet-0.5.6"))
@@ -154,6 +152,10 @@
     (direx:find-directory-reuse current-dir)
     (set-window-dedicated-p direx-wnd t)))
 (global-set-key (kbd "C-x C-j") 'direx-on-the-left)
+
+;; Groovy
+(autoload 'groovy-mode "groovy-mode" "Major mode for editing Groovy code." t)
+(add-to-list 'auto-mode-alist '("\\.\\(groovy\\|gradle\\)\\'" . groovy-mode))
 
 ;; Train shell to hide SSO passwords.
 (unless use-google-stuff
