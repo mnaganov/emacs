@@ -133,11 +133,13 @@
 
 ;; direx -- Directory tree browser
 (require 'direx)
+(defun direx-window-p (&optional w)
+  (and (window-dedicated-p w)
+       (direx:buffer-live-p (window-buffer w))))
 (defun find-dedicated-direx-window ()
   (let ((dedicated nil))
     (walk-windows (function (lambda (w)
-                              (if (and (window-dedicated-p w)
-                                       (direx:buffer-live-p (window-buffer w)))
+                              (if (direx-window-p w)
                                   (setq dedicated w)))))
     dedicated))
 ;; Opens the directory list on the left side of the frame
@@ -151,7 +153,17 @@
     (select-window direx-wnd)
     (direx:find-directory-reuse current-dir)
     (set-window-dedicated-p direx-wnd t)))
+;; Un-pins the dedicated direx window before switching buffer,
+;; and pins back again if the buffer is still direx. Uses ido-switch-buffer.
+(defun direx-switch-buffer ()
+  (interactive)
+  (if (direx-window-p)
+      (set-window-dedicated-p nil nil))
+  (ido-switch-buffer)
+  (if (direx:buffer-live-p (window-buffer))
+      (set-window-dedicated-p nil t)))
 (global-set-key (kbd "C-x C-j") 'direx-on-the-left)
+(global-set-key (kbd "C-x b") 'direx-switch-buffer)
 
 ;; Groovy
 (autoload 'groovy-mode "groovy-mode" "Major mode for editing Groovy code." t)
