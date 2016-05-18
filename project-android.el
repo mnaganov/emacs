@@ -7,7 +7,8 @@
       '(". build/envsetup.sh && lunch angler-eng && USE_GOMA=true make -j100 -l20"
         ". build/envsetup.sh && lunch bullhead-eng && USE_GOMA=true make -j100 -l20"
         ". build/envsetup.sh && lunch shamu-eng && USE_GOMA=true make -j100 -l20"
-        ". build/envsetup.sh && lunch seed-eng && USE_GOMA=true make -j100 -l20"))
+        ". build/envsetup.sh && lunch seed-eng && USE_GOMA=true make -j100 -l20"
+        "ANDROID_HOME=~/Android/Sdk ANDROID_NDK_HOME=~/android-ndk-r11c ./gradlew assembleDebug"))
 (setq compile-command
    ". build/envsetup.sh && lunch angler-eng && USE_GOMA=true make -j100 -l20")
 
