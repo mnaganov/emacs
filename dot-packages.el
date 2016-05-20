@@ -109,7 +109,7 @@
 ;; NXML
 (add-to-list 'load-path (concat packages-root "nxml-mode"))
 (load "rng-auto.el")
-(add-to-list 'auto-mode-alist ("\\.\\(xml\\|xsl\\|rng\\|xhtml\\|gxp\\)\\'" . nxml-mode))
+(add-to-list 'auto-mode-alist '("\\.\\(xml\\|xsl\\|rng\\|xhtml\\|gxp\\)\\'" . nxml-mode))
 
 ;; Yasnippet
 (add-to-list 'load-path (concat packages-root "yasnippet-0.5.6"))
@@ -159,9 +159,10 @@
   (interactive)
   (if (direx-window-p)
       (set-window-dedicated-p nil nil))
-  (ido-switch-buffer)
-  (if (direx:buffer-live-p (window-buffer))
-      (set-window-dedicated-p nil t)))
+  (unwind-protect
+   (ido-switch-buffer)
+   (if (direx:buffer-live-p (window-buffer))
+       (set-window-dedicated-p nil t))))
 (global-set-key (kbd "C-x C-j") 'direx-on-the-left)
 (global-set-key (kbd "C-x b") 'direx-switch-buffer)
 
