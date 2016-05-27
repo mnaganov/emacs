@@ -59,7 +59,13 @@
             (google-set-c-style)
             (set-android-coding-style)))
 
-(add-hook 'java-mode-hook 'set-android-coding-style)
+(add-hook 'java-mode-hook
+          (lambda()
+            (set-android-coding-style)
+            ;; This is to avoid over-indenting of anonymous classes
+            (c-set-offset 'substatement-open 0)
+            (if (assoc 'inexpr-class c-offsets-alist)
+                (c-set-offset 'inexpr-class 0))))
 
 (add-hook 'python-mode-hook
           (lambda()
