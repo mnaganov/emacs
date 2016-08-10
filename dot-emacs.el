@@ -94,6 +94,8 @@
 ;; (set-face-foreground 'vertical-border "white")
 ;; (set-face-background 'vertical-border "black")
 (set-face-foreground 'shadow "brightcyan")
+(set-face-background 'match "white")
+(set-face-background 'secondary-selection "white")
 
 ;; Don't unsplit windows on ESC ESC ESC
 (defadvice keyboard-escape-quit (around my-keyboard-escape-quit activate)
