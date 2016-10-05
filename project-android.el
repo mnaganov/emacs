@@ -52,12 +52,19 @@
                                                (concat "I" (concat base ".h"))))
                               ("^I.*\\.hpp$" (lambda (base)
                                                (concat "I" (concat base ".hpp"))))))
+
+(add-to-list 'auto-mode-alist '("\\.hal$" . c++-mode))
+(defun maybe-set-hal-style ()
+  (if (and (char-or-string-p buffer-file-name) (string-match ".hal" (downcase buffer-file-name)))
+      (setq fill-column 80)))
+
 (add-hook 'c-mode-common-hook
           (lambda()
             (local-set-key (kbd "C-c o") 'cff-find-other-file)
             (setq tags-revert-without-query t)
             (google-set-c-style)
-            (set-android-coding-style)))
+            (set-android-coding-style)
+            (maybe-set-hal-style)))
 
 (add-hook 'java-mode-hook
           (lambda()
