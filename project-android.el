@@ -4,13 +4,12 @@
 (require 'compile)
 
 (setq compile-history
-      '(". build/envsetup.sh && lunch angler-eng && USE_GOMA=true make -j100 -l20"
-        ". build/envsetup.sh && lunch bullhead-eng && USE_GOMA=true make -j100 -l20"
-        ". build/envsetup.sh && lunch shamu-eng && USE_GOMA=true make -j100 -l20"
-        ". build/envsetup.sh && lunch seed-eng && USE_GOMA=true make -j100 -l20"
+      '(". build/envsetup.sh && lunch angler-eng && USE_GOMA=false chrt -b 0 make -j20 -l10"
+        ". build/envsetup.sh && lunch bullhead-eng && USE_GOMA=false chrt -b 0 make -j20 -l10"
+        ". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=false chrt -b 0 make -j20 -l10"
         "ANDROID_HOME=~/Android/Sdk ANDROID_NDK_HOME=~/android-ndk-r11c ./gradlew assembleDebug"))
 (setq compile-command
-   ". build/envsetup.sh && lunch angler-eng && USE_GOMA=true make -j100 -l20")
+   ". build/envsetup.sh && lunch angler-eng && USE_GOMA=false chrt -b 0 make -j20 -l10")
 
 ;; Keybindings
 
@@ -55,7 +54,7 @@
 
 (add-to-list 'auto-mode-alist '("\\.hal$" . c++-mode))
 (defun maybe-set-hal-style ()
-  (if (and (char-or-string-p buffer-file-name) (string-match ".hal" (downcase buffer-file-name)))
+  (if (and (char-or-string-p buffer-file-name) (string-match "\\.hal$" (downcase buffer-file-name)))
       (setq fill-column 80)))
 
 (add-hook 'c-mode-common-hook
@@ -83,8 +82,6 @@
   (set-marker comint-last-output-start (point))
   (insert startup-command)
   (comint-send-input nil t))
-(open-shell-buffer "=android=" "cd ~/code")
 (open-shell-buffer "=angler=" "cd ~/code/master && . build/envsetup.sh && lunch angler-eng && export ANDROID_SERIAL=84B0115625000687")
 (open-shell-buffer "=bullhead=" "cd ~/code/master && . build/envsetup.sh && lunch bullhead-eng && export ANDROID_SERIAL=0060b1211cc9a54c")
-(open-shell-buffer "=seed=" "cd ~/code/master && . build/envsetup.sh && lunch seed-eng && export ANDROID_SERIAL=1759c4f7")
-(open-shell-buffer "=shamu=" "cd ~/code/master && . build/envsetup.sh && lunch shamu-eng && export ANDROID_SERIAL=ZX1G22KMKB")
+(open-shell-buffer "=sailfish=" "cd ~/code/master && . build/envsetup.sh && lunch sailfish-eng && export ANDROID_SERIAL=HT6540300151")
