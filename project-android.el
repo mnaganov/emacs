@@ -4,12 +4,12 @@
 (require 'compile)
 
 (setq compile-history
-      '(". build/envsetup.sh && lunch angler-eng && USE_GOMA=false chrt -b 0 make -j20 -l10"
-        ". build/envsetup.sh && lunch bullhead-eng && USE_GOMA=false chrt -b 0 make -j20 -l10"
-        ". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=false chrt -b 0 make -j20 -l10"
+      '(". build/envsetup.sh && lunch angler-eng && USE_GOMA=false chrt -b 0 make -j32 -l10"
+        ". build/envsetup.sh && lunch bullhead-eng && USE_GOMA=false chrt -b 0 make -j32 -l10"
+        ". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=false chrt -b 0 make -j32 -l10"
         "ANDROID_HOME=~/Android/Sdk ANDROID_NDK_HOME=~/android-ndk-r11c ./gradlew assembleDebug"))
 (setq compile-command
-   ". build/envsetup.sh && lunch angler-eng && USE_GOMA=false chrt -b 0 make -j20 -l10")
+   ". build/envsetup.sh && lunch angler-eng && USE_GOMA=false chrt -b 0 make -j32 -l10")
 
 ;; Keybindings
 
