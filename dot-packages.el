@@ -121,6 +121,9 @@
 ;; gyp
 (require 'gyp)
 
+;; Octave
+(add-to-list 'auto-mode-alist '("\\.m$" . octave-mode))
+
 ;; flx-ido
 (require 'flx-ido)
 (flx-ido-mode t)
