@@ -196,6 +196,51 @@
 ;; Disable Undo for shell buffers
 (add-hook 'shell-mode-hook 'buffer-disable-undo)
 
+;; Use dired as a dedicated "project tree window"
+(defun dired-buffer-live-p (buffer)
+  (and (buffer-live-p buffer)
+       (eq (buffer-local-value 'major-mode buffer) 'dired-mode)))
+(defun dired-window-p (&optional w)
+  (and (window-dedicated-p w)
+       (dired-buffer-live-p (window-buffer w))))
+(defun find-dedicated-dired-window ()
+  (let ((dedicated nil))
+    (walk-windows (function (lambda (w)
+                              (if (dired-window-p w)
+                                  (setq dedicated w)))))
+    dedicated))
+;; Opens directories list on the left side of the frame
+;; To close it, either use C-x 0, or C-c left-arrow.
+(defun dired-on-the-left ()
+  (interactive)
+  (let ((dired-wnd (find-dedicated-dired-window)) (current-dir default-directory))
+    (if (not dired-wnd)
+        (setq dired-wnd (split-window (frame-root-window) -40 'left)))
+    (set-window-dedicated-p dired-wnd nil)
+    (select-window dired-wnd)
+    (let ((already-opened (dired-buffers-for-dir current-dir)))
+      (if (not already-opened)
+          (progn
+           (switch-to-buffer (dired-noselect current-dir "-AlR"))
+           (dired-hide-details-mode)
+           (dired-hide-all)
+           (auto-revert-mode))
+          (switch-to-buffer (car already-opened))))
+    (set-window-dedicated-p dired-wnd t)))
+;; Un-pins the dedicated dired window before switching buffer,
+;; and pins back again if the buffer is still dired. Uses ido-switch-buffer.
+(defun dired-switch-buffer ()
+  (interactive)
+  (if (dired-window-p)
+      (set-window-dedicated-p nil nil))
+  (unwind-protect
+   (ido-switch-buffer)
+   (if (dired-buffer-live-p (window-buffer))
+       (set-window-dedicated-p nil t))))
+(global-set-key (kbd "C-x C-j") 'dired-on-the-left)
+(global-set-key (kbd "C-x b") 'dired-switch-buffer)
+
+
 ;; == Set up packages ==
 
 (load-file (concat emacs-root "dot-packages.el"))

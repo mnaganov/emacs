@@ -166,8 +166,9 @@
    (ido-switch-buffer)
    (if (direx:buffer-live-p (window-buffer))
        (set-window-dedicated-p nil t))))
-(global-set-key (kbd "C-x C-j") 'direx-on-the-left)
-(global-set-key (kbd "C-x b") 'direx-switch-buffer)
+;; Obsolete -- now dired is used for that, see dot-emacs.el
+;; (global-set-key (kbd "C-x C-j") 'direx-on-the-left)
+;; (global-set-key (kbd "C-x b") 'direx-switch-buffer)
 
 ;; Groovy
 (autoload 'groovy-mode "groovy-mode" "Major mode for editing Groovy code." t)
