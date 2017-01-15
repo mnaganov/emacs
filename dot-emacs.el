@@ -221,12 +221,14 @@
     (let ((already-opened (dired-buffers-for-dir current-dir)))
       (if (not already-opened)
           (progn
-           (switch-to-buffer (dired-noselect current-dir "-AlR"))
+           (switch-to-buffer (dired-noselect current-dir "-lR"))
            (dired-hide-details-mode)
            (dired-hide-all)
            (auto-revert-mode))
           (switch-to-buffer (car already-opened))))
-    (set-window-dedicated-p dired-wnd t)))
+    (set-window-dedicated-p dired-wnd t)
+    ;; Apply dired-shorten-directory-names hook
+    (revert-buffer)))
 ;; Un-pins the dedicated dired window before switching buffer,
 ;; and pins back again if the buffer is still dired. Uses ido-switch-buffer.
 (defun dired-switch-buffer ()
@@ -237,6 +239,23 @@
    (ido-switch-buffer)
    (if (dired-buffer-live-p (window-buffer))
        (set-window-dedicated-p nil t))))
+(defun find-first-dired-dir-name ()
+  (save-excursion
+   (goto-char (point-min))
+   (if (re-search-forward dired-subdir-regexp nil t)
+       (match-string 1)
+       nil)))
+(defun dired-shorten-directory-names ()
+  (if (dired-window-p)
+      (let ((dir-name (find-first-dired-dir-name)))
+        (if dir-name
+            (while (re-search-forward (concat "^. " dir-name) nil t)
+                   (replace-match "  ."))))))
+(add-hook 'dired-after-readin-hook 'dired-shorten-directory-names)
+(when (eq system-type 'darwin)
+  (require 'ls-lisp)
+  (setq ls-lisp-use-insert-directory-program nil))
+
 (global-set-key (kbd "C-x C-j") 'dired-on-the-left)
 (global-set-key (kbd "C-x b") 'dired-switch-buffer)
 
