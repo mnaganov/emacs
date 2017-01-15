@@ -233,12 +233,14 @@
 ;; and pins back again if the buffer is still dired. Uses ido-switch-buffer.
 (defun dired-switch-buffer ()
   (interactive)
-  (if (dired-window-p)
-      (set-window-dedicated-p nil nil))
-  (unwind-protect
-   (ido-switch-buffer)
-   (if (dired-buffer-live-p (window-buffer))
-       (set-window-dedicated-p nil t))))
+  (let ((restore-dedicated nil))
+    (when (dired-window-p)
+          (set-window-dedicated-p nil nil)
+          (setq restore-dedicated t))
+    (unwind-protect
+     (ido-switch-buffer)
+     (if (and restore-dedicated (dired-buffer-live-p (window-buffer)))
+         (set-window-dedicated-p nil t)))))
 (defun find-first-dired-dir-name ()
   (save-excursion
    (goto-char (point-min))
