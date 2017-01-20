@@ -73,6 +73,9 @@
 
 ;; Disable default "kill emacs" binding. Usually I press it incidentally.
 (global-unset-key "\C-x\C-c")
+;; Disable C-PgUp and C-PgDn -- used for tab switching in Chrome.
+(global-unset-key [C-next])
+(global-unset-key [C-prior])
 
 ;; Don't use TAB for indenting
 (setq-default indent-tabs-mode nil)
