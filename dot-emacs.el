@@ -199,7 +199,7 @@
 ;; Disable Undo for shell buffers
 (add-hook 'shell-mode-hook 'buffer-disable-undo)
 
-;; Track current dir in shell via procfs
+;; Track current dir in shell via procfs on Linux
 
 (defun shell-procfs-dirtrack (str)
   (prog1 str
@@ -226,7 +226,8 @@
          (remove-hook 'comint-preoutput-filter-functions
                       'shell-procfs-dirtrack t))))
 
-(add-hook 'shell-mode-hook 'shell-procfs-dirtrack-mode)
+(if (eq system-type 'gnu/linux)
+   (add-hook 'shell-mode-hook 'shell-procfs-dirtrack-mode))
 
 ;; Use dired as a dedicated "project tree window"
 (defun dired-buffer-live-p (buffer)
