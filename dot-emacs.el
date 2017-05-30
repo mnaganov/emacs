@@ -229,6 +229,10 @@
 (if (eq system-type 'gnu/linux)
    (add-hook 'shell-mode-hook 'shell-procfs-dirtrack-mode))
 
+;; == Set up packages ==
+
+(load-file (concat emacs-root "dot-packages.el"))
+
 ;; Use dired as a dedicated "project tree window"
 (defun dired-buffer-live-p (buffer)
   (and (buffer-live-p buffer)
@@ -293,12 +297,6 @@
 
 (global-set-key (kbd "C-x C-j") 'dired-on-the-left)
 (global-set-key (kbd "C-x b") 'dired-switch-buffer)
-
-
-;; == Set up packages ==
-
-(load-file (concat emacs-root "dot-packages.el"))
-
 
 ;; == Set up customizations ==
 
