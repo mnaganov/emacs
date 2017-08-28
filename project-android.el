@@ -83,3 +83,6 @@
   (comint-send-input nil t))
 (open-shell-buffer "=sailfish-b=" "cd ~/code/master && . build/envsetup.sh && lunch sailfish-eng && export ANDROID_SERIAL=HT6540300151")
 (open-shell-buffer "=sailfish-w=" "cd ~/code/master && . build/envsetup.sh && lunch sailfish-eng && export ANDROID_SERIAL=FA6CP0301906")
+(open-shell-buffer "=toolbox=" (concat "cd ~/code/master && "
+                                       ". build/envsetup.sh && lunch sailfish-eng && "
+                                       "export ANDROID_SERIAL=FA6CP0301906 ANDROID_HOME=~/Android/Sdk ANDROID_NDK_HOME=~/android-ndk-r15c"))
