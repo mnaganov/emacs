@@ -112,11 +112,9 @@
 (add-to-list 'auto-mode-alist '("\\.\\(xml\\|xsl\\|rng\\|xhtml\\|gxp\\)\\'" . nxml-mode))
 
 ;; Yasnippet
-(add-to-list 'load-path (concat packages-root "yasnippet-0.5.6"))
+(add-to-list 'load-path (concat packages-root "yasnippet"))
 (require 'yasnippet)
-(setq yas/extra-mode-hooks '(nxml-mode-hook js2-mode-hook))
-(yas/initialize)
-(yas/load-directory (concat packages-root "yasnippet-0.5.6/snippets"))
+(yas-global-mode 1)
 
 ;; gyp
 (require 'gyp)

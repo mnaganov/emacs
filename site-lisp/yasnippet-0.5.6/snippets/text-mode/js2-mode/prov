@@ -1,7 +1,0 @@
-#name : goog.provide('...'); ... { ... }
-# --
-goog.provide('${1:Name}');
-
-$1 = function() {
-  $2
-};

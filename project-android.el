@@ -4,13 +4,9 @@
 (require 'compile)
 
 (setq compile-history
-      '(". build/envsetup.sh && lunch angler-eng && USE_GOMA=true chrt -b 0 make -j42 -l10"
-        ". build/envsetup.sh && lunch bullhead-eng && USE_GOMA=true chrt -b 0 make -j42 -l10"
-        ". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=true chrt -b 0 make -j42 -l10"
-        ". build/envsetup.sh && lunch angler-eng && USE_GOMA=true mmm -j42 -l10 frameworks/av"
-        ". build/envsetup.sh && lunch bullhead-eng && USE_GOMA=true mmm -j42 -l10 frameworks/av"
-        ". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=true mmm -j42 -l10 frameworks/av"
-        "ANDROID_HOME=~/Android/Sdk ANDROID_NDK_HOME=~/android-ndk-r11c ./gradlew assembleDebug"))
+      '(". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=true chrt -b 0 make -j42 -l10"
+        ". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=true mmm -j42 frameworks/av"
+        "ANDROID_HOME=~/Android/Sdk ANDROID_NDK_HOME=~/android-ndk-r15c ./gradlew assembleDebug"))
 (setq compile-command
    ". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=true chrt -b 0 make -j42 -l10")
 
@@ -85,6 +81,5 @@
   (set-marker comint-last-output-start (point))
   (insert startup-command)
   (comint-send-input nil t))
-(open-shell-buffer "=angler=" "cd ~/code/master && . build/envsetup.sh && lunch angler-eng && export ANDROID_SERIAL=84B0115625000687")
-(open-shell-buffer "=bullhead=" "cd ~/code/master && . build/envsetup.sh && lunch bullhead-eng && export ANDROID_SERIAL=0060b1211cc9a54c")
-(open-shell-buffer "=sailfish=" "cd ~/code/master && . build/envsetup.sh && lunch sailfish-eng && export ANDROID_SERIAL=HT6540300151")
+(open-shell-buffer "=sailfish-b=" "cd ~/code/master && . build/envsetup.sh && lunch sailfish-eng && export ANDROID_SERIAL=HT6540300151")
+(open-shell-buffer "=sailfish-w=" "cd ~/code/master && . build/envsetup.sh && lunch sailfish-eng && export ANDROID_SERIAL=FA6CP0301906")

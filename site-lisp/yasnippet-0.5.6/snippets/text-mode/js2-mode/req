@@ -1,3 +1,0 @@
-#name : goog.require('...');
-# --
-goog.require('$1');
