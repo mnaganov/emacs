@@ -61,7 +61,11 @@
 
 
 ;; JS2
-(autoload 'js2-mode (concat "js2-mode-emacs" (number-to-string emacs-major-version)) nil t)
+(if (version< emacs-version "25.0")
+    (autoload 'js2-mode (concat "js2-mode-emacs" (number-to-string emacs-major-version)) nil t)
+    (progn
+     (add-to-list 'load-path (concat packages-root "js2-mode"))
+     (autoload 'js2-mode "js2-mode" "JS2 mode" t)))
 (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
 (add-hook 'js2-mode-hook 'js2-mode-reset nil t)
 (if use-google-stuff
