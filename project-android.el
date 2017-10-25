@@ -4,11 +4,11 @@
 (require 'compile)
 
 (setq compile-history
-      '(". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=true chrt -b 0 make -j42 -l10"
-        ". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=true mmm -j42 frameworks/av"
+      '(". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=true chrt -b 0 make -j100 -l30"
+        ". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=true mmm -j100 frameworks/av"
         "ANDROID_HOME=~/Android/Sdk ANDROID_NDK_HOME=~/android-ndk-r15c ./gradlew assembleDebug"))
 (setq compile-command
-   ". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=true chrt -b 0 make -j42 -l10")
+   ". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=true chrt -b 0 make -j100 -l30")
 
 ;; Keybindings
 
