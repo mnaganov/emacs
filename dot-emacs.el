@@ -157,18 +157,40 @@
           (concat "/Users/" (user-login-name) "/." name "/")
           (concat (getenv "HOME") "/." name "/" system-name "/"))))
 
-;; Set 2x2 windows configuration
-(split-window-vertically)
-(save-selected-window
- (other-window 1)
- (switch-to-buffer nil)
- (split-window-horizontally)
- (other-window 1)
- (switch-to-buffer nil))
-(split-window-horizontally)
-(save-selected-window
- (other-window 1)
- (switch-to-buffer nil))
+(if (< (frame-text-width) 300)
+    (progn
+     ;; Set 2x2 windows configuration
+     (split-window-vertically)
+     (save-selected-window
+      (other-window 1)
+      (switch-to-buffer nil)
+      (split-window-horizontally)
+      (other-window 1)
+      (switch-to-buffer nil))
+     (split-window-horizontally)
+     (save-selected-window
+      (other-window 1)
+      (switch-to-buffer nil)))
+    (progn
+     ;; Set 3x2 windows configuration
+     (split-window-vertically)
+     (save-selected-window
+      (other-window 1)
+      (switch-to-buffer nil)
+      (split-window-horizontally)
+      (other-window 1)
+      (switch-to-buffer nil)
+      (split-window-horizontally)
+      (other-window 1)
+      (switch-to-buffer nil))
+     (split-window-horizontally)
+     (save-selected-window
+      (other-window 1)
+      (switch-to-buffer nil)
+      (split-window-horizontally)
+      (other-window 1)
+      (switch-to-buffer nil))
+     (balance-windows)))
 
 ;; Put autosave files (ie #foo#) in one place, *not* scattered all over the
 ;; file system! (The make-autosave-file-name function is invoked to determine
