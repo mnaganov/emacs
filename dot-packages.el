@@ -126,6 +126,10 @@
 ;; Octave
 (add-to-list 'auto-mode-alist '("\\.m$" . octave-mode))
 
+;; Faust
+(require 'faust-mode)
+(add-to-list 'auto-mode-alist '("\\.dsp$" . faust-mode))
+
 ;; flx-ido
 (require 'flx-ido)
 (flx-ido-mode t)
