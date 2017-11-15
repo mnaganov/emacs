@@ -163,33 +163,16 @@
      (split-window-vertically)
      (save-selected-window
       (other-window 1)
-      (switch-to-buffer nil)
-      (split-window-horizontally)
-      (other-window 1)
-      (switch-to-buffer nil))
-     (split-window-horizontally)
-     (save-selected-window
-      (other-window 1)
-      (switch-to-buffer nil)))
+      (split-window-horizontally))
+     (split-window-horizontally))
     (progn
-     ;; Set 3x2 windows configuration
-     (split-window-vertically)
-     (save-selected-window
-      (other-window 1)
-      (switch-to-buffer nil)
-      (split-window-horizontally)
-      (other-window 1)
-      (switch-to-buffer nil)
-      (split-window-horizontally)
-      (other-window 1)
-      (switch-to-buffer nil))
+     ;; Set 3x2 windows configuration with merged center
      (split-window-horizontally)
      (save-selected-window
       (other-window 1)
-      (switch-to-buffer nil)
-      (split-window-horizontally)
-      (other-window 1)
-      (switch-to-buffer nil))
+      (split-window-vertically))
+     (split-window-horizontally)
+     (split-window-vertically)
      (balance-windows)))
 
 ;; Put autosave files (ie #foo#) in one place, *not* scattered all over the
