@@ -173,7 +173,9 @@
       (split-window-vertically))
      (split-window-horizontally)
      (split-window-vertically)
-     (balance-windows)))
+     (balance-windows)
+     ;; Prevent the center window from being auto splitted on occasion
+     (setq split-height-threshold (* (frame-text-height) 2))))
 
 ;; Put autosave files (ie #foo#) in one place, *not* scattered all over the
 ;; file system! (The make-autosave-file-name function is invoked to determine
