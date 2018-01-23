@@ -95,11 +95,20 @@
 (global-auto-revert-mode)
 
 ;; C++ style
+(defun c-style-comment-dwim (&optional arg)
+  "Call `comment-dwim' with comments style override to C."
+  (interactive "*P")
+  (let ((comment-start "/*") (comment-padding "") (comment-end "*/"))
+    (call-interactively 'comment-dwim)))
+
 (unless use-google-stuff
     (require 'google-c-style)
     (unless (or (string-match "chrome" use-project) (string-match "v8" use-project) (string-match "android" use-project))
             (add-hook 'c-mode-common-hook 'google-set-c-style))
     (add-hook 'c-mode-common-hook 'google-make-newline-indent))
+(add-hook 'c-mode-common-hook
+          (lambda ()
+            (local-set-key (kbd "C-c ;") 'c-style-comment-dwim)))
 
 ;; Fix indentation for Java annotations
 (add-hook 'java-mode-hook
