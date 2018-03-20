@@ -6,6 +6,8 @@
 (setq compile-history
       '(". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=true chrt -b 0 make -j100 -l30"
         ". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=true mmm -j100 frameworks/av"
+        ". build/envsetup.sh && lunch marlin-eng && USE_GOMA=true chrt -b 0 make -j100 -l30"
+        ". build/envsetup.sh && lunch marlin-eng && USE_GOMA=true mmm -j100 frameworks/av"
         ". build/envsetup.sh && lunch walleye-eng && USE_GOMA=true chrt -b 0 make -j100 -l30"
         ". build/envsetup.sh && lunch walleye-eng && USE_GOMA=true mmm -j100 frameworks/av"
         ". build/envsetup.sh && lunch taimen-eng && USE_GOMA=true chrt -b 0 make -j100 -l30"
@@ -85,8 +87,8 @@
   (set-marker comint-last-output-start (point))
   (insert startup-command)
   (comint-send-input nil t))
-(open-shell-buffer "=sailfish-b=" "cd ~/code/master && . build/envsetup.sh && lunch sailfish-eng && export ANDROID_SERIAL=HT6540300151")
-(open-shell-buffer "=sailfish-w=" "cd ~/code/master && . build/envsetup.sh && lunch sailfish-eng && export ANDROID_SERIAL=FA6CP0301906")
+(open-shell-buffer "=marlin=" "cd ~/code/master && . build/envsetup.sh && lunch marlin-eng && export ANDROID_SERIAL=HT7550201847")
+(open-shell-buffer "=sailfish=" "cd ~/code/master && . build/envsetup.sh && lunch sailfish-eng && export ANDROID_SERIAL=FA6CP0301906")
 (open-shell-buffer "=walleye=" "cd ~/code/master && . build/envsetup.sh && lunch walleye-eng && export ANDROID_SERIAL=HT76N1A00839")
 (open-shell-buffer "=taimen=" "cd ~/code/master && . build/envsetup.sh && lunch taimen-eng && export ANDROID_SERIAL=709KPAE0017104")
 (open-shell-buffer "=toolbox=" (concat "cd ~/code/master && "
