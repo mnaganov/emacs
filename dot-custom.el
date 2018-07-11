@@ -19,4 +19,5 @@
   ;; If there is more than one, they won't work right.
  '(diff-added ((t (:inherit diff-changed :foreground "green"))))
  '(diff-removed ((t (:inherit diff-changed :foreground "red"))))
- '(diff-context ((t (:inherit shadow)))))
+ '(diff-context ((t (:inherit shadow))))
+ '(which-func ((t (:inherit header-line)))))

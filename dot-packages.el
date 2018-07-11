@@ -53,25 +53,6 @@
 
 ;; == Other packages ==
 
-;; Haskell
-(load (concat packages-root "haskell-mode-2.4/haskell-site-file"))
-(add-hook 'haskell-mode-hook 'turn-on-haskell-doc-mode)
-(add-hook 'haskell-mode-hook 'turn-on-haskell-indent)
-(add-hook 'haskell-mode-hook 'font-lock-mode)
-
-
-;; JS2
-(if (version< emacs-version "25.0")
-    (autoload 'js2-mode (concat "js2-mode-emacs" (number-to-string emacs-major-version)) nil t)
-    (progn
-     (add-to-list 'load-path (concat packages-root "js2-mode"))
-     (autoload 'js2-mode "js2-mode" "JS2 mode" t)))
-(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
-(add-hook 'js2-mode-hook 'js2-mode-reset nil t)
-(if use-google-stuff
-    (require 'js2-google))
-
-
 ;; Fill-Column-Indicator
 (setq-default fill-column 80)
 (require 'fill-column-indicator)
@@ -81,11 +62,6 @@
 (add-hook 'html-mode-hook 'fci-mode)
 (add-hook 'javascript-mode-hook 'fci-mode)
 (add-hook 'js2-mode-hook 'fci-mode)
-
-
-;; Gambit Scheme
-(require 'gambit)
-
 
 ;; GIT VC support
 (add-to-list 'load-path (concat packages-root "git"))
@@ -123,11 +99,6 @@
 (add-to-list 'load-path (concat packages-root "nxml-mode"))
 (load "rng-auto.el")
 (add-to-list 'auto-mode-alist '("\\.\\(xml\\|xsl\\|rng\\|xhtml\\|gxp\\)\\'" . nxml-mode))
-
-;; Yasnippet
-(add-to-list 'load-path (concat packages-root "yasnippet"))
-(require 'yasnippet)
-(yas-global-mode 1)
 
 ;; gyp
 (require 'gyp)
@@ -202,3 +173,14 @@
                "\\|Please enter your unix login (kerberos) password:"
                "\\|Password for"))
         (add-hook 'comint-output-filter-functions 'comint-watch-for-password-prompt))
+
+;; which function
+(which-function-mode 1)
+(setq mode-line-misc-info
+      (delete (assoc 'which-function-mode mode-line-misc-info) mode-line-misc-info)
+      which-func-header-line-format '(which-func-mode ("" which-func-format)))
+(defadvice which-func-ff-hook (after header-line activate)
+  (when which-func-mode
+    (setq mode-line-misc-info
+          (delete (assoc 'which-function-mode mode-line-misc-info) mode-line-misc-info)
+          header-line-format which-func-header-line-format)))
