@@ -4,17 +4,18 @@
 (require 'compile)
 
 (setq compile-history
-      '(". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=true chrt -b 0 make -j100 -l30"
-        ". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=true mmm -j100 frameworks/av"
-        ". build/envsetup.sh && lunch marlin-eng && USE_GOMA=true chrt -b 0 make -j100 -l30"
+      '(". build/envsetup.sh && lunch marlin-eng && USE_GOMA=true chrt -b 0 make -j100 -l30"
         ". build/envsetup.sh && lunch marlin-eng && USE_GOMA=true mmm -j100 frameworks/av"
         ". build/envsetup.sh && lunch walleye-eng && USE_GOMA=true chrt -b 0 make -j100 -l30"
         ". build/envsetup.sh && lunch walleye-eng && USE_GOMA=true mmm -j100 frameworks/av"
         ". build/envsetup.sh && lunch taimen-eng && USE_GOMA=true chrt -b 0 make -j100 -l30"
         ". build/envsetup.sh && lunch taimen-eng && USE_GOMA=true mmm -j100 frameworks/av"
+        ". build/envsetup.sh && lunch crosshatch-eng && USE_GOMA=true chrt -b 0 make -j100 -l30"
+        ". build/envsetup.sh && lunch crosshatch-eng && USE_GOMA=true mmm -j100 frameworks/av"
+        ". build/envsetup.sh && lunch crosshatch-eng && ANDROID_SERIAL=86WY00EDS USE_GOMA=true atest CtsMediaTestCases:AudioTrackTest"
         "ANDROID_HOME=~/Android/Sdk ANDROID_NDK_HOME=~/android-ndk-r15c ./gradlew assembleDebug"))
 (setq compile-command
-   ". build/envsetup.sh && lunch sailfish-eng && USE_GOMA=true chrt -b 0 make -j100 -l30")
+   ". build/envsetup.sh && lunch crosshatch-eng && USE_GOMA=true chrt -b 0 make -j100 -l30")
 
 ;; Keybindings
 
@@ -88,9 +89,9 @@
   (insert startup-command)
   (comint-send-input nil t))
 (open-shell-buffer "=marlin=" "cd ~/code/pi-dev && . build/envsetup.sh && lunch marlin-eng && export ANDROID_SERIAL=HT7550201847")
-(open-shell-buffer "=sailfish=" "cd ~/code/pi-dev && . build/envsetup.sh && lunch sailfish-eng && export ANDROID_SERIAL=FA6CP0301906")
 (open-shell-buffer "=walleye=" "cd ~/code/master && . build/envsetup.sh && lunch walleye-eng && export ANDROID_SERIAL=HT76N1A00839")
 (open-shell-buffer "=taimen=" "cd ~/code/master && . build/envsetup.sh && lunch taimen-eng && export ANDROID_SERIAL=709KPAE0017104")
+(open-shell-buffer "=crosshatch=" "cd ~/code/master && . build/envsetup.sh && lunch crosshatch-eng && export ANDROID_SERIAL=86WY00EDS")
 (open-shell-buffer "=toolbox=" (concat "cd ~/code/master && "
-                                       ". build/envsetup.sh && lunch sailfish-eng && "
-                                       "export ANDROID_SERIAL=FA6CP0301906 ANDROID_HOME=~/Android/Sdk ANDROID_NDK_HOME=~/android-ndk-r15c"))
+                                       ". build/envsetup.sh && lunch crosshatch-eng && "
+                                       "export ANDROID_SERIAL=86WY00EDS ANDROID_HOME=~/Android/Sdk ANDROID_NDK_HOME=~/android-ndk-r15c"))
