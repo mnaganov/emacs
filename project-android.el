@@ -83,15 +83,16 @@
           (lambda()
             (setq python-indent 2)))
 
-(defun open-shell-buffer (buffer-name startup-command)
+(defun open-shell-buffer (buffer-name startup-cmd)
   (switch-to-buffer (shell buffer-name))
   (set-marker comint-last-output-start (point))
-  (insert startup-command)
+  (funcall startup-cmd)
   (comint-send-input nil t))
-(open-shell-buffer "=marlin=" "cd ~/code/pi-dev && . build/envsetup.sh && lunch marlin-eng && export ANDROID_SERIAL=HT7550201847")
-(open-shell-buffer "=walleye=" "cd ~/code/master && . build/envsetup.sh && lunch walleye-eng && export ANDROID_SERIAL=HT76N1A00839")
-(open-shell-buffer "=taimen=" "cd ~/code/master && . build/envsetup.sh && lunch taimen-eng && export ANDROID_SERIAL=709KPAE0017104")
-(open-shell-buffer "=crosshatch=" "cd ~/code/master && . build/envsetup.sh && lunch crosshatch-eng && export ANDROID_SERIAL=86WY00EDS")
-(open-shell-buffer "=toolbox=" (concat "cd ~/code/master && "
+(open-shell-buffer "=marlin=" (lambda() (insert-file-contents "~/screen/marlin.cfg" nil)))
+(open-shell-buffer "=walleye=" (lambda() (insert-file-contents "~/screen/walleye.cfg" nil)))
+(open-shell-buffer "=taimen=" (lambda() (insert-file-contents "~/screen/taimen.cfg" nil)))
+(open-shell-buffer "=crosshatch=" (lambda() (insert-file-contents "~/screen/crosshatch.cfg" nil)))
+(open-shell-buffer "=toolbox=" (lambda() (insert (concat "cd ~/code/master && "
                                        ". build/envsetup.sh && lunch crosshatch-eng && "
-                                       "export ANDROID_SERIAL=86WY00EDS ANDROID_HOME=~/Android/Sdk ANDROID_NDK_HOME=~/android-ndk-r15c"))
+                                       "export ANDROID_SERIAL=86WY00EDS "
+                                       "ANDROID_HOME=~/Android/Sdk ANDROID_NDK_HOME=~/android-ndk-r15c"))))
