@@ -21,5 +21,6 @@
  '(diff-removed ((t (:inherit diff-changed :foreground "red"))))
  '(diff-context ((t (:inherit shadow))))
  '(eww-form-text ((t (:foreground "brightblack" :background "brightcyan"))))
+ '(hi-yellow ((t (:background "color-229"))))
  '(magit-header-line ((t (:inherit header-line :bold t))))
  '(which-func ((t (:inherit header-line)))))
