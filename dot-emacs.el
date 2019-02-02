@@ -127,6 +127,14 @@
                         dired-directory
                         (revert-buffer-function " %b" ("%b - Dir: " default-directory)))))))
 
+;; Exit search normally, save the `search-string' on kill-ring.
+(defun isearch-kill-and-exit ()
+  (interactive)
+  (isearch-done)
+  (isearch-clean-overlays)
+  (kill-new isearch-string))
+(global-set-key (kbd "M-w") 'isearch-kill-and-exit)
+
 ;; Copy full file path of the buffer to clipboard on C-c f
 (defun kill-buffer-file-name ()
   (interactive)
