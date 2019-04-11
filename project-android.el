@@ -13,7 +13,7 @@
         ". build/envsetup.sh && lunch crosshatch-eng && USE_GOMA=true chrt -b 0 make -j100 -l30"
         ". build/envsetup.sh && lunch crosshatch-eng && USE_GOMA=true mmm -j100 frameworks/av"
         ". build/envsetup.sh && lunch crosshatch-eng && ANDROID_SERIAL=86WY00EDS USE_GOMA=true atest CtsMediaTestCases:AudioTrackTest"
-        "ANDROID_HOME=~/Android/Sdk ANDROID_NDK_HOME=~/android-ndk-r15c ./gradlew assembleDebug"))
+        "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r19c ./gradlew assembleDebug"))
 (setq compile-command
    ". build/envsetup.sh && lunch crosshatch-eng && USE_GOMA=true chrt -b 0 make -j100 -l30")
 
@@ -95,4 +95,4 @@
 (open-shell-buffer "=toolbox=" (lambda() (insert (concat "cd ~/code/master && "
                                        ". build/envsetup.sh && lunch crosshatch-eng && "
                                        "export ANDROID_SERIAL=86WY00EDS "
-                                       "ANDROID_HOME=~/Android/Sdk ANDROID_NDK_HOME=~/android-ndk-r15c"))))
+                                       "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r19c"))))
