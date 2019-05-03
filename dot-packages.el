@@ -61,11 +61,8 @@
 (add-hook 'java-mode-hook 'fci-mode)
 (add-hook 'js2-mode-hook 'fci-mode)
 
-;; GIT VC support
-(add-to-list 'load-path (concat packages-root "git"))
-(require 'git)
+;; GIT support
 (require 'vc-git)
-(add-to-list 'vc-handled-backends 'git)
 (global-auto-revert-mode)
 
 ;; C++ style
