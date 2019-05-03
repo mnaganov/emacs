@@ -218,7 +218,6 @@
 (add-hook 'shell-mode-hook 'buffer-disable-undo)
 
 ;; Track current dir in shell via procfs on Linux
-
 (defun shell-procfs-dirtrack (str)
   (prog1 str
          (when (string-match comint-prompt-regexp str)

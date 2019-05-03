@@ -59,8 +59,6 @@
 (add-hook 'c++-mode-hook 'fci-mode)
 (add-hook 'python-mode-hook 'fci-mode)
 (add-hook 'java-mode-hook 'fci-mode)
-(add-hook 'html-mode-hook 'fci-mode)
-(add-hook 'javascript-mode-hook 'fci-mode)
 (add-hook 'js2-mode-hook 'fci-mode)
 
 ;; GIT VC support
@@ -95,11 +93,6 @@
              (modify-syntax-entry ?@ "< b"
                                   java-mode-syntax-table)))
 
-;; NXML
-(add-to-list 'load-path (concat packages-root "nxml-mode"))
-(load "rng-auto.el")
-(add-to-list 'auto-mode-alist '("\\.\\(xml\\|xsl\\|rng\\|xhtml\\|gxp\\)\\'" . nxml-mode))
-
 ;; gyp
 (require 'gyp)
 
@@ -115,46 +108,6 @@
 (flx-ido-mode t)
 (setq flx-ido-use-faces nil)
 (setq gc-cons-threshold 20000000)
-
-;; protobuf
-(require 'protobuf-mode)
-(add-to-list 'auto-mode-alist '("\\.proto$" . protobuf-mode))
-
-;; direx -- Directory tree browser
-(require 'direx)
-(defun direx-window-p (&optional w)
-  (and (window-dedicated-p w)
-       (direx:buffer-live-p (window-buffer w))))
-(defun find-dedicated-direx-window ()
-  (let ((dedicated nil))
-    (walk-windows (function (lambda (w)
-                              (if (direx-window-p w)
-                                  (setq dedicated w)))))
-    dedicated))
-;; Opens the directory list on the left side of the frame
-;; To close it, either use C-x 0, or C-c left-arrow.
-(defun direx-on-the-left ()
-  (interactive)
-  (let ((direx-wnd (find-dedicated-direx-window)) (current-dir default-directory))
-    (if (not direx-wnd)
-         (setq direx-wnd (split-window (frame-root-window) -40 'left)))
-    (set-window-dedicated-p direx-wnd nil)
-    (select-window direx-wnd)
-    (direx:find-directory-reuse current-dir)
-    (set-window-dedicated-p direx-wnd t)))
-;; Un-pins the dedicated direx window before switching buffer,
-;; and pins back again if the buffer is still direx. Uses ido-switch-buffer.
-(defun direx-switch-buffer ()
-  (interactive)
-  (if (direx-window-p)
-      (set-window-dedicated-p nil nil))
-  (unwind-protect
-   (ido-switch-buffer)
-   (if (direx:buffer-live-p (window-buffer))
-       (set-window-dedicated-p nil t))))
-;; Obsolete -- now dired is used for that, see dot-emacs.el
-;; (global-set-key (kbd "C-x C-j") 'direx-on-the-left)
-;; (global-set-key (kbd "C-x b") 'direx-switch-buffer)
 
 ;; Groovy
 (autoload 'groovy-mode "groovy-mode" "Major mode for editing Groovy code." t)
