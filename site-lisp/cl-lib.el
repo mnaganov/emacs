@@ -1,10 +1,11 @@
 ;;; cl-lib.el --- Properly prefixed CL functions and macros  -*- coding: utf-8 -*-
 
-;; Copyright (C) 2012, 2013  Free Software Foundation, Inc.
+;; Copyright (C) 2012, 2013, 2014, 2017  Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 ;; vcomment: Emacs-24.3's version is 1.0 so this has to stay below.
-;; Version: 0.3
+;; Version: 0.6.1
+;; Y-Package-Requires: ((emacs "21")) ¡`emacs' package only exists in Emacs≥24!
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -23,7 +24,7 @@
 
 ;; This is a forward compatibility package, which provides (a subset of) the
 ;; features of the cl-lib package introduced in Emacs-24.3, for use on
-;; previous emacsen.
+;; previous emacsen (it should work on Emacs≥21 as well as XEmacs).
 
 ;; Make sure this is installed *late* in your `load-path`, i.e. after Emacs's
 ;; built-in .../lisp/emacs-lisp directory, so that if/when you upgrade to
@@ -35,6 +36,15 @@
 ;; simply reversed.
 
 ;;; Code:
+
+;; We need to handle the situation where this package is used with an Emacs
+;; that comes with a real cl-lib (i.e. ≥24.3).
+
+;; First line of defense: try to make sure the built-in cl-lib comes earlier in
+;; load-path so we never get loaded:
+;;;###autoload (let ((d (file-name-directory #$)))
+;;;###autoload   (when (member d load-path)
+;;;###autoload     (setq load-path (append (remove d load-path) (list d)))))
 
 (when (functionp 'macroexp--compiler-macro)
   ;; `macroexp--compiler-macro' was introduced as part of the big CL
@@ -91,7 +101,21 @@
                ;; custom-print-functions
                ))
   (let ((new (intern (format "cl-%s" var))))
-    (unless (boundp new) (defvaralias new var))))
+    (if (fboundp 'defvaralias)
+        (unless (boundp new) (defvaralias new var))
+      (if (fboundp 'cl-float-limits) (cl-float-limits))
+      (eval `(defvar ,new ,var ,(format "`cl-lib' alias of `%s'" var))))))
+
+;; The following cl-lib functions were already defined in the old cl.el,
+;; with a different meaning:
+;; - cl-position and cl-delete-duplicates
+;;   the two meanings are clearly different, but we can distinguish which was
+;;   meant by looking at the arguments.
+;; - cl-member
+;;   the old meaning hasn't been used for a long time and is a subset of the
+;;   new, so we can simply override it.
+;; - cl-adjoin
+;;   the old meaning is actually the same as the new except for optimizations.
 
 (dolist (fun '(
                (get* . cl-get)
@@ -104,7 +128,7 @@
                (floor* . cl-floor)
                (rassoc* . cl-rassoc)
                (assoc* . cl-assoc)
-               (member* . cl-member)
+               ;; (member* . cl-member) ;Handle specially below.
                (delete* . cl-delete)
                (remove* . cl-remove)
                (defsubst* . cl-defsubst)
@@ -171,7 +195,7 @@
                count
                position-if-not
                position-if
-               position
+               ;; position ;Handle specially via defadvice below.
                find-if-not
                find-if
                find
@@ -181,7 +205,7 @@
                substitute-if-not
                substitute-if
                substitute
-               delete-duplicates
+               ;; delete-duplicates ;Handle specially via defadvice below.
                remove-duplicates
                delete-if-not
                delete-if
@@ -205,7 +229,6 @@
                shiftf
                remf
                psetf
-               (define-setf-method . define-setf-expander)
                declare
                the
                locally
@@ -237,7 +260,7 @@
                pairlis
                acons
                subst
-               adjoin
+               ;; adjoin ;It's already defined.
                copy-list
                ldiff
                list*
@@ -301,7 +324,38 @@
                ))
   (let ((new (if (consp fun) (prog1 (cdr fun) (setq fun (car fun)))
                (intern (format "cl-%s" fun)))))
-    (unless (fboundp new) (defalias new fun))))
+    (if (fboundp new)
+        (unless (or (eq (symbol-function new) fun)
+                    (eq new (and (symbolp fun) (fboundp fun)
+                                 (symbol-function fun))))
+          (message "%S already defined, not rebinding" new))
+      (defalias new fun))))
+
+(unless (symbolp (symbol-function 'position))
+  (autoload 'cl-position "cl-seq")
+  (defadvice cl-position (around cl-lib (cl-item cl-seq &rest cl-keys) activate)
+  (let ((argk (ad-get-args 2)))
+    (if (or (null argk) (keywordp (car argk)))
+        ;; This is a call to cl-lib's `cl-position'.
+        (setq ad-return-value
+              (apply #'position (ad-get-arg 0) (ad-get-arg 1) argk))
+      ;; Must be a call to cl's old `cl-position'.
+      ad-do-it))))
+
+(unless (symbolp (symbol-function 'delete-duplicates))
+  (autoload 'cl-delete-duplicates "cl-seq")
+  (defadvice cl-delete-duplicates (around cl-lib (cl-seq &rest cl-keys) activate)
+  (let ((argk (ad-get-args 1)))
+    (if (or (null argk) (keywordp (car argk)))
+        ;; This is a call to cl-lib's `cl-delete-duplicates'.
+        (setq ad-return-value
+              (apply #'delete-duplicates (ad-get-arg 0) argk))
+      ;; Must be a call to cl's old `cl-delete-duplicates'.
+      ad-do-it))))
+
+(when (or (not (fboundp 'cl-member))
+          (eq (symbol-function 'cl-member) #'memq))
+  (defalias 'cl-member #'member*))
 
 ;; `cl-labels' is not 100% compatible with `labels' when using dynamic scoping
 ;; (mostly because it does not turn lambdas that refer to those functions into
@@ -320,13 +374,41 @@
 
 ;;;; ChangeLog:
 
+;; 2017-01-06  Stefan Monnier  <monnier@iro.umontreal.ca>
+;; 
+;; 	* cl-lib/cl-lib.el: Don't use `emacs` package for Emacs<24
+;; 
+;; 2017-01-04  Stefan Monnier  <monnier@iro.umontreal.ca>
+;; 
+;; 	* cl-lib/cl-lib.el: Make it work for Emacs-21.	Bump version to 0.6
+;; 
+;; 	(var aliases): Don't assume `defvaralias' is available.
+;; 
+;; 2014-02-25  Stefan Monnier  <monnier@iro.umontreal.ca>
+;; 
+;; 	Fixes: debbugs:16671
+;; 
+;; 	* cl-lib.el (cl-position, cl-delete-duplicate): Don't advise if >=24.3.
+;; 	(load-path): Try to make sure we're at the end.
+;; 
+;; 2014-01-25  Stefan Monnier  <monnier@iro.umontreal.ca>
+;; 
+;; 	* cl-lib.el: Resolve conflicts with old internal definitions
+;; 	(bug#16353).
+;; 	(dolist fun): Don't skip definitions silently.
+;; 	(define-setf-expander): Remove, not in cl-lib.
+;; 	(cl-position, cl-delete-duplicates): Add advice to distinguish the use
+;; 	case.
+;; 	(cl-member): Override old definition.
+;; 
 ;; 2013-05-22  Stefan Monnier  <monnier@iro.umontreal.ca>
 ;; 
 ;; 	* cl-lib.el (cl-labels): Demote error to message and improve it.
 ;; 
 ;; 2012-11-30  Stefan Monnier  <monnier@iro.umontreal.ca>
 ;; 
-;; 	* cl-lib.el: Try and patch things up in case we're hiding the real cl-lib.
+;; 	* cl-lib.el: Try and patch things up in case we're hiding the real
+;; 	cl-lib.
 ;; 
 ;; 2012-11-22  Stefan Monnier  <monnier@iro.umontreal.ca>
 ;; 
