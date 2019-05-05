@@ -61,6 +61,12 @@
 (add-hook 'java-mode-hook 'fci-mode)
 (add-hook 'js2-mode-hook 'fci-mode)
 
+;; Flyspell for comments
+(add-hook 'c++-mode-hook 'flyspell-prog-mode)
+(add-hook 'python-mode-hook 'flyspell-prog-mode)
+(add-hook 'java-mode-hook 'flyspell-prog-mode)
+(add-hook 'js2-mode-hook 'flyspell-prog-mode)
+
 ;; GIT support
 (require 'vc-git)
 (global-auto-revert-mode)
