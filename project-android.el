@@ -20,7 +20,7 @@
 ;; Keybindings
 
 (require 'find-things-fast)
-(require 'ack)
+(require 'ag)
 (defvar my-cs-command '("cs --corpus=android   | sed -n -e 's/^android\\///p'" .  21)
   "The command to be run by the cs function.")
 (define-compilation-mode my-cs-mode "CS"
@@ -36,7 +36,7 @@
 (global-set-key [f1] 'ftf-find-file)
 (global-set-key [f2] 'my-cs)
 (global-set-key [f5] '(lambda () (interactive) (revert-buffer nil t)))
-(global-set-key [f6] 'ack)
+(global-set-key [f6] 'ag)
 (global-set-key [f7] 'compile)
 (global-set-key [f8] 'recompile)
 

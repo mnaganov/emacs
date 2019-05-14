@@ -12,8 +12,8 @@
 (setq compile-command
    "PATH=$HOME/goma:$PATH ninja -j400 -l30 -C out/Release chrome")
 
-;; Use Ack instead of Find-grep
-(require 'ack)
+;; Use Ag instead of Find-grep
+(require 'ag)
 
 ;; Keybindings
 (global-set-key [f5] '(lambda () (interactive) (revert-buffer nil t)))
@@ -23,7 +23,7 @@
      (global-set-key [f6] 'find-grep)
      (custom-set-variables
       '(grep-find-command "gnu-find . -type f \\( -name \"*.cc\" -or -name \"*.h\" \\) -print0 | xargs -0 -e grep -nH -e ")))
-    (global-set-key [f6] 'ack))
+    (global-set-key [f6] 'ag))
 (global-set-key [f7] 'compile)
 (global-set-key [f8] 'recompile)
 
