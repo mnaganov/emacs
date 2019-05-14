@@ -11,7 +11,8 @@
  '(ns-command-modifier (quote meta))
  '(direx:leaf-icon " ")
  '(direx:open-icon "\u2193")
- '(direx:closed-icon "\u2192"))
+ '(direx:closed-icon "\u2192")
+ '(ag-reuse-buffers t))
 (custom-set-faces
   ;; custom-set-faces was added by Custom.
   ;; If you edit it by hand, you could mess it up, so be careful.
