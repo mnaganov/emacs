@@ -36,7 +36,7 @@
 (global-set-key [f1] 'ftf-find-file)
 (global-set-key [f2] 'my-cs)
 (global-set-key [f5] '(lambda () (interactive) (revert-buffer nil t)))
-(global-set-key [f6] 'ag-regexp)
+(global-set-key [f6] 'ag-project-regexp)
 (global-set-key [f7] 'compile)
 (global-set-key [f8] 'recompile)
 
