@@ -18,45 +18,6 @@
 ;; Stop at the end of the file, not just add lines
 (setq next-line-add-newlines nil)
 
-(when window-system
-  ;; enable wheelmouse support by default
-  (mwheel-install)
-  ;; use extended compound-text coding for X clipboard
-  (set-selection-coding-system 'compound-text-with-extensions)
-  ;; Fixing Cut and Paste under X
-  (setq x-select-enable-clipboard t))
-
-(require 'osc52)
-
-;; If emacs is run in a terminal, clipboard functions have no
-;; effect. Instead, use system-specific CLI clipboard interaction.
-(unless window-system
-  (when (getenv "DISPLAY")
-  (defun xsel-cut-function (text &optional push)
-    ;; I used to use a temp buffer and `call-process-region` here,
-    ;; but for really large selections this could end up with some
-    ;; garbage being passed at the end of the text to the clipboard
-    ;; program. Writing the selection into the file seems to work
-    ;; better.
-    ;; Now we use OSC52, functionality under darwin not tested yet.
-    (let ((temp-file (make-temp-file "clip")))
-      (write-region text nil temp-file nil 0)
-      (if (eq system-type 'darwin)
-          (call-process "pbcopy" temp-file)
-          (call-process "xclip" temp-file 0 nil "-in" "-selection" "clipboard"))))
-  (defun xsel-paste-function ()
-    ;; Find out what is current selection by xsel. If it is different
-    ;; from the top of the kill-ring (car kill-ring), then return
-    ;; it. Else, nil is returned, so whatever is in the top of the
-    ;; kill-ring will be used.
-    (let ((xsel-output
-           (shell-command-to-string (if (eq system-type 'darwin) "pbpaste" "xsel --clipboard --output"))))
-      (unless (string= (car kill-ring) xsel-output)
-              xsel-output)))
-  (setq interprogram-cut-function 'osc52-select-text-dcs)
-  (setq interprogram-paste-function 'xsel-paste-function)
-))
-
 ;; Paren match highlighting
 (show-paren-mode t)
 
