@@ -26,6 +26,8 @@
   ;; Fixing Cut and Paste under X
   (setq x-select-enable-clipboard t))
 
+(require 'osc52)
+
 ;; If emacs is run in a terminal, clipboard functions have no
 ;; effect. Instead, use system-specific CLI clipboard interaction.
 (unless window-system
@@ -36,6 +38,7 @@
     ;; garbage being passed at the end of the text to the clipboard
     ;; program. Writing the selection into the file seems to work
     ;; better.
+    ;; Now we use OSC52, functionality under darwin not tested yet.
     (let ((temp-file (make-temp-file "clip")))
       (write-region text nil temp-file nil 0)
       (if (eq system-type 'darwin)
@@ -50,7 +53,7 @@
            (shell-command-to-string (if (eq system-type 'darwin) "pbpaste" "xsel --clipboard --output"))))
       (unless (string= (car kill-ring) xsel-output)
               xsel-output)))
-  (setq interprogram-cut-function 'xsel-cut-function)
+  (setq interprogram-cut-function 'osc52-select-text-dcs)
   (setq interprogram-paste-function 'xsel-paste-function)
 ))
 
