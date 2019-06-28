@@ -72,12 +72,16 @@
       ;; garbage being passed at the end of the text to the clipboard
       ;; program. Writing the selection into the file seems to work
       ;; better.
-      ;; Now we use OSC52, functionality under darwin not tested yet.
       (let ((temp-file (make-temp-file "clip")))
         (write-region text nil temp-file nil 0)
         (if (eq system-type 'darwin)
             (call-process "pbcopy" temp-file)
           (call-process "xclip" temp-file 0 nil "-in" "-selection" "clipboard"))))
+    (defun osc52-then-xsel-cut-function (text &optional push)
+      ;; For remote sessions, this allows using remote's clipboard for pasting.
+      ;; Otherwise, after copying from remote via OSC52 one has to paste using terminal.
+      (osc52-select-text-dcs text)
+      (xsel-cut-function text))
     (defun xsel-paste-function ()
       ;; Find out what is current selection by xsel. If it is different
       ;; from the top of the kill-ring (car kill-ring), then return
@@ -87,7 +91,7 @@
              (shell-command-to-string (if (eq system-type 'darwin) "pbpaste" "xsel --clipboard --output"))))
         (unless (string= (car kill-ring) xsel-output)
           xsel-output)))
-    (setq interprogram-cut-function 'osc52-select-text-dcs)
+    (setq interprogram-cut-function 'osc52-then-xsel-cut-function)
     (setq interprogram-paste-function 'xsel-paste-function)
     ))
 
