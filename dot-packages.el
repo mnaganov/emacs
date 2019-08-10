@@ -129,7 +129,7 @@
     (add-hook 'c-mode-common-hook 'google-make-newline-indent))
 (add-hook 'c-mode-common-hook
           (lambda ()
-            (local-set-key (kbd "C-c ;") 'c-style-comment-dwim)))
+            (local-set-key (kbd "M-*") 'c-style-comment-dwim)))
 
 ;; Fix indentation for Java annotations
 (add-hook 'java-mode-hook
