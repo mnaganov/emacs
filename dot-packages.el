@@ -62,38 +62,45 @@
 
 (require 'osc52)
 
-;; If emacs is run in a terminal, clipboard functions have no
-;; effect. Instead, use system-specific CLI clipboard interaction.
+;; If emacs runs as a console program in a terminal or under screen
+;; clipboard functions need to be set up in order to interact with
+;; external clipboards
 (unless window-system
-  (when (getenv "DISPLAY")
-    (defun xsel-cut-function (text &optional push)
-      ;; I used to use a temp buffer and `call-process-region` here,
-      ;; but for really large selections this could end up with some
-      ;; garbage being passed at the end of the text to the clipboard
-      ;; program. Writing the selection into the file seems to work
-      ;; better.
-      (let ((temp-file (make-temp-file "clip")))
-        (write-region text nil temp-file nil 0)
-        (if (eq system-type 'darwin)
-            (call-process "pbcopy" temp-file)
-          (call-process "xclip" temp-file 0 nil "-in" "-selection" "clipboard"))))
-    (defun osc52-then-xsel-cut-function (text &optional push)
-      ;; For remote sessions, this allows using remote's clipboard for pasting.
-      ;; Otherwise, after copying from remote via OSC52 one has to paste using terminal.
-      (osc52-select-text-dcs text)
-      (xsel-cut-function text))
-    (defun xsel-paste-function ()
-      ;; Find out what is current selection by xsel. If it is different
-      ;; from the top of the kill-ring (car kill-ring), then return
-      ;; it. Else, nil is returned, so whatever is in the top of the
-      ;; kill-ring will be used.
-      (let ((xsel-output
-             (shell-command-to-string (if (eq system-type 'darwin) "pbpaste" "xsel --clipboard --output"))))
-        (unless (string= (car kill-ring) xsel-output)
-          xsel-output)))
-    (setq interprogram-cut-function 'osc52-then-xsel-cut-function)
-    (setq interprogram-paste-function 'xsel-paste-function)
-    ))
+  (cond ((getenv "DISPLAY")
+         ;; In this case the host has X running. We assume that emacs runs under screen.
+         (defun xsel-cut-function (text &optional push)
+           ;; I used to use a temp buffer and `call-process-region` here,
+           ;; but for really large selections this could end up with some
+           ;; garbage being passed at the end of the text to the clipboard
+           ;; program. Writing the selection into the file seems to work
+           ;; better.
+           (let ((temp-file (make-temp-file "clip")))
+             (write-region text nil temp-file nil 0)
+             (if (eq system-type 'darwin)
+                 (call-process "pbcopy" temp-file)
+               (call-process "xclip" temp-file 0 nil "-in" "-selection" "clipboard"))))
+         (defun osc52-then-xsel-cut-function (text &optional push)
+           ;; For remote sessions, this allows using remote's clipboard for pasting.
+           ;; Otherwise, after copying from remote via OSC52 one has to paste using terminal.
+           (osc52-select-text-dcs text)
+           (xsel-cut-function text))
+         (defun xsel-paste-function ()
+           ;; Find out what is current selection by xsel. If it is different
+           ;; from the top of the kill-ring (car kill-ring), then return
+           ;; it. Else, nil is returned, so whatever is in the top of the
+           ;; kill-ring will be used.
+           (let ((xsel-output
+                  (shell-command-to-string (if (eq system-type 'darwin) "pbpaste" "xsel --clipboard --output"))))
+             (unless (string= (car kill-ring) xsel-output)
+               xsel-output)))
+         (setq interprogram-cut-function 'osc52-then-xsel-cut-function)
+         (setq interprogram-paste-function 'xsel-paste-function))
+        ((getenv "STY")
+         ;; On the host, X is not running, emacs runs under screen remotely.
+         ;; We assume that on the client side a graphical terminal is used.
+         ;; Paste from external clipboard has to be done using the terminal.
+         (setq interprogram-cut-function 'osc52-select-text-dcs))
+        ))
 
 ;; == Other packages ==
 
