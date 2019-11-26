@@ -10,7 +10,7 @@
         ". build/envsetup.sh && lunch taimen-eng && USE_GOMA=true mmm -j100 frameworks/av"
         ". build/envsetup.sh && lunch crosshatch-eng && USE_GOMA=true m -j100"
         ". build/envsetup.sh && lunch crosshatch-eng && USE_GOMA=true mmm -j100 frameworks/av"
-        ". build/envsetup.sh && lunch crosshatch-eng && ANDROID_SERIAL=86WY00EDS USE_GOMA=true atest CtsMediaTestCases:AudioTrackTest"
+        ". build/envsetup.sh && lunch crosshatch-eng && ANDROID_SERIAL=86WY00E9D USE_GOMA=true atest CtsMediaTestCases:AudioTrackTest"
         "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r19c ./gradlew assembleDebug"))
 (setq compile-command
    ". build/envsetup.sh && lunch crosshatch-eng && USE_GOMA=true m -j100")
@@ -89,7 +89,9 @@
 (open-shell-buffer "=walleye=" (lambda() (insert-file-contents "~/screen/walleye.cfg" nil)))
 (open-shell-buffer "=taimen=" (lambda() (insert-file-contents "~/screen/taimen.cfg" nil)))
 (open-shell-buffer "=crosshatch=" (lambda() (insert-file-contents "~/screen/crosshatch.cfg" nil)))
+(open-shell-buffer "=sargo=" (lambda() (insert-file-contents "~/screen/sargo.cfg" nil)))
+(open-shell-buffer "=coral=" (lambda() (insert-file-contents "~/screen/coral.cfg" nil)))
 (open-shell-buffer "=toolbox=" (lambda() (insert (concat "cd ~/code/master && "
                                        ". build/envsetup.sh && lunch crosshatch-eng && "
-                                       "export ANDROID_SERIAL=86WY00EDS "
+                                       "export ANDROID_SERIAL=86WY00E9D "
                                        "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r19c"))))
