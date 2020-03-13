@@ -35,6 +35,8 @@
 (require 'whitespace)
 (setq whitespace-style (quote (face trailing tabs empty)))
 (global-whitespace-mode 1)
+(add-hook 'shell-mode-hook (lambda () (whitespace-mode 0)))
+(add-hook 'lisp-interaction-mode-hook (lambda () (whitespace-mode 0)))
 
 ;; == Set up external packages ==
 
