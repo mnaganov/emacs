@@ -83,13 +83,13 @@
 (setq bell-volume 0)
 (setq sound-alist nil)
 
-;; Show full path to file in frame title
-(setq-default frame-title-format
-              (list '((buffer-file-name
-                       " %f"
-                       (dired-directory
-                        dired-directory
-                        (revert-buffer-function " %b" ("%b - Dir: " default-directory)))))))
+;; Frame title: <compact host name>:<one-of full-file-path dired-directory buffer-name>
+(setq system-name-for-frame-title (when (string-match (concat (user-login-name) "[.-]?") (system-name))
+                                    (replace-match "" nil nil (system-name))))
+;; (symbol then else) shows <then> when <symbol> isn't empty, otherwise <else>
+(setq frame-title-format (list
+                          "" system-name-for-frame-title ":"
+                          '(buffer-file-name "%f" (dired-directory dired-directory "%b"))))
 
 ;; Exit search normally, save the `search-string' on kill-ring.
 (defun isearch-kill-and-exit ()
