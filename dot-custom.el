@@ -24,4 +24,7 @@
  '(eww-form-text ((t (:foreground "brightblack" :background "brightcyan"))))
  '(hi-yellow ((t (:background "color-229"))))
  '(magit-header-line ((t (:inherit header-line :bold t))))
- '(which-func ((t (:inherit header-line)))))
+ '(which-func ((t (:inherit header-line))))
+ '(highlight ((t (:background "white"))))
+ '(show-paren-match ((t (:underline t))))
+ '(show-paren-mismatch ((t (:background "red")))))
