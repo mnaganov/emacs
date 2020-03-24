@@ -26,5 +26,5 @@
  '(magit-header-line ((t (:inherit header-line :bold t))))
  '(which-func ((t (:inherit header-line))))
  '(highlight ((t (:background "white"))))
- '(show-paren-match ((t (:underline t))))
+ '(show-paren-match ((t (:bold t))))
  '(show-paren-mismatch ((t (:background "red")))))
