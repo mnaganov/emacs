@@ -98,6 +98,9 @@
   (isearch-clean-overlays)
   (kill-new isearch-string))
 (global-set-key (kbd "M-w") 'isearch-kill-and-exit)
+;; Avoid using C-w in isearch for SSH-in-a-tab compatibility. Use C-d.
+(define-key isearch-mode-map "\C-d"
+  '(lambda ()(interactive)(isearch-yank-word-or-char)))
 
 ;; Copy full file path of the buffer to clipboard on C-c f
 (defun kill-buffer-file-name ()
