@@ -12,6 +12,9 @@
 (global-set-key [delete] 'delete-char)
 (global-set-key [kp-delete] 'delete-char)
 
+;; Use C-h as delete instead of invoking help. For help, use M-x help-command
+(global-set-key "\C-h" 'delete-backward-char)
+
 ;; Always end a file with a newline
 (setq require-final-newline t)
 
