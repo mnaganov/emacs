@@ -119,8 +119,9 @@
 (add-hook 'java-mode-hook 'flyspell-prog-mode)
 (add-hook 'js2-mode-hook 'flyspell-prog-mode)
 
-;; GIT support
+;; GIT and Mercurial support
 (require 'vc-git)
+(require 'vc-hg)
 (global-auto-revert-mode)
 
 ;; C++ style
