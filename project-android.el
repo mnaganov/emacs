@@ -4,16 +4,16 @@
 (require 'compile)
 
 (setq compile-history
-      '(". build/envsetup.sh && lunch walleye-eng && USE_GOMA=true m -j100"
-        ". build/envsetup.sh && lunch walleye-eng && USE_GOMA=true mmm -j100 frameworks/av"
-        ". build/envsetup.sh && lunch taimen-eng && USE_GOMA=true m -j100"
-        ". build/envsetup.sh && lunch taimen-eng && USE_GOMA=true mmm -j100 frameworks/av"
-        ". build/envsetup.sh && lunch crosshatch-eng && USE_GOMA=true m -j100"
-        ". build/envsetup.sh && lunch crosshatch-eng && USE_GOMA=true mmm -j100 frameworks/av"
-        ". build/envsetup.sh && lunch crosshatch-eng && ANDROID_SERIAL=86WY00E9D USE_GOMA=true atest CtsMediaTestCases:AudioTrackTest"
+      '(". build/envsetup.sh && lunch walleye-userdebug && USE_GOMA=true m -j100"
+        ". build/envsetup.sh && lunch walleye-userdebug && USE_GOMA=true mmm -j100 frameworks/av"
+        ". build/envsetup.sh && lunch taimen-userdebug && USE_GOMA=true m -j100"
+        ". build/envsetup.sh && lunch taimen-userdebug && USE_GOMA=true mmm -j100 frameworks/av"
+        ". build/envsetup.sh && lunch crosshatch-userdebug && USE_GOMA=true m -j100"
+        ". build/envsetup.sh && lunch crosshatch-userdebug && USE_GOMA=true mmm -j100 frameworks/av"
+        ". build/envsetup.sh && lunch crosshatch-userdebug && ANDROID_SERIAL=86WY00E9D USE_GOMA=true atest CtsMediaTestCases:AudioTrackTest"
         "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r19c ./gradlew assembleDebug"))
 (setq compile-command
-   ". build/envsetup.sh && lunch crosshatch-eng && USE_GOMA=true m -j100")
+   ". build/envsetup.sh && lunch crosshatch-userdebug && USE_GOMA=true m -j100")
 
 ;; Keybindings
 
@@ -56,9 +56,14 @@
                               ("^I.*\\.hpp$" (lambda (base)
                                                (concat "I" (concat base ".hpp"))))))
 
+(add-to-list 'auto-mode-alist '("\\.bp$" . js-mode))
+
+(add-to-list 'auto-mode-alist '("\\.aidl$" . java-mode))
 (add-to-list 'auto-mode-alist '("\\.hal$" . c++-mode))
 (defun maybe-set-hal-style ()
-  (if (and (char-or-string-p buffer-file-name) (string-match "\\.hal$" (downcase buffer-file-name)))
+  (if (and (char-or-string-p buffer-file-name)
+           (or (string-match "\\.aidl$" (downcase buffer-file-name))
+               (string-match "\\.hal$" (downcase buffer-file-name))))
       (setq fill-column 80)))
 
 (add-hook 'c-mode-common-hook
@@ -72,6 +77,7 @@
 (add-hook 'java-mode-hook
           (lambda()
             (set-android-coding-style)
+            (maybe-set-hal-style)
             ;; This is to avoid over-indenting of anonymous classes
             (c-set-offset 'substatement-open 0)
             (if (assoc 'inexpr-class c-offsets-alist)
@@ -79,7 +85,7 @@
 
 (add-hook 'python-mode-hook
           (lambda()
-            (setq python-indent 2)))
+            (setq python-indent 4)))
 
 (defun open-shell-buffer (buffer-name startup-cmd)
   (switch-to-buffer (shell buffer-name))
@@ -92,6 +98,6 @@
 (open-shell-buffer "=sargo=" (lambda() (insert-file-contents "~/screen/sargo.cfg" nil)))
 (open-shell-buffer "=coral=" (lambda() (insert-file-contents "~/screen/coral.cfg" nil)))
 (open-shell-buffer "=toolbox=" (lambda() (insert (concat "cd ~/code/master && "
-                                       ". build/envsetup.sh && lunch crosshatch-eng && "
+                                       ". build/envsetup.sh && lunch crosshatch-userdebug && "
                                        "export ANDROID_SERIAL=86WY00E9D "
                                        "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r19c"))))
