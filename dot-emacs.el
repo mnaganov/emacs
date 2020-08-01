@@ -15,6 +15,10 @@
 ;; Use C-h as delete instead of invoking help. For help, use M-x help-command
 (global-set-key "\C-h" 'delete-backward-char)
 
+;; M-_ inserts em dash, M-- inserts en dash, C-x 8 SPC inserts nbsp
+(global-set-key (kbd "M-_") "—")
+(global-set-key (kbd "M--") "–")
+
 ;; Always end a file with a newline
 (setq require-final-newline t)
 
