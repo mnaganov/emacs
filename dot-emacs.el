@@ -99,15 +99,14 @@
                           '(buffer-file-name "%f" (dired-directory dired-directory "%b"))))
 
 ;; Exit search normally, save the `search-string' on kill-ring.
-(defun isearch-kill-and-exit ()
+(defun my-isearch-kill-and-exit ()
   (interactive)
   (isearch-done)
   (isearch-clean-overlays)
   (kill-new isearch-string))
-(global-set-key (kbd "M-w") 'isearch-kill-and-exit)
+(define-key isearch-mode-map (kbd "M-w") 'my-isearch-kill-and-exit)
 ;; Avoid using C-w in isearch for SSH-in-a-tab compatibility. Use C-d.
-(define-key isearch-mode-map "\C-d"
-  '(lambda ()(interactive)(isearch-yank-word-or-char)))
+(define-key isearch-mode-map (kbd "C-d") 'isearch-yank-word-or-char)
 
 ;; Copy full file path of the buffer to clipboard on C-c f
 (defun kill-buffer-file-name ()

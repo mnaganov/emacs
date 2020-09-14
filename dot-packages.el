@@ -47,10 +47,8 @@
 (if (eq system-type 'windows-nt)
     (load-file (concat emacs-root "dot-windows.el")))
 (when (not window-system)
-     (require 'xterm-frobs)
-     (defun my-xterm-title-hook ()
-       (xterm-set-window-title (format-mode-line frame-title-format)))
-     (add-hook 'post-command-hook 'my-xterm-title-hook))
+     (require 'term/xterm)
+     (add-hook 'post-command-hook 'xterm-set-window-title))
 
 
 (when window-system
