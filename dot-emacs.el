@@ -38,9 +38,10 @@
 ;; Disable splash screen
 (setq inhibit-splash-screen t)
 
-;; Disable toolbar and menubar
+;; Disable toolbar, menubar, and tooltips
 (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
 (if (fboundp 'menu-bar-mode) (menu-bar-mode -1))
+(if (fboundp 'tooltip-mode) (tooltip-mode -1))
 
 ;; Disable default "kill emacs" binding. Usually I press it incidentally.
 (global-unset-key "\C-x\C-c")
