@@ -4,11 +4,7 @@
 (require 'compile)
 
 (setq compile-history
-      '(". build/envsetup.sh && lunch walleye-userdebug && . build/make/rbesetup.sh && m"
-        ". build/envsetup.sh && lunch walleye-userdebug && . build/make/rbesetup.sh && mmm frameworks/av"
-        ". build/envsetup.sh && lunch taimen-userdebug && . build/make/rbesetup.sh && m"
-        ". build/envsetup.sh && lunch taimen-userdebug && . build/make/rbesetup.sh && mmm frameworks/av"
-        ". build/envsetup.sh && lunch crosshatch-userdebug && . build/make/rbesetup.sh && m"
+      '(". build/envsetup.sh && lunch crosshatch-userdebug && . build/make/rbesetup.sh && m"
         ". build/envsetup.sh && lunch crosshatch-userdebug && . build/make/rbesetup.sh && mmm frameworks/av"
         ". build/envsetup.sh && lunch crosshatch-userdebug && . build/make/rbesetup.sh && ANDROID_SERIAL=86WY00E9D atest CtsMediaTestCases:AudioTrackTest"
         ". build/envsetup.sh && lunch coral-userdebug && . build/make/rbesetup.sh && m"
@@ -95,8 +91,6 @@
   (set-marker comint-last-output-start (point))
   (funcall startup-cmd)
   (comint-send-input nil t))
-(open-shell-buffer "=walleye=" (lambda() (insert-file-contents "~/screen/walleye.cfg" nil)))
-(open-shell-buffer "=taimen=" (lambda() (insert-file-contents "~/screen/taimen.cfg" nil)))
 (open-shell-buffer "=crosshatch=" (lambda() (insert-file-contents "~/screen/crosshatch.cfg" nil)))
 (open-shell-buffer "=sargo=" (lambda() (insert-file-contents "~/screen/sargo.cfg" nil)))
 (open-shell-buffer "=coral=" (lambda() (insert-file-contents "~/screen/coral.cfg" nil)))
