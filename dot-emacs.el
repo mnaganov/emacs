@@ -70,11 +70,14 @@
 ;; (set-face-background 'mode-line-inactive "black")
 ;; (set-face-foreground 'vertical-border "white")
 ;; (set-face-background 'vertical-border "black")
-(set-face-foreground 'shadow "brightcyan")
+(if (eq system-type 'windows-nt)
+    (progn (set-face-foreground 'shadow "light gray")
+           (set-face-background 'header-line "dim gray"))
+    (progn (set-face-foreground 'shadow "brightcyan")
+           (set-face-background 'header-line "brightblue")))
 (set-face-background 'match "white")
 (set-face-background 'secondary-selection "white")
 (set-face-foreground 'header-line "white")
-(set-face-background 'header-line "brightblue")
 (set-face-underline 'header-line nil)
 
 ;; Don't unsplit windows on ESC ESC ESC
@@ -144,25 +147,26 @@
           (concat "/Users/" (user-login-name) "/." name "/")
           (concat (getenv "HOME") "/." name "/" system-name "/"))))
 
-(if (< (frame-text-width) 300)
+(unless (display-graphic-p)
+  (if (< (frame-text-width) 300)
+      (progn
+        ;; Set 2x2 windows configuration
+        (split-window-vertically)
+        (save-selected-window
+          (other-window 1)
+          (split-window-horizontally))
+        (split-window-horizontally))
     (progn
-     ;; Set 2x2 windows configuration
-     (split-window-vertically)
-     (save-selected-window
-      (other-window 1)
-      (split-window-horizontally))
-     (split-window-horizontally))
-    (progn
-     ;; Set 3x2 windows configuration with merged center
-     (split-window-horizontally)
-     (save-selected-window
-      (other-window 1)
-      (split-window-vertically))
-     (split-window-horizontally)
-     (split-window-vertically)
-     (balance-windows)
-     ;; Prevent the center window from being auto splitted on occasion
-     (setq split-height-threshold (* (frame-text-height) 2))))
+      ;; Set 3x2 windows configuration with merged center
+      (split-window-horizontally)
+      (save-selected-window
+        (other-window 1)
+        (split-window-vertically))
+      (split-window-horizontally)
+      (split-window-vertically)
+      (balance-windows)
+      ;; Prevent the center window from being auto splitted on occasion
+      (setq split-height-threshold (* (frame-text-height) 2)))))
 
 ;; Put autosave files (ie #foo#) in one place, *not* scattered all over the
 ;; file system! (The make-autosave-file-name function is invoked to determine

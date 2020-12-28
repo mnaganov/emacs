@@ -3,7 +3,9 @@
 
 ;; Keybindings
 (global-set-key [f5] '(lambda () (interactive) (revert-buffer nil t)))
-(global-set-key [f6] 'find-grep)
+(if (eq system-type 'windows-nt)
+    (global-set-key [f6] 'rgrep)
+    (global-set-key [f6] 'find-grep))
 
 (require 'find-things-fast)
 (global-set-key '[f1] 'ftf-find-file)
@@ -13,3 +15,5 @@
 (if (eq system-type 'darwin)
     (setq shell-command-history '("pandoc -f markdown_github -t html | pbcopy"
                                   "pbpaste | pandoc -f html-native_divs-native_spans -t markdown_github")))
+
+(add-to-list 'auto-mode-alist '("\\.ino$" . c-mode))
