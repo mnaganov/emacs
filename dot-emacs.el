@@ -32,7 +32,7 @@
 
 ;; Enable CUA key bindings: C-z/x/c/v
 (cua-mode t)
-(unless window-system (global-set-key [f9] 'cua-set-rectangle-mark))
+(global-set-key [f9] 'cua-set-rectangle-mark)
 
 ;; Auto-scroll in *compilation* buffer
 (setq compilation-scroll-output t)
