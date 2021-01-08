@@ -147,7 +147,7 @@
           (concat "/Users/" (user-login-name) "/." name "/")
           (concat (getenv "HOME") "/." name "/" system-name "/"))))
 
-(unless (display-graphic-p)
+(unless (or (display-graphic-p) (< (frame-text-width) 160))
   (if (< (frame-text-width) 300)
       (progn
         ;; Set 2x2 windows configuration
