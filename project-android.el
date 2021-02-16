@@ -94,6 +94,7 @@
 (open-shell-buffer "=crosshatch=" (lambda() (insert-file-contents "~/screen/crosshatch.cfg" nil)))
 (open-shell-buffer "=sargo=" (lambda() (insert-file-contents "~/screen/sargo.cfg" nil)))
 (open-shell-buffer "=coral=" (lambda() (insert-file-contents "~/screen/coral.cfg" nil)))
+(open-shell-buffer "=bramble=" (lambda() (insert-file-contents "~/screen/bramble.cfg" nil)))
 (open-shell-buffer "=toolbox=" (lambda() (insert (concat "cd ~/code/master && "
                                        ". build/envsetup.sh && lunch crosshatch-userdebug && "
                                        "export ANDROID_SERIAL=86WY00E9D "
