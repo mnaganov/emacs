@@ -191,6 +191,9 @@
    "Major mode for editing GitHub Flavored Markdown files" t)
 (add-to-list 'auto-mode-alist '("README\\.md\\'" . gfm-mode))
 
-;; String Inflection: switch between various naming styles
+;; String Inflection: switch between various naming styles.
 (require 'string-inflection)
-(global-set-key (kbd "C-c C-u") 'string-inflection-all-cycle)
+(global-set-key (kbd "C-c C-b") 'string-inflection-all-cycle)
+;; C-c C-b in C mode is for sending bug reports.
+(add-hook 'c++-mode-hook
+          '(lambda () (local-set-key (kbd "C-c C-b") 'string-inflection-all-cycle)))
