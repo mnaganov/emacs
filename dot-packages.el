@@ -138,15 +138,6 @@
           (lambda ()
             (local-set-key (kbd "M-*") 'c-style-comment-dwim)))
 
-;; Fix indentation for Java annotations
-(add-hook 'java-mode-hook
-          '(lambda ()
-             "Treat Java 1.5 @-style annotations as comments."
-             (setq c-comment-start-regexp
-                   "\\(@\\|/\\(/\\|[*][*]?\\)\\)")
-             (modify-syntax-entry ?@ "< b"
-                                  java-mode-syntax-table)))
-
 ;; gyp
 (require 'gyp)
 
