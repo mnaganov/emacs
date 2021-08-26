@@ -15,6 +15,9 @@
 ;; Use C-h as delete instead of invoking help. For help, use M-x help-command
 (global-set-key "\C-h" 'delete-backward-char)
 
+;; I love to use diff mode and use it more often than macros.
+(global-set-key [f3] 'diff-mode)
+
 ;; Reminder:
 ;; C-x 8 _ m inserts em dash,
 ;; C-x 8 _ n inserts en dash
