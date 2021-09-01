@@ -1,9 +1,3 @@
-;; == Google stuff ==
-
-(if use-google-stuff
-    (load-file (concat emacs-root "dot-google.el")))
-
-
 ;; == My stuff ==
 
 ;; Set up the keyboard so the delete key on both the regular keyboard
@@ -320,3 +314,8 @@
 
 (if (not (eq use-project nil))
     (load-file (concat emacs-root "project-" use-project ".el")))
+
+;; == Google stuff ==
+
+(if use-google-stuff
+    (load-file (concat emacs-root "dot-google.el")))

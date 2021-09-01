@@ -1,18 +1,16 @@
 ;; Google stuff
+(require 'google)
+(require 'google3-eglot)
+(google3-eglot-setup)
+(if (string-match "android" use-project)
+    (setq google3-eglot-c++-server 'clangd))
+(require 'google-ycmd)
 
-(setq google-elisp-root use-google-stuff)
+;; Turn off flycheck since flymake is also active
+(global-flycheck-mode -1)
 
-;; The main file
-
-(load-file (concat google-elisp-root "/google.el"))
-(require 'googlemenu)
-
-;; Preventing Emacs from gratuitously frobbing around in network mounts
-(setq
- vc-ignore-dir-regexp
- "\\`\\([\\/][\\/]\\|/net/\\|/home/\\|/afs/\\)\\'"
- locate-dominating-stop-dir-regexp
- "\\`\\(?:[\\/][\\/]\\|/\\(?:net\\|afs\\|home\\|\\.\\.\\.\\)/\\)\\'")
-
-;; Internal plugins dir
-(add-to-list 'load-path (concat google-elisp-root "/gnuemacs"))
+;; Stylize the eldoc buffer properly
+(eldoc-display-in-buffer '(("## Hello eldoc!  ")) t)
+(with-current-buffer eldoc--doc-buffer
+  (markdown-mode)
+  (setq show-trailing-whitespace nil))
