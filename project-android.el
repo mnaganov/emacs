@@ -4,15 +4,15 @@
 (require 'compile)
 
 (setq compile-history
-      '(". build/envsetup.sh && lunch crosshatch-userdebug && . build/make/rbesetup.sh && m"
+      '(". build/envsetup.sh && lunch crosshatch-userdebug && . build/make/rbesetup.sh && m SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP"
         ". build/envsetup.sh && lunch crosshatch-userdebug && . build/make/rbesetup.sh && mmm frameworks/av"
         ". build/envsetup.sh && lunch crosshatch-userdebug && . build/make/rbesetup.sh && ANDROID_SERIAL=86WY00E9D atest CtsMediaTestCases:AudioTrackTest"
-        ". build/envsetup.sh && lunch coral-userdebug && . build/make/rbesetup.sh && m"
+        ". build/envsetup.sh && lunch coral-userdebug && . build/make/rbesetup.sh && m SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP"
         ". build/envsetup.sh && lunch coral-userdebug && . build/make/rbesetup.sh && mmm frameworks/av"
         ". build/envsetup.sh && lunch coral-userdebug && . build/make/rbesetup.sh && ANDROID_SERIAL=96061FFBA00028 atest CtsMediaTestCases:AudioTrackTest"
         "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r19c ./gradlew assembleDebug"))
 (setq compile-command
-   ". build/envsetup.sh && lunch coral-userdebug && . build/make/rbesetup.sh && m")
+   ". build/envsetup.sh && lunch coral-userdebug && . build/make/rbesetup.sh && m SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP")
 
 ;; Keybindings
 
