@@ -86,6 +86,12 @@
           (lambda()
             (setq python-indent 4)))
 
+;; Support ANSI control sequences in the compilation buffer
+(require 'ansi-color)
+(defun colorize-compilation-buffer ()
+  (ansi-color-apply-on-region compilation-filter-start (point)))
+(add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
+
 (defun open-shell-buffer (buffer-name startup-cmd)
   (switch-to-buffer (shell buffer-name))
   (set-marker comint-last-output-start (point))
