@@ -14,7 +14,8 @@
  '(direx:closed-icon "\u2192")
  '(ag-reuse-buffers t)
  '(eldoc-echo-area-prefer-doc-buffer t)
- '(eldoc-echo-area-use-multiline-p nil))
+ '(eldoc-echo-area-use-multiline-p nil)
+ '(company-idle-delay 1))
 (custom-set-faces
   ;; custom-set-faces was added by Custom.
   ;; If you edit it by hand, you could mess it up, so be careful.
