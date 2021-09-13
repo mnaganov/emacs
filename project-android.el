@@ -4,15 +4,13 @@
 (require 'compile)
 
 (setq compile-history
-      '(". build/envsetup.sh && lunch crosshatch-userdebug && . build/make/rbesetup.sh && m SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP"
-        ". build/envsetup.sh && lunch crosshatch-userdebug && . build/make/rbesetup.sh && mmm frameworks/av"
-        ". build/envsetup.sh && lunch crosshatch-userdebug && . build/make/rbesetup.sh && ANDROID_SERIAL=86WY00E9D atest CtsMediaTestCases:AudioTrackTest"
-        ". build/envsetup.sh && lunch coral-userdebug && . build/make/rbesetup.sh && m SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP"
-        ". build/envsetup.sh && lunch coral-userdebug && . build/make/rbesetup.sh && mmm frameworks/av"
-        ". build/envsetup.sh && lunch coral-userdebug && . build/make/rbesetup.sh && ANDROID_SERIAL=96061FFBA00028 atest CtsMediaTestCases:AudioTrackTest"
-        "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r19c ./gradlew assembleDebug"))
+      '(". build/envsetup.sh && lunch crosshatch-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
+        ". build/envsetup.sh && lunch crosshatch-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP ANDROID_SERIAL=86WY00E9D atest CtsMediaTestCases:AudioTrackTest"
+        ". build/envsetup.sh && lunch coral-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
+        ". build/envsetup.sh && lunch coral-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP ANDROID_SERIAL=96061FFBA00028 atest CtsMediaTestCases:AudioTrackTest"
+        "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r22b ./gradlew assembleDebug"))
 (setq compile-command
-   ". build/envsetup.sh && lunch coral-userdebug && . build/make/rbesetup.sh && m SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP")
+   ". build/envsetup.sh && lunch coral-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m")
 
 ;; Keybindings
 
@@ -105,4 +103,4 @@
 (open-shell-buffer "=toolbox=" (lambda() (insert (concat "cd ~/code/master && "
                                        ". build/envsetup.sh && lunch crosshatch-userdebug && "
                                        "export ANDROID_SERIAL=86WY00E9D "
-                                       "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r19c"))))
+                                       "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r22d"))))
