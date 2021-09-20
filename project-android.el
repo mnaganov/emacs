@@ -32,7 +32,12 @@
 (global-set-key [f2] 'my-cs)
 (global-set-key [f5] '(lambda () (interactive) (revert-buffer nil t)))
 (global-set-key [f6] 'ag-project-regexp)
-(global-set-key [f7] 'compile)
+;; Enable comint as 'atest' sometimes is asking questions
+(defun my-compile-with-comint ()
+  (interactive)
+  (setq current-prefix-arg '(4))
+  (call-interactively 'compile))
+(global-set-key [f7] 'my-compile-with-comint)
 (global-set-key [f8] 'recompile)
 
 (defun set-android-coding-style ()
@@ -85,9 +90,11 @@
             (setq python-indent 4)))
 
 ;; Support ANSI control sequences in the compilation buffer
+;; but only for the actual compilation (not grep etc).
 (require 'ansi-color)
 (defun colorize-compilation-buffer ()
-  (ansi-color-apply-on-region compilation-filter-start (point)))
+  (when (bound-and-true-p compilation-shell-minor-mode)
+    (ansi-color-apply-on-region compilation-filter-start (point))))
 (add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
 
 (defun open-shell-buffer (buffer-name startup-cmd)
