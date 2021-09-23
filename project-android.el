@@ -1,13 +1,13 @@
 ;; Project Android stuff
 
 (setq compile-history
-      '(". build/envsetup.sh && lunch crosshatch-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
-        ". build/envsetup.sh && lunch crosshatch-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP ANDROID_SERIAL=86WY00E9D atest CtsMediaTestCases:AudioTrackTest"
-        ". build/envsetup.sh && lunch coral-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
-        ". build/envsetup.sh && lunch coral-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP ANDROID_SERIAL=96061FFBA00028 atest CtsMediaTestCases:AudioTrackTest"
+      '(". build/envsetup.sh && lunch bramble-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
+        ". build/envsetup.sh && lunch bramble-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP ANDROID_SERIAL=02151FQC200016 atest CtsMediaTestCases:AudioTrackTest"
+        ". build/envsetup.sh && lunch redfin-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
+        ". build/envsetup.sh && lunch redfin-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP ANDROID_SERIAL=06131FDD4000HP atest CtsMediaTestCases:AudioTrackTest"
         "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r22b ./gradlew assembleDebug"))
 (setq compile-command
-   ". build/envsetup.sh && lunch coral-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m")
+   ". build/envsetup.sh && lunch redfin-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m")
 
 ;; Keybindings
 
@@ -99,12 +99,10 @@
   (set-marker comint-last-output-start (point))
   (funcall startup-cmd)
   (comint-send-input nil t))
-(open-shell-buffer "=crosshatch=" (lambda() (insert-file-contents "~/screen/crosshatch.cfg" nil)))
 (open-shell-buffer "=sargo=" (lambda() (insert-file-contents "~/screen/sargo.cfg" nil)))
-(open-shell-buffer "=coral=" (lambda() (insert-file-contents "~/screen/coral.cfg" nil)))
 (open-shell-buffer "=bramble=" (lambda() (insert-file-contents "~/screen/bramble.cfg" nil)))
 (open-shell-buffer "=redfin=" (lambda() (insert-file-contents "~/screen/redfin.cfg" nil)))
 (open-shell-buffer "=toolbox=" (lambda() (insert (concat "cd ~/code/master && "
-                                       ". build/envsetup.sh && lunch crosshatch-userdebug && "
-                                       "export ANDROID_SERIAL=86WY00E9D "
+                                       ". build/envsetup.sh && lunch bramble-userdebug && "
+                                       "export ANDROID_SERIAL=02151FQC200016 "
                                        "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r22d"))))
