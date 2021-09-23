@@ -1,8 +1,5 @@
 ;; Project V8 stuff
 
-;; Compile command
-(require 'compile)
-
 (setq compile-history
       '("make -j16 ia32.release"
         "make -j16 ia32.release.check"

@@ -1,6 +1,3 @@
-;; Compile command
-(require 'compile)
-
 ;; Keybindings
 (global-set-key [f5] '(lambda () (interactive) (revert-buffer nil t)))
 (if (eq system-type 'windows-nt)

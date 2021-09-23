@@ -31,9 +31,6 @@
 (cua-mode t)
 (global-set-key [f9] 'cua-set-rectangle-mark)
 
-;; Auto-scroll in *compilation* buffer
-(setq compilation-scroll-output t)
-
 ;; Disable splash screen
 (setq inhibit-splash-screen t)
 
@@ -53,6 +50,14 @@
 
 ;; Highlight current line
 (global-hl-line-mode 1)
+;; But turn it off for compile and comint buffers since it can be slow
+;; for very long lines
+(defun my-turn-off-hl-mode ()
+  (set (make-local-variable 'global-hl-line-mode) nil))
+(require 'compile)
+(add-hook 'compilation-mode-hook 'my-turn-off-hl-mode)
+(require 'comint)
+(add-hook 'comint-mode-hook 'my-turn-off-hl-mode)
 
 ;; Instead of 'yes or no' use 'y or n'
 (fset 'yes-or-no-p 'y-or-n-p)

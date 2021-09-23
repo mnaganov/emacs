@@ -1,8 +1,5 @@
 ;; Project Android stuff
 
-;; Compile command
-(require 'compile)
-
 (setq compile-history
       '(". build/envsetup.sh && lunch crosshatch-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
         ". build/envsetup.sh && lunch crosshatch-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP ANDROID_SERIAL=86WY00E9D atest CtsMediaTestCases:AudioTrackTest"

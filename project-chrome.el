@@ -1,8 +1,5 @@
 ;; Project Chrome stuff
 
-;; Compile command
-(require 'compile)
-
 (setq compile-history
       '("PATH=$HOME/goma:$PATH ninja -j400 -l30 -C out/Release chrome"
         "PATH=$HOME/goma:$PATH ninja -j400 -l30 -C out/Debug chrome"
