@@ -150,25 +150,21 @@
           (concat (getenv "HOME") "/." name "/" system-name "/"))))
 
 (unless (or (display-graphic-p) (< (frame-text-width) 160))
-  (if (< (frame-text-width) 300)
-      (progn
-        ;; Set 2x2 windows configuration
-        (split-window-vertically)
-        (save-selected-window
-          (other-window 1)
-          (split-window-horizontally))
-        (split-window-horizontally))
-    (progn
-      ;; Set 3x2 windows configuration with merged center
-      (split-window-horizontally)
-      (save-selected-window
-        (other-window 1)
-        (split-window-vertically))
-      (split-window-horizontally)
+  (if (< (frame-text-width) 235)
       (split-window-vertically)
-      (balance-windows)
+    (let ((center-width 104)
+          (left-width (/ (* (- (frame-text-width) 104) 5) 9)))
+      ;; Create 3 vertical windows. The center window is 104 chars,
+      ;; the left and right windows are 5/9 and 4/9. The right one
+      ;; is in addition split horizontally in half.
+      (split-window-horizontally left-width)
+      (other-window 1)
+      (split-window-horizontally center-width)
       ;; Prevent the center window from being auto splitted on occasion
-      (setq split-height-threshold (* (frame-text-height) 2)))))
+      (setq split-height-threshold (* (frame-text-height) 2))
+      (save-selected-window
+       (other-window 1)
+       (split-window-vertically)))))
 
 ;; Put autosave files (ie #foo#) in one place, *not* scattered all over the
 ;; file system! (The make-autosave-file-name function is invoked to determine
@@ -311,7 +307,8 @@
 
 
 ;; == Start up commands ==
-(shell)
+(save-selected-window
+  (shell))
 (server-start)
 
 

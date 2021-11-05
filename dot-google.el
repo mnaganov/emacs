@@ -10,7 +10,8 @@
 (global-flycheck-mode -1)
 
 ;; Stylize the eldoc buffer properly
-(eldoc-display-in-buffer '(("## Hello eldoc!  ")) t)
-(with-current-buffer eldoc--doc-buffer
-  (markdown-mode)
-  (setq show-trailing-whitespace nil))
+(save-selected-window
+  (eldoc-display-in-buffer '(("## Hello eldoc!  ")) t)
+  (with-current-buffer eldoc--doc-buffer
+    (markdown-mode)
+    (setq show-trailing-whitespace nil)))

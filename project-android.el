@@ -96,10 +96,11 @@
 (add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
 
 (defun open-shell-buffer (buffer-name startup-cmd)
-  (switch-to-buffer (shell buffer-name))
-  (set-marker comint-last-output-start (point))
-  (funcall startup-cmd)
-  (comint-send-input nil t))
+  (save-selected-window
+    (with-current-buffer (shell buffer-name)
+      (set-marker comint-last-output-start (point))
+      (funcall startup-cmd)
+      (comint-send-input nil t))))
 (open-shell-buffer "=sargo=" (lambda() (insert-file-contents "~/screen/sargo.cfg" nil)))
 (open-shell-buffer "=bramble=" (lambda() (insert-file-contents "~/screen/bramble.cfg" nil)))
 (open-shell-buffer "=redfin=" (lambda() (insert-file-contents "~/screen/redfin.cfg" nil)))

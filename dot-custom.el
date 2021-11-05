@@ -15,7 +15,7 @@
  '(ag-reuse-buffers t)
  '(eldoc-echo-area-prefer-doc-buffer t)
  '(eldoc-echo-area-use-multiline-p nil)
- '(company-idle-delay 1)
+ '(company-idle-delay 3)
  '(compilation-scroll-output t))
 (custom-set-faces
   ;; custom-set-faces was added by Custom.
