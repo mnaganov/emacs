@@ -9,6 +9,9 @@
 (setq compile-command
    ". build/envsetup.sh && lunch redfin-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m")
 
+(custom-set-variables
+ '(google-use-coding-style nil))
+
 ;; Keybindings
 
 (require 'find-things-fast)
