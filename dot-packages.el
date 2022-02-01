@@ -42,6 +42,8 @@
 (add-to-list 'load-path (concat emacs-root "site-lisp"))
 (setq packages-root (concat emacs-root "site-lisp/"))
 
+;; Swap contents of the buffers
+(require 'buffer-move)
 
 ;; == OS-specific setup ==
 (if (eq system-type 'windows-nt)
