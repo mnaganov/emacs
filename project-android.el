@@ -108,6 +108,7 @@
 (open-shell-buffer "=bramble=" (lambda() (insert-file-contents "~/screen/bramble.cfg" nil)))
 (open-shell-buffer "=redfin=" (lambda() (insert-file-contents "~/screen/redfin.cfg" nil)))
 (open-shell-buffer "=raven=" (lambda() (insert-file-contents "~/screen/raven.cfg" nil)))
+(open-shell-buffer "=cuttlefish=" (lambda() (insert-file-contents "~/screen/cuttlefish.cfg" nil)))
 (open-shell-buffer "=toolbox=" (lambda() (insert (concat "cd ~/code/master && "
                                        ". build/envsetup.sh && lunch bramble-userdebug && "
                                        "export ANDROID_SERIAL=02151FQC200016 "
