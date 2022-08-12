@@ -1,8 +1,8 @@
 ;; Project Android stuff
 
 (setq compile-history
-      '(". build/envsetup.sh && lunch bramble-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
-        ". build/envsetup.sh && lunch bramble-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP ANDROID_SERIAL=02151FQC200016 atest CtsMediaTestCases:AudioTrackTest"
+      '(". build/envsetup.sh && lunch cf_x86_64_phone-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
+        ". build/envsetup.sh && lunch cf_x86_64_phone-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP atest VtsHalAudioCoreTargetTest"
         ". build/envsetup.sh && lunch redfin-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
         ". build/envsetup.sh && lunch redfin-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP ANDROID_SERIAL=06131FDD4000HP atest CtsMediaTestCases:AudioTrackTest"
         "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r22b ./gradlew assembleDebug"))
