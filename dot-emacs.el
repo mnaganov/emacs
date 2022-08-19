@@ -18,6 +18,9 @@
 ;; C-x 8 SPC inserts nbsp
 ;; To see other shortcuts, type C-x 8 C-h
 
+;; Turn off bell
+(setq ring-bell-function 'ignore)
+
 ;; Always end a file with a newline
 (setq require-final-newline t)
 
