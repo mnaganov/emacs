@@ -1,0 +1,25 @@
+# Control-/ is the new escape key
+# I use C-z in emacs anyways; to send C-/ to emacs, type C-/ /
+escape ^_/
+# Use 'xterm-256color' because this gives better looking colors in emacs
+term xterm-256color
+# However, this makes screen to send unexpected keys for Home/End, fix that
+bindkey -k kh stuff \033OH
+bindkey -k kH stuff \033OF
+vbell off
+startup_message off
+altscreen on
+defscrollback 100000
+# These commands are useful when using hterm
+hardstatus on
+hardstatus alwaysfirstline
+hardstatus "%t"
+# C-/ C-c copies the paste buffer to X clipboard
+bind ^C eval writebuf "exec !!! xclip -in -selection clipboard /tmp/screen-exchange"
+# C-/ C-k clears the scrollback
+bind ^K eval "clear" "scrollback 0" "scrollback 100000"
+# Does not work well with emacs 28
+unsetenv COLORTERM
+
+# Scripted creation of pre-configured shells
+screen -t emacs emacs -nw
