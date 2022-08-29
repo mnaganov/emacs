@@ -49,9 +49,12 @@
 (if (eq system-type 'windows-nt)
     (load-file (concat emacs-root "dot-windows.el")))
 (when (not window-system)
-     (require 'term/xterm)
-     (add-hook 'post-command-hook 'xterm-set-window-title))
+  (require 'term/xterm)
+  (when (fboundp 'xterm-set-window-title)
+    (add-hook 'post-command-hook 'xterm-set-window-title)))
 
+(defun is-windows-wsl ()
+  (string-match-p (regexp-quote "WINDOWS/system32") (getenv "PATH")))
 
 (when window-system
   ;; enable wheelmouse support by default
@@ -67,7 +70,7 @@
 ;; clipboard functions need to be set up in order to interact with
 ;; external clipboards
 (unless window-system
-  (cond ((getenv "DISPLAY")
+  (cond ((or (getenv "DISPLAY") (is-windows-wsl))
          ;; In this case the host has X running. We assume that emacs runs under screen.
          (defun xsel-cut-function (text &optional push)
            ;; I used to use a temp buffer and `call-process-region` here,
@@ -77,9 +80,9 @@
            ;; better.
            (let ((temp-file (make-temp-file "clip")))
              (write-region text nil temp-file nil 0)
-             (if (eq system-type 'darwin)
-                 (call-process "pbcopy" temp-file)
-               (call-process "xclip" temp-file 0 nil "-in" "-selection" "clipboard"))))
+             (cond ((eq system-type 'darwin) (call-process "pbcopy" temp-file))
+                   ((is-windows-wsl) (call-process "clip.exe" temp-file))
+                   (t (call-process "xclip" temp-file 0 nil "-in" "-selection" "clipboard")))))
          (defun osc52-then-xsel-cut-function (text &optional push)
            ;; For remote sessions, this allows using remote's clipboard for pasting.
            ;; Otherwise, after copying from remote via OSC52 one has to paste using terminal.
