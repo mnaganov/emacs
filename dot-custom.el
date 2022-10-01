@@ -23,6 +23,8 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(diff-added ((t (:inherit diff-changed :foreground "green"))))
+ '(diff-file-header ((t (:foreground "black"))))
+ '(diff-header ((t (:background "brightcyan" :foreground "brightgreen"))))
  '(diff-context ((t (:inherit shadow))))
  '(diff-removed ((t (:inherit diff-changed :foreground "magenta"))))
  '(error ((t (:foreground "red" :weight bold))))
