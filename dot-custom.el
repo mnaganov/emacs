@@ -16,16 +16,16 @@
  '(js2-cleanup-whitespace nil)
  '(js2-indent-on-enter-key nil)
  '(js2-mirror-mode nil)
- '(ns-command-modifier (quote meta)))
+ '(ns-command-modifier 'meta))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(diff-added ((t (:inherit diff-changed :foreground "green"))))
- '(diff-file-header ((t (:foreground "black"))))
- '(diff-header ((t (:background "brightcyan" :foreground "brightgreen"))))
  '(diff-context ((t (:inherit shadow))))
+ '(diff-file-header ((t (:foreground "brightgreen"))))
+ '(diff-header ((t (:background "brightcyan"))))
  '(diff-removed ((t (:inherit diff-changed :foreground "magenta"))))
  '(error ((t (:foreground "red" :weight bold))))
  '(eww-form-text ((t (:foreground "brightblack" :background "brightcyan"))))
@@ -37,11 +37,15 @@
  '(font-lock-preprocessor-face ((t (:foreground "brightblack"))))
  '(font-lock-string-face ((t (:foreground "magenta"))))
  '(font-lock-type-face ((t (:foreground "green"))))
+ '(help-key-binding ((t (:background "brightcyan"))))
  '(hi-yellow ((t (:background "white"))))
  '(highlight ((t (:background "white"))))
+ '(lazy-highlight ((t (:inverse-video t))))
  '(magit-header-line ((t (:inherit header-line :bold t))))
  '(region ((t (:background "black" :distant-foreground "white"))))
  '(show-paren-match ((t (:bold t))))
  '(show-paren-mismatch ((t (:background "red"))))
  '(warning ((t (:foreground "brightred" :bold t))))
- '(which-func ((t (:inherit header-line)))))
+ '(which-func ((t (:inherit header-line))))
+ '(whitespace-tab ((t (:background "red" :foreground "white"))))
+ '(widget-field ((t (:background "brightcyan" :foreground "brightwhite")))))

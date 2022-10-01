@@ -69,12 +69,12 @@
 (column-number-mode 1)
 
 ;; Set colors for mode line and buffer separators
-(set-face-foreground 'mode-line "white")
-(set-face-background 'mode-line "black")
-;; (set-face-foreground 'mode-line-inactive "white")
-;; (set-face-background 'mode-line-inactive "black")
-;; (set-face-foreground 'vertical-border "white")
-;; (set-face-background 'vertical-border "black")
+(set-face-foreground 'mode-line "black")
+(set-face-background 'mode-line "white")
+(set-face-foreground 'mode-line-inactive "white")
+(set-face-background 'mode-line-inactive "black"))
+(set-face-foreground 'vertical-border "white")
+(set-face-background 'vertical-border "black")
 (if (eq system-type 'windows-nt)
     (progn (set-face-foreground 'shadow "light gray")
            (set-face-background 'header-line "dim gray"))
