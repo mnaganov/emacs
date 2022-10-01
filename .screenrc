@@ -1,11 +1,8 @@
 # Control-/ is the new escape key
 # I use C-z in emacs anyways; to send C-/ to emacs, type C-/ /
 escape ^_/
-# Use 'xterm-256color' because this gives better looking colors in emacs
-term xterm-256color
-# However, this makes screen to send unexpected keys for Home/End, fix that
-bindkey -k kh stuff \033OH
-bindkey -k kH stuff \033OF
+# 16 colors is better than 8
+term screen-16color
 vbell off
 startup_message off
 altscreen on
