@@ -50,8 +50,14 @@
     (load-file (concat emacs-root "dot-windows.el")))
 (when (not window-system)
   (require 'term/xterm)
-  (when (fboundp 'xterm-set-window-title)
-    (add-hook 'post-command-hook 'xterm-set-window-title)))
+  (unless (fboundp 'xterm-set-window-title)
+    (defun xterm-set-window-title (&optional terminal)
+      "Set the window title of the Xterm TERMINAL. The title is constructed from `frame-title-format'."
+      (unless (display-graphic-p terminal)
+        (send-string-to-terminal
+         (format "\e]2;%s\a" (format-mode-line frame-title-format))
+         terminal))))
+  (add-hook 'post-command-hook 'xterm-set-window-title))
 
 (defun is-windows-wsl ()
   (string-match-p (regexp-quote "WINDOWS/system32") (getenv "PATH")))

@@ -16,7 +16,7 @@
  '(js2-cleanup-whitespace nil)
  '(js2-indent-on-enter-key nil)
  '(js2-mirror-mode nil)
- '(ns-command-modifier 'meta))
+ '(ns-command-modifier (quote meta)))
 ;; The following 16-color palette is recommended.
 ;; It's based on Colorized Light, with most of shades of gray replaced
 ;; with bright colors to use as backgrounds.
@@ -66,6 +66,7 @@
  '(isearch ((t (:background "brightgreen"))))
  '(lazy-highlight ((t (:background "brightyellow"))))
  '(magit-header-line ((t (:inherit header-line :bold t))))
+ '(match ((t (:background "brightyellow"))))
  '(region ((t (:background "brightblue"))))
  '(show-paren-match ((t (:bold t))))
  '(show-paren-mismatch ((t (:background "red"))))
