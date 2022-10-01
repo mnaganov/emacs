@@ -38,7 +38,7 @@
  '(hi-yellow ((t (:background "white"))))
  '(highlight ((t (:background "white"))))
  '(magit-header-line ((t (:inherit header-line :bold t))))
- '(region ((t (:background "brightcyan" :distant-foreground "black"))))
+ '(region ((t (:background "black" :distant-foreground "white"))))
  '(show-paren-match ((t (:bold t))))
  '(show-paren-mismatch ((t (:background "red"))))
  '(warning ((t (:foreground "brightred" :bold t))))
