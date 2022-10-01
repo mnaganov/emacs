@@ -22,8 +22,8 @@
   ;; If you edit it by hand, you could mess it up, so be careful.
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
- '(diff-added ((t (:inherit diff-changed :foreground "brightmagenta"))))
- '(diff-removed ((t (:inherit diff-changed :foreground "brightred"))))
+ '(diff-added ((t (:inherit diff-changed :foreground "green"))))
+ '(diff-removed ((t (:inherit diff-changed :foreground "magenta"))))
  '(diff-context ((t (:inherit shadow))))
  '(eww-form-text ((t (:foreground "brightblack" :background "brightcyan"))))
  '(hi-yellow ((t (:background "color-229"))))
