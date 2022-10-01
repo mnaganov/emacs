@@ -43,6 +43,10 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(compilation-mode-line-fail ((t (:foreground "red" :bold t))))
+ '(compilation-mode-line-run ((t (:foreground "brightmagenta" :bold t))))
+ '(cua-global-mark ((t (:background "brightgreen"))))
+ '(cua-rectangle ((t (:background "brightblue"))))
  '(diff-added ((t (:inherit diff-changed :foreground "green"))))
  '(diff-context ((t (:inherit shadow))))
  '(diff-file-header ((t (:foreground "brightblack"))))
@@ -60,6 +64,7 @@
  '(font-lock-preprocessor-face ((t (:foreground "brightblack"))))
  '(font-lock-string-face ((t (:foreground "magenta"))))
  '(font-lock-type-face ((t (:foreground "green"))))
+ '(font-lock-warning-face ((t (:inherit warning))))
  '(help-key-binding ((t (:bold t))))
  '(hi-yellow ((t (:background "brightyellow"))))
  '(highlight ((t (:background "white"))))
@@ -72,5 +77,6 @@
  '(show-paren-mismatch ((t (:background "red"))))
  '(warning ((t (:foreground "brightred" :bold t))))
  '(which-func ((t (:inherit header-line))))
- '(whitespace-tab ((t (:background "red" :foreground "white"))))
+ '(whitespace-big-indent ((t (:inherit whitespace-tab))))
+ '(whitespace-tab ((t (:background "brightred" :foreground "white"))))
  '(widget-field ((t (:background "brightcyan" :foreground "brightwhite")))))
