@@ -29,13 +29,13 @@
 ;;  "#8b2252",
 ;;  "#0087af",
 ;;  "#eee8d5",
-;;  "#002b36",
+;;  "#93a1a1",
 ;;  "#cb4b16",
 ;;  "#e3ffb3",
 ;;  "#ffffaf",
-;;  "#b3e5ff",
+;;  "#e5f6ff",
 ;;  "#3a5fcd",
-;;  "#93a1a1",
+;;  "#f1f3f3",
 ;;  "#fdf6e3"
 ;; ]
 (custom-set-faces
@@ -46,22 +46,25 @@
  '(compilation-mode-line-fail ((t (:foreground "red" :bold t))))
  '(compilation-mode-line-run ((t (:foreground "brightmagenta" :bold t))))
  '(cua-global-mark ((t (:background "brightgreen"))))
- '(cua-rectangle ((t (:background "brightblue"))))
+ '(cua-rectangle ((t (:background "brightcyan"))))
+ '(custom-face-tag ((t (:foreground "brightblack"))))
+ '(custom-group-tag ((t (:foreground "brightblack"))))
+ '(custom-group-tag1 ((t (:foreground "brightblack"))))
  '(diff-added ((t (:inherit diff-changed :foreground "green"))))
  '(diff-context ((t (:inherit shadow))))
- '(diff-file-header ((t (:foreground "brightblack"))))
+ '(diff-file-header ((t (:foreground "black"))))
  '(diff-header ((t (:background "brightcyan"))))
  '(diff-refine-added ((t (:inherit diff-added :background "brightgreen"))))
  '(diff-refine-removed ((t (:inherit diff-removed :background "brightblue"))))
  '(diff-removed ((t (:inherit diff-changed :foreground "cyan"))))
  '(error ((t (:foreground "red" :weight bold))))
- '(eww-form-text ((t (:foreground "brightblack" :background "brightcyan"))))
+ '(eww-form-text ((t (:foreground "black" :background "brightcyan"))))
  '(font-lock-builtin-face ((t (:foreground "black"))))
  '(font-lock-comment-face ((t (:foreground "red"))))
  '(font-lock-constant-face ((t (:foreground "cyan"))))
- '(font-lock-function-name-face ((t (:foreground "brightblack" :weight normal))))
+ '(font-lock-function-name-face ((t (:foreground "black" :weight normal))))
  '(font-lock-keyword-face ((t (:foreground "brightmagenta" :weight normal))))
- '(font-lock-preprocessor-face ((t (:foreground "brightblack"))))
+ '(font-lock-preprocessor-face ((t (:foreground "black"))))
  '(font-lock-string-face ((t (:foreground "magenta"))))
  '(font-lock-type-face ((t (:foreground "green"))))
  '(font-lock-warning-face ((t (:inherit warning))))
@@ -69,14 +72,21 @@
  '(hi-yellow ((t (:background "brightyellow"))))
  '(highlight ((t (:background "white"))))
  '(isearch ((t (:background "brightgreen"))))
+ '(isearch-fail ((t (:background "brightred" :foreground "brightwhite"))))
  '(lazy-highlight ((t (:background "brightyellow"))))
  '(magit-header-line ((t (:inherit header-line :bold t))))
  '(match ((t (:background "brightyellow"))))
- '(region ((t (:background "brightblue"))))
+ '(region ((t (:background "brightcyan"))))
+ '(shadow ((t (:foreground "brightblack"))))
  '(show-paren-match ((t (:bold t))))
  '(show-paren-mismatch ((t (:background "red"))))
+ '(smerge-base ((t (:background "brightyellow"))))
+ '(smerge-lower ((t (:background "brightgreen"))))
+ '(smerge-markers ((t (:background "brightcyan"))))
+ '(smerge-upper ((t (:background "brightblue"))))
  '(warning ((t (:foreground "brightred" :bold t))))
  '(which-func ((t (:inherit header-line))))
  '(whitespace-big-indent ((t (:inherit whitespace-tab))))
  '(whitespace-tab ((t (:background "brightred" :foreground "white"))))
- '(widget-field ((t (:background "brightcyan" :foreground "brightwhite")))))
+ '(widget-field ((t (:background "brightcyan" :foreground "black"))))
+ '(widget-single-line-field ((t (:background "brightgreen" :foreground "black")))))
