@@ -35,7 +35,7 @@
 ;;  "#ffffaf",
 ;;  "#e5f6ff",
 ;;  "#3a5fcd",
-;;  "#f1f3f3",
+;;  "#ebecec",
 ;;  "#fdf6e3"
 ;; ]
 (custom-set-faces
