@@ -66,7 +66,7 @@
  '(font-lock-constant-face ((t (:foreground "cyan"))))
  '(font-lock-function-name-face ((t (:bold t))))
  '(font-lock-keyword-face ((t (:foreground "brightmagenta"))))
- '(font-lock-preprocessor-face ((t (:foreground "black" :bold t))))
+ '(font-lock-preprocessor-face ((t (:foreground "black"))))
  '(font-lock-string-face ((t (:foreground "magenta"))))
  '(font-lock-type-face ((t (:foreground "green"))))
  '(font-lock-warning-face ((t (:inherit warning))))
