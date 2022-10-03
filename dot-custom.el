@@ -20,6 +20,8 @@
 ;; The following 16-color palette is recommended.
 ;; It's based on Colorized Light, with most of shades of gray replaced
 ;; with bright colors to use as backgrounds.
+;; Terminal background: #fdf6e3 (same as brightwhite)
+;;          foreground: #657b83
 ;; [
 ;;  "#073642",
 ;;  "#b22222",
@@ -62,9 +64,9 @@
  '(font-lock-builtin-face ((t (:foreground "black"))))
  '(font-lock-comment-face ((t (:foreground "red"))))
  '(font-lock-constant-face ((t (:foreground "cyan"))))
- '(font-lock-function-name-face ((t (:foreground "black" :weight normal))))
- '(font-lock-keyword-face ((t (:foreground "brightmagenta" :weight normal))))
- '(font-lock-preprocessor-face ((t (:foreground "black"))))
+ '(font-lock-function-name-face ((t (:bold t))))
+ '(font-lock-keyword-face ((t (:foreground "brightmagenta"))))
+ '(font-lock-preprocessor-face ((t (:foreground "black" :bold t))))
  '(font-lock-string-face ((t (:foreground "magenta"))))
  '(font-lock-type-face ((t (:foreground "green"))))
  '(font-lock-warning-face ((t (:inherit warning))))
@@ -76,6 +78,7 @@
  '(lazy-highlight ((t (:background "brightyellow"))))
  '(magit-header-line ((t (:inherit header-line :bold t))))
  '(match ((t (:background "brightyellow"))))
+ '(minibuffer-prompt ((t (:foreground "brightmagenta"))))
  '(region ((t (:background "brightcyan"))))
  '(show-paren-match ((t (:bold t))))
  '(show-paren-mismatch ((t (:background "red"))))
