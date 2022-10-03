@@ -68,23 +68,6 @@
 ;; Show column number in mode line
 (column-number-mode 1)
 
-;; Set colors for mode line and buffer separators
-(set-face-foreground 'mode-line "black")
-(set-face-background 'mode-line "white")
-(set-face-foreground 'mode-line-inactive "white")
-(set-face-background 'mode-line-inactive "black")
-(set-face-foreground 'vertical-border "white")
-(set-face-background 'vertical-border "black")
-(if (eq system-type 'windows-nt)
-    (progn (set-face-foreground 'shadow "light gray")
-           (set-face-background 'header-line "dim gray"))
-    (progn (set-face-foreground 'shadow "brightcyan")
-           (set-face-background 'header-line "brightblue")))
-(set-face-background 'match "white")
-(set-face-background 'secondary-selection "white")
-(set-face-foreground 'header-line "white")
-(set-face-underline 'header-line nil)
-
 ;; Don't unsplit windows on ESC ESC ESC
 (defadvice keyboard-escape-quit (around my-keyboard-escape-quit activate)
   (let (orig-one-window-p)
