@@ -104,7 +104,6 @@
       (set-marker comint-last-output-start (point))
       (funcall startup-cmd)
       (comint-send-input nil t))))
-(open-shell-buffer "=sargo=" (lambda() (insert-file-contents "~/screen/sargo.cfg" nil)))
 (open-shell-buffer "=bramble=" (lambda() (insert-file-contents "~/screen/bramble.cfg" nil)))
 (open-shell-buffer "=redfin=" (lambda() (insert-file-contents "~/screen/redfin.cfg" nil)))
 (open-shell-buffer "=raven=" (lambda() (insert-file-contents "~/screen/raven.cfg" nil)))
