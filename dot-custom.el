@@ -46,7 +46,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(compilation-mode-line-fail ((t (:foreground "red" :bold t))))
- '(compilation-mode-line-run ((t (:foreground "brightmagenta" :bold t))))
+ '(compilation-mode-line-run ((t (:foreground "blue" :bold t))))
  '(cua-global-mark ((t (:background "brightgreen"))))
  '(cua-rectangle ((t (:background "brightcyan"))))
  '(custom-face-tag ((t (:foreground "brightblack"))))
