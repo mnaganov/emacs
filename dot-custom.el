@@ -123,7 +123,7 @@
  '(smerge-lower ((t (:background "brightgreen"))))
  '(smerge-markers ((t (:inherit diff-header))))
  '(smerge-refined-added ((t (:inherit diff-added :bold t))))
- '(smerge-refined-changed ((t (:inherit diff-changed :bold t))))
+ '(smerge-refined-change ((t (:inherit diff-changed))))
  '(smerge-refined-removed ((t (:inherit diff-removed :bold t))))
  '(smerge-upper ((t (:background "brightblue"))))
  '(vertical-border ((t (:inherit mode-line-inactive))))
