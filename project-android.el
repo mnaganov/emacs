@@ -20,7 +20,8 @@
   "The command to be run by the cs function.")
 (define-compilation-mode my-cs-mode "CS"
   "CodeSearch compilation mode."
-  nil)
+  (setq-local compilation-error-face
+              compilation-info-face))
 (defun my-cs (command-args)
   (interactive
    (list (read-shell-command "Run cs (like this): "
