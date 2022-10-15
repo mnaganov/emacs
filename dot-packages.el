@@ -72,6 +72,11 @@
 
 (require 'osc52)
 
+;; Test command to check whether "direct" OSC52 works:
+;; printf "\033]52;c;$(printf testOSC52 | base64)\a"
+;; Test command to check whether DCS-wrapped OSC52 works:
+;; printf "\033P\033]52;c;$(printf testOSC52DCS | base64)\a\033\\"
+
 ;; If emacs runs as a console program in a terminal or under screen
 ;; clipboard functions need to be set up in order to interact with
 ;; external clipboards
