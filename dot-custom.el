@@ -45,6 +45,14 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(ansi-color-bright-black ((t (:inherit ansi-color-black :bold t))))
+ '(ansi-color-bright-blue ((t (:inherit ansi-color-blue :bold t))))
+ '(ansi-color-bright-cyan ((t (:inherit ansi-color-cyan :bold t))))
+ '(ansi-color-bright-green ((t (:inherit ansi-color-green :bold t))))
+ '(ansi-color-bright-magenta ((t (:inherit ansi-color-magenta :bold t))))
+ '(ansi-color-bright-red ((t (:inherit ansi-color-red :bold t))))
+ '(ansi-color-bright-white ((t (:inherit ansi-color-white :bold t))))
+ '(ansi-color-bright-yellow ((t (:inherit ansi-color-yellow :bold t))))
  '(compilation-mode-line-fail ((t (:inherit error))))
  '(compilation-mode-line-run ((t (:foreground "blue" :bold t))))
  '(cua-global-mark ((t (:inherit match))))
