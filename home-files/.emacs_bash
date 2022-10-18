@@ -1,0 +1,3 @@
+export STAY_OFF_MY_LAWN=1
+export PAGER=cat
+export TERM=dumb-emacs-ansi
