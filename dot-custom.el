@@ -20,25 +20,25 @@
 ;; The following 16-color palette is recommended.
 ;; It's based on Colorized Light, with most of shades of gray replaced
 ;; with bright colors to use as backgrounds.
-;; Terminal background: #fdf6e3 (same as brightwhite)
+;; Terminal background: #fdf6e4 (same as brightwhite)
 ;;          foreground: #657b83
 ;; [
-;;  "#073642",
-;;  "#b22222",
-;;  "#228b22",
-;;  "#b58900",
+;;  "#043642",
+;;  "#b12621",
+;;  "#1f892b",
+;;  "#b68900",
 ;;  "#268bd2",
-;;  "#8b2252",
-;;  "#0087af",
-;;  "#eee8d5",
+;;  "#94245c",
+;;  "#249482",
+;;  "#eee8d6",
 ;;  "#93a1a1",
-;;  "#cb4b16",
-;;  "#e3ffb3",
-;;  "#ffffaf",
-;;  "#e5f6ff",
-;;  "#3a5fcd",
-;;  "#ebecec",
-;;  "#fdf6e3"
+;;  "#c7692b",
+;;  "#deffe2",
+;;  "#eef9c2",
+;;  "#dfe3ec",
+;;  "#3657cb",
+;;  "#ddf3ed",
+;;  "#fdf6e4"
 ;; ]
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -64,11 +64,11 @@
  '(diff-context ((t (:foreground "brightblack"))))
  '(diff-error ((t (:inherit error))))
  '(diff-file-header ((t (:foreground "black"))))
- '(diff-header ((t (:background "brightcyan"))))
+ '(diff-header ((t (:background "brightyellow"))))
  '(diff-refine-added ((t (:inherit diff-added :background "brightgreen"))))
  '(diff-refine-changed ((t (:inherit diff-changed :bold t))))
  '(diff-refine-removed ((t (:inherit diff-removed :background "brightblue"))))
- '(diff-removed ((t (:inherit diff-changed :foreground "cyan"))))
+ '(diff-removed ((t (:inherit diff-changed :foreground "blue"))))
  '(ediff-current-diff-A ((t (:inherit smerge-upper))))
  '(ediff-current-diff-Ancestor ((t (:inherit smerge-markers))))
  '(ediff-current-diff-B ((t (:inherit smerge-base))))
@@ -104,6 +104,7 @@
  '(isearch ((t (:inherit match))))
  '(isearch-fail ((t (:background "brightred" :foreground "brightyellow"))))
  '(lazy-highlight ((t (:background "brightyellow"))))
+ '(link ((t (:foreground "blue" :underline t))))
  '(magit-blame-heading ((t (:inherit diff-header))))
  '(magit-branch-local ((t (:inherit default :bold t))))
  '(magit-diff-added ((t (:inherit diff-added))))
@@ -140,4 +141,4 @@
  '(whitespace-big-indent ((t (:inherit whitespace-tab))))
  '(whitespace-tab ((t (:background "brightred" :foreground "white"))))
  '(widget-field ((t (:background "brightcyan" :foreground "black"))))
- '(widget-single-line-field ((t (:background "brightgreen" :foreground "black")))))
+ '(widget-single-line-field ((t (:background "brightblue" :foreground "black")))))
