@@ -85,6 +85,7 @@
  '(ediff-odd-diff-Ancestor ((t (:inherit ediff-current-diff-Ancestor))))
  '(ediff-odd-diff-B ((t (:inherit ediff-current-diff-B))))
  '(ediff-odd-diff-C ((t (:inherit ediff-current-diff-C))))
+ '(eglot-highlight-symbol-face ((t (:inherit underline))))
  '(error ((t (:foreground "red" :bold t))))
  '(eww-form-text ((t (:inherit widget-field))))
  '(font-lock-builtin-face ((t (:foreground "black"))))
