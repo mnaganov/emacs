@@ -22,6 +22,7 @@
 ;; with bright colors to use as backgrounds.
 ;; Terminal background: #fdf6e4 (same as brightwhite)
 ;;          foreground: #657b83
+;;          cursor:     #b1b5d8 (brightmagenta, 40% opacity)
 ;; [
 ;;  "#043642",
 ;;  "#b12621",
