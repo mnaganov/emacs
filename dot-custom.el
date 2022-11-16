@@ -103,7 +103,7 @@
  '(hi-yellow ((t (:background "brightyellow"))))
  '(highlight ((t (:background "white"))))
  '(isearch ((t (:inherit match))))
- '(isearch-fail ((t (:background "brightred" :foreground "brightyellow"))))
+ '(isearch-fail ((t (:background "red" :foreground "brightwhite"))))
  '(lazy-highlight ((t (:background "brightyellow"))))
  '(link ((t (:foreground "blue" :underline t))))
  '(magit-blame-heading ((t (:inherit diff-header))))
