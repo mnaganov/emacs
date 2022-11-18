@@ -132,7 +132,7 @@
  '(secondary-selection ((t (:background "brightblue"))))
  '(smerge-base ((t (:background "brightyellow"))))
  '(smerge-lower ((t (:background "brightgreen"))))
- '(smerge-markers ((t (:inherit diff-header))))
+ '(smerge-markers ((t (:background "brightred" :foreground "brightwhite"))))
  '(smerge-refined-added ((t (:inherit diff-added :bold t))))
  '(smerge-refined-change ((t (:inherit diff-changed))))
  '(smerge-refined-removed ((t (:inherit diff-removed :bold t))))
