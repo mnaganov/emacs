@@ -9,8 +9,13 @@
 ;; Use C-h as delete instead of invoking help. For help, use M-x help-command
 (global-set-key "\C-h" 'delete-backward-char)
 
-;; I love to use diff mode and use it more often than macros.
-(global-set-key [f3] 'diff-mode)
+;; I love to use diff mode and use it more often than macros,
+;; but it's a disaster when it's applied to a wrong buffer.
+(defun my-switch-fundamental-to-diff-mode ()
+  (interactive
+   (if (eq major-mode 'fundamental-mode)
+       (diff-mode))))
+(global-set-key [f3] 'my-switch-fundamental-to-diff-mode)
 
 ;; Reminder:
 ;; C-x 8 _ m inserts em dash,
