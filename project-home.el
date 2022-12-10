@@ -1,5 +1,5 @@
 ;; Keybindings
-(global-set-key [f5] '(lambda () (interactive) (revert-buffer nil t)))
+(global-set-key [f5] (lambda () (interactive) (revert-buffer nil t)))
 (if (eq system-type 'windows-nt)
     (global-set-key [f6] 'rgrep)
     (global-set-key [f6] 'find-grep))

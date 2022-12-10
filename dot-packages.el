@@ -203,4 +203,4 @@
 (global-set-key (kbd "C-c C-b") 'string-inflection-all-cycle)
 ;; C-c C-b in C mode is for sending bug reports.
 (add-hook 'c++-mode-hook
-          '(lambda () (local-set-key (kbd "C-c C-b") 'string-inflection-all-cycle)))
+          (lambda () (local-set-key (kbd "C-c C-b") 'string-inflection-all-cycle)))

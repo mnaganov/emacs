@@ -13,7 +13,7 @@
 (require 'ag)
 
 ;; Keybindings
-(global-set-key [f5] '(lambda () (interactive) (revert-buffer nil t)))
+(global-set-key [f5] (lambda () (interactive) (revert-buffer nil t)))
 (if (eq system-type 'windows-nt)
     ;; ack hangs in cygwin under emacs, use good 'ol find-grep instead
     (progn

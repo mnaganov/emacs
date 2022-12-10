@@ -32,7 +32,7 @@
 (global-set-key [f1] 'ftf-find-file)
 (global-set-key [f2] 'my-cs)
 (global-set-key [f4] 'eglot-rename)
-(global-set-key [f5] '(lambda () (interactive) (revert-buffer nil t)))
+(global-set-key [f5] (lambda () (interactive) (revert-buffer nil t)))
 (global-set-key [f6] 'ag-project-regexp)
 ;; Enable comint as 'atest' sometimes is asking questions
 (defun my-compile-with-comint ()

@@ -162,7 +162,10 @@
 ;; the filename of an autosave file.)
 (defvar autosave-dir nil)
 (setq autosave-dir (generate-temp-dir-name "emacs_autosaves"))
-(make-directory autosave-dir t)
+(defun make-autosave-dir ()
+  (make-directory autosave-dir t))
+(make-autosave-dir)
+(run-with-timer (* 60 60 24) (* 60 60 24) 'make-autosave-dir)
 
 (defun auto-save-file-name-p (filename)
   (string-match "^#.*#$" (file-name-nondirectory filename)))
