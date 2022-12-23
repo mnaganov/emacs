@@ -83,12 +83,13 @@
 ;; must establish a reverse SSH tunnel to the remote machine for the port 3333:
 ;;   ssh -R 3333:localhost:3333 <remote-host>
 (setq xclip-tunnel-port 3333)
-(defun start-xclip-server ()
-  (start-process "xclip-server"
+(defun xclip-server-start ()
+  (interactive)
+  (setq xclip-server-process (start-process "xclip-server"
                  nil
                  "bash"
                  "-c"
-                 (format "while [ true ]; do nc -l 127.0.0.1 %s | xclip -selection clipboard; done" xclip-tunnel-port)))
+                 (format "while [ true ]; do nc -l 127.0.0.1 %s | xclip -selection clipboard; done" xclip-tunnel-port))))
 (defun remote-xclip-cut-function (text &optional push)
   (let ((temp-file (make-temp-file "clip")))
     ;; Use a temp file to avoid issues with large selections.
@@ -127,7 +128,8 @@
              (unless (string= (car kill-ring) xsel-output)
                xsel-output)))
          (setq interprogram-cut-function 'osc52-then-xsel-cut-function)
-         (setq interprogram-paste-function 'xsel-paste-function))
+         (setq interprogram-paste-function 'xsel-paste-function)
+         (when (getenv "DISPLAY") (xclip-server-start)))
         ((getenv "STY")
          ;; On the host, X is not running, emacs runs under screen remotely.
          ;; We assume that on the client side a graphical terminal is used.
