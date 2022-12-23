@@ -135,7 +135,7 @@
          ;; Paste from external clipboard has to be done using the terminal.
          (defun osc52-then-remote-xclip-cut-function (text &optional push)
            (osc52-select-text-dcs text)
-           (remote-xclip-cut-function test))
+           (remote-xclip-cut-function text))
          (setq interprogram-cut-function 'osc52-then-remote-xclip-cut-function))
         ))
 
