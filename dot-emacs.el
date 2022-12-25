@@ -229,6 +229,7 @@
 
 (load-file (concat emacs-root "dot-packages.el"))
 
+(require 'dired)
 ;; Use dired as a dedicated "project tree window"
 (defun dired-buffer-live-p (buffer)
   (and (buffer-live-p buffer)
@@ -244,6 +245,7 @@
     dedicated))
 ;; Opens directories list on the left side of the frame
 ;; To close it, either use C-x 0, or C-c left-arrow.
+;; To expand/collapse a directory, use '$' (dired-hide-subdir)
 (defun dired-on-the-left ()
   (interactive)
   (let ((dired-wnd (find-dedicated-dired-window)) (current-dir default-directory))
@@ -285,7 +287,10 @@
       (let ((dir-name (find-first-dired-dir-name)))
         (if dir-name
             (while (re-search-forward (concat "^. " dir-name) nil t)
-                   (replace-match "  ."))))))
+              (replace-match "  ·")
+              (while (and (re-search-forward "[^/:]*\\(/\\|:\\)" nil t)
+                          (seq-contains (match-string-no-properties 0) ?/))
+                (replace-match "·")))))))
 (add-hook 'dired-after-readin-hook 'dired-shorten-directory-names)
 (when (eq system-type 'darwin)
   (require 'ls-lisp)
