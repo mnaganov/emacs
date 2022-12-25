@@ -257,7 +257,7 @@
       (if (not already-opened)
           (progn
            (switch-to-buffer (dired-noselect current-dir "-lR"))
-           (dired-hide-details-mode)
+           (dired-hide-details-mode 1)
            (dired-hide-all)
            (auto-revert-mode))
           (switch-to-buffer (car already-opened))))
