@@ -44,6 +44,10 @@
 
 ;; Swap contents of the buffers
 (require 'buffer-move)
+;; C-b and C-f are "canonical" move by character shortcuts, however
+;; I only use arrows for that, and I do move buffers around a lot.
+(global-set-key (kbd "C-b") 'buf-move-left)
+(global-set-key (kbd "C-f") 'buf-move-right)
 
 ;; == OS-specific setup ==
 (if (eq system-type 'windows-nt)
