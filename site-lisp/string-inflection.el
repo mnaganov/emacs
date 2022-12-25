@@ -4,7 +4,7 @@
 
 ;; Author: akicho8 <akicho8@gmail.com>
 ;; Keywords: elisp
-;; Version: 1.0.13
+;; Version: 1.0.16
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -23,15 +23,16 @@
 
 ;;; Commentary:
 
-;; Main functions are three
+;; There are three main functions:
 ;;
-;;   1. For Ruby -> string-inflection-ruby-style-cycle  (foo_bar => FOO_BAR => FooBar => foo_bar)
-;;   2. For Python -> string-inflection-python-style-cycle  (foo_bar => FOO_BAR => FooBar => foo_bar)
-;;   3. For Java -> string-inflection-java-style-cycle  (fooBar  => FOO_BAR => FooBar => fooBar)
-;;   4. For All  -> string-inflection-all-cycle         (foo_bar => FOO_BAR => FooBar => fooBar => foo-bar => Foo_Bar => foo_bar)
+;;   1. For Ruby   -> string-inflection-ruby-style-cycle   (foo_bar => FOO_BAR => FooBar => foo_bar)
+;;   2. For Elixir -> string-inflection-elixir-style-cycle (foo_bar => FooBar => foo_bar)
+;;   3. For Python -> string-inflection-python-style-cycle (foo_bar => FOO_BAR => FooBar => foo_bar)
+;;   4. For Java   -> string-inflection-java-style-cycle   (fooBar  => FOO_BAR => FooBar => fooBar)
+;;   5. For All    -> string-inflection-all-cycle          (foo_bar => FOO_BAR => FooBar => fooBar => foo-bar => Foo_Bar => foo_bar)
 ;;
 ;;
-;; Setting Example 1
+;; Example 1:
 ;;
 ;;   (require 'string-inflection)
 ;;   (global-unset-key (kbd "C-q"))
@@ -51,12 +52,15 @@
 ;;      ;; for python
 ;;      ((eq major-mode 'python-mode)
 ;;       (string-inflection-python-style-cycle))
+;;      ;; for elixir
+;;      ((eq major-mode 'elixir-mode)
+;;       (string-inflection-elixir-style-cycle))
 ;;      (t
 ;;       ;; default
 ;;       (string-inflection-ruby-style-cycle))))
 ;;
 ;;
-;; Setting Example 2
+;; Example 2:
 ;;
 ;;   (require 'string-inflection)
 ;;
@@ -68,6 +72,11 @@
 ;;             '(lambda ()
 ;;                (local-set-key (kbd "C-c C-u") 'string-inflection-ruby-style-cycle)))
 ;;
+;;   ;; for elixir
+;;   (add-hook 'elixir-mode-hook
+;;             '(lambda ()
+;;                (local-set-key (kbd "C-c C-u") 'string-inflection-elixir-style-cycle)))
+;;
 ;;   ;; for python
 ;;   (add-hook 'python-mode-hook
 ;;             '(lambda ()
@@ -78,16 +87,35 @@
 ;;             '(lambda ()
 ;;                (local-set-key (kbd "C-c C-u") 'string-inflection-java-style-cycle)))
 ;;
-;; You may also consider setting `string-inflection-skip-backward-when-done' to
-;; `t' if you don't like `string-inflect' moving your point to the end of the
-;; word
+;; You can also set `string-inflection-skip-backward-when-done' to `t' if
+;; you don't like `string-inflect' moving your point to the end of the word.
 
 ;;; Code:
 
+(defgroup string-inflection nil
+  "Change the casing of words."
+  :group 'convenience)
+
+(defcustom string-inflection-skip-backward-when-done nil
+  "Controls the position of the cursor after an inflection.
+
+If nil remain at the end of the string after inflecting, else move backward to
+the beginning."
+  :group 'string-inflection
+  :type 'boolean)
+
 (defconst string-inflection-word-chars "a-zA-Z0-9_-")
 
-(defvar string-inflection-skip-backward-when-done nil
-  "Whether point just move backward to the beginning of the word after inflecting.")
+(defcustom string-inflection-erase-chars-when-region "./"
+  "When selected in the region, this character is included in the transformation
+as part of the string.
+
+Exactly assume that the underscore exists.
+For example, when you select `Foo/Bar', it is considered that `Foo_Bar' is
+selected. If include `:', select `FOO::VERSION' to run
+`M-x\ string-inflection-underscore' to `foo_version'."
+  :group 'string-inflection
+  :type 'string)
 
 ;; --------------------------------------------------------------------------------
 
@@ -99,6 +127,13 @@
    (string-inflection-ruby-style-cycle-function (string-inflection-get-current-word))))
 
 (fset 'string-inflection-cycle 'string-inflection-ruby-style-cycle)
+
+;;;###autoload
+(defun string-inflection-elixir-style-cycle ()
+  "foo_bar => FooBar => foo_bar"
+  (interactive)
+  (string-inflection-insert
+   (string-inflection-elixir-style-cycle-function (string-inflection-get-current-word))))
 
 ;;;###autoload
 (defun string-inflection-python-style-cycle ()
@@ -205,10 +240,20 @@
                   (point))))
          (str (buffer-substring start end)))
     (prog1
-        (if (use-region-p)
+        (progn
+          (when (use-region-p)
             ;; https://github.com/akicho8/string-inflection/issues/31
             ;; Multiple lines will be one line because [:space:] are included to line breaks
-            (replace-regexp-in-string "[.:/]+" "_" str) ; 'aa::bb.cc dd/ee' => 'aa_bb_cc dd_ee'
+            (setq str (replace-regexp-in-string (concat "[" string-inflection-erase-chars-when-region "]+") "_" str)) ; 'aa::bb.cc dd/ee' => 'aa_bb_cc dd_ee'
+
+            ;; kebabing a region can insert an unexpected hyphen
+            ;; https://github.com/akicho8/string-inflection/issues/34
+            (with-syntax-table (copy-syntax-table)
+              (modify-syntax-entry ?_ "w")
+              (setq str (replace-regexp-in-string "_+\\b" "" str)) ; '__aA__ __aA__' => '__aA __aA'
+              (setq str (replace-regexp-in-string "\\b_+" "" str)) ; '__aA __aA'     => 'aA aA'
+              )
+            )
           str)
       (delete-region start end))))
 
@@ -292,6 +337,14 @@
 
 (defalias 'string-inflection-python-style-cycle-function
   'string-inflection-ruby-style-cycle-function)
+
+(defun string-inflection-elixir-style-cycle-function (str)
+  "foo_bar => FooBar => foo_bar"
+  (cond
+   ((string-inflection-underscore-p str)
+    (string-inflection-pascal-case-function str))
+   (t
+    (string-inflection-underscore-function str))))
 
 (defun string-inflection-java-style-cycle-function (str)
   "fooBar => FOO_BAR => FooBar => fooBar"

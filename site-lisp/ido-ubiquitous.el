@@ -4,11 +4,11 @@
 
 ;; Author: Ryan C. Thompson
 ;; URL: https://github.com/DarwinAwardWinner/ido-ubiquitous
-;; Version: 3.16
+;; Version: 3.8
 ;; Created: 2011-09-01
 ;; Keywords: convenience, completion, ido
 ;; EmacsWiki: InteractivelyDoThings
-;; Package-Requires: ((emacs "24.1") (ido-completing-read+ "3.16") (cl-lib "0.5"))
+;; Package-Requires: ((emacs "24.1") (ido-completing-read+ "3.8") (cl-lib "0.5"))
 ;; Filename: ido-ubiquitous.el
 
 ;; This file is NOT part of GNU Emacs.
@@ -39,8 +39,9 @@
 ;; functions will not have ido completion even when this mode is
 ;; enabled. Some other functions have ido disabled in them because
 ;; their packages already provide support for ido via other means (for
-;; example, magit). See `M-x customize-group ido-ubiquitous' and read
-;; about the override variables for more information.
+;; example, org-mode and magit). See `M-x customize-group
+;; ido-ubiquitous' and read about the override variables for more
+;; information.
 
 ;; ido-ubiquitous version 3.0 is a major update, including a split
 ;; into two packages, and some of the configuration options have
@@ -69,7 +70,7 @@
 ;;
 ;;; Code:
 
-(defconst ido-ubiquitous-version "3.16"
+(defconst ido-ubiquitous-version "3.8"
   "Currently running version of ido-ubiquitous.
 
 Note that when you update ido-ubiquitous, this variable may not
@@ -83,9 +84,7 @@ be updated until you restart Emacs.")
 (require 'ido)
 (require 'advice)
 (require 'cl-lib)
-(require 'cus-edit)
 (require 'ido-completing-read+)
-
 ;; Only exists in emacs 24.4 and up; we don't use this library
 ;; directly, but we load it here so we can test if it's available,
 ;; because if it isn't we need enable a workaround.
@@ -93,18 +92,13 @@ be updated until you restart Emacs.")
 
 ;;; Debug messages
 
-;;;###autoload
-(define-minor-mode ido-ubiquitous-debug-mode
-  "If non-nil, ido-ubiquitous will print debug info.
+(defvar ido-ubiquitous-debug-mode)
 
-Debug info is printed to the *Messages* buffer."
-  nil
-  :global t
-  :group 'ido-ubiquitous)
-
-(defun ido-ubiquitous--debug-message (format-string &rest args)
-  (when ido-ubiquitous-debug-mode
-     (apply #'message (concat "ido-ubiquitous: " format-string) args)))
+;; Defined as a macro for efficiency (args are not evaluated unless
+;; debug mode is on)
+(defmacro ido-ubiquitous--debug-message (format-string &rest args)
+  `(when ido-ubiquitous-debug-mode
+     (message (concat "ido-ubiquitous: " ,format-string) ,@args)))
 
 (defun ido-ubiquitous--explain-fallback (arg)
   ;; This function accepts a string, or an ido-ubiquitous-fallback
@@ -112,7 +106,7 @@ Debug info is printed to the *Messages* buffer."
   (when ido-ubiquitous-debug-mode
     (when (and (listp arg)
                (eq (car arg) 'ido-ubiquitous-fallback))
-      (setq arg (cadr arg)))
+      (setq arg (cdr arg)))
     (ido-ubiquitous--debug-message "Falling back to `%s' because %s."
                                    ido-cr+-fallback-function arg)))
 
@@ -314,6 +308,9 @@ using overrides and disable it for everything else."
     (enable exact "webjump")
     ;; https://github.com/DarwinAwardWinner/ido-ubiquitous/issues/28
     (enable regexp "\\`\\(find\\|load\\|locate\\)-library\\'")
+    ;; https://github.com/DarwinAwardWinner/ido-ubiquitous/issues/37
+    ;; Org already supports ido natively
+    (disable prefix "org-")
     ;; https://github.com/bbatsov/prelude/issues/488
     ;; https://github.com/DarwinAwardWinner/ido-ubiquitous/issues/44
     ;; tmm implements its own non-standard completion mechanics
@@ -325,6 +322,8 @@ using overrides and disable it for everything else."
     (enable-old prefix "bbdb-")
     ;; https://github.com/DarwinAwardWinner/ido-ubiquitous/issues/83
     (enable-old exact "where-is")
+    ;; https://github.com/DarwinAwardWinner/ido-ubiquitous/issues/85
+    (enable prefix "xref-")
     ;; https://github.com/DarwinAwardWinner/ido-ubiquitous/issues/60
     (disable exact "todo-add-category")
     ;; https://github.com/DarwinAwardWinner/ido-ubiquitous/issues/51
@@ -351,6 +350,11 @@ You can restore these using the command `ido-ubiquitous-restore-default-override
     (enable-old exact "webjump-read-url-choice")
     ;; https://github.com/DarwinAwardWinner/ido-ubiquitous/issues/9
     (disable exact "isearchp-read-unicode-char")
+    ;; https://github.com/DarwinAwardWinner/ido-ubiquitous/issues/37
+    (disable exact "org-completing-read")
+    (disable exact "org-completing-read-no-i")
+    (disable exact "org-iswitchb-completing-read")
+    (disable exact "org-icompleting-read")
     ;; https://github.com/DarwinAwardWinner/ido-ubiquitous/issues/38
     (enable exact "read-char-by-name")
     ;; https://github.com/DarwinAwardWinner/ido-ubiquitous/issues/39
@@ -361,10 +365,7 @@ You can restore these using the command `ido-ubiquitous-restore-default-override
     ;; https://github.com/mooz/js2-mode/issues/181
     (enable exact "imenu--completion-buffer")
     ;; https://github.com/DarwinAwardWinner/ido-ubiquitous/issues/74
-    (enable-old exact "auto-insert")
-    ;; https://github.com/DarwinAwardWinner/ido-ubiquitous/issues/116
-    (enable exact "project--completing-read-strict")
-    ) ; Close paren on separate line for better VC diffs
+    (enable-old exact "auto-insert"))
   "Default value of `ido-ubiquitous-function-overrides'.
 
 You can restore these using the command `ido-ubiquitous-restore-default-overrides'.")
@@ -406,9 +407,6 @@ Note that this variable only affects *commands*, which are
 functions marked as interactive. See
 `ido-ubiquitous-function-overrides' for how to modify the
 behavior of ido-ubiquitous for arbitrary functions.
-
-Note: If multiple overrides match the same commmand, the first
-one in the list will take precedence.
 
 If you need to add a new specification to this list, please also
 file a bug report at https://github.com/DarwinAwardWinner/ido-ubiquitous/issues"
@@ -469,75 +467,18 @@ each function to apply the appropriate override."
         (cl-loop for (action match-type func) in newval
                  collect (list action match-type
                                (ido-ubiquitous--as-string func))))
+  (set-default sym newval)
   ;; set new overrides
-  (cl-loop for override in newval
+  (cl-loop for override in (eval sym)
            for (action match-type func) = override
-
-           ;; Remove duplicate overrides
-           if (member func overridden-functions)
-           do (display-warning
-               'ido-ubiquitous
-               (format
-                "Removing duplicate override for function `%s'" func))
-
-           ;; Apply valid overrides
-           else if (eq match-type 'exact)
+           if (eq match-type 'exact)
            do (ido-ubiquitous-apply-function-override func action)
-           and collect func into overridden-functions
-           and collect override into final-value
-
-           ;; Remove invalid overrides
            else
            do (display-warning
                'ido-ubiquitous
                (format
-                "Removing invalid function override match-type `%s' for function `%s'; only match-type `exact' is supported in `ido-ubiquitous-function-overrides'."
-                match-type func))
-
-           ;; Set the value to only the overrides that were actually
-           ;; applied.
-           finally return
-           (set-default sym final-value)))
-
-(defcustom ido-ubiquitous-auto-update-overrides 'notify
-  "Whether to add new overrides when updating ido-ubiquitous.
-
-Ido-ubiquitous comes with a default set of overrides for commands
-that are known to require them. New versions of ido-ubiquitous
-may come with updates to the default overrides as more commands
-are discovered to require them. However, customizing your own
-overrides would normally prevent you from receiving these
-updates, since Emacs will not overwrite your customizations.
-
-To resolve this problem, you can set this variable to `t', and
-then ido-ubiquitous can automatically add any new built-in
-overrides whenever it is updated. (Actually, the update will
-happen the next time Emacs is restarted after the update.) This
-allows you to add your own overrides but still receive updates to
-the default set. The default overrides will always be added with
-lower precedence than user-added ones.
-
-If you want ido-ubiquitous to just notify you about new default
-overrides instead of adding them itself, set this variable to
-`notify'. If you don't want this auto-update behavior at all, set
-it to `nil'.
-
-(Note that having this option enabled effectively prevents you
-from removing any of the built-in default overrides, since they
-will simply be re-added the next time Emacs starts. However, your
-custom overrides will still take precedence, so this shouldn't be
-a problem.)"
-  :type '(choice :tag "When new overrides are available:"
-                 (const :menu-tag "Auto-add"
-                        :tag "Add them automatically"
-                        t)
-                 (const :menu-tag "Notify"
-                        :tag "Notify the user about them"
-                        notify)
-                 (const :menu-tag "Ignore"
-                        :tag "Ignore them"
-                        nil))
-  :group 'ido-ubiquitous)
+                "Ignoring invalid function override match-type `%s' for function `%s'; only match-type `exact' is supported in `ido-ubiquitous-function-overrides'."
+                match-type func))))
 
 (defcustom ido-ubiquitous-function-overrides ido-ubiquitous-default-function-overrides
   "List of function override specifications for ido-ubiquitous
@@ -548,12 +489,6 @@ command override specifications (see
 specification has the form `(BEHAVIOR MATCH-TYPE MATCH-TEXT)'.
 However, `MATCH-TYPE' may ONLY be `exact'; No other match type is
 supported.
-
-Note: If multiple overrides are set for the same function, the
-first one in the list will take precedence, and the rest will be
-ignored and deleted from the override list, with a warning.
-Invalid override specifications will also be deleted with a
-warning.
 
 If you need to add a new specification to this list, please also file a
 bug report at https://github.com/DarwinAwardWinner/ido-ubiquitous/issues
@@ -626,8 +561,7 @@ ido-ubiquitous, not for ordinary ido completion."
          (ido-ubiquitous-initial-item nil))
     ad-do-it))
 
-;; Signal used to trigger fallback (don't use `define-error' because
-;; it's only supported in 24.4 and up)
+;; Signal used to trigger fallback
 (put 'ido-ubiquitous-fallback 'error-conditions '(ido-ubiquitous-fallback error))
 (put 'ido-ubiquitous-fallback 'error-message "ido-ubiquitous-fallback")
 
@@ -648,54 +582,38 @@ completion for them."
         (orig-args
          (list prompt collection predicate require-match
                initial-input hist def inherit-input-method)))
-    ;; Outer `condition-case' is the fallback handler
     (condition-case sig
-        ;; Inner `condition-case' converts any unexpected errors into
-        ;; fallback signals.
-        (condition-case err
-            (let* (;; Set the active override and clear the "next" one so it
-                   ;; doesn't apply to nested calls.
-                   (ido-ubiquitous-active-override ido-ubiquitous-next-override)
-                   (ido-ubiquitous-next-override nil)
-                   ;; Apply the active override, if any
-                   (ido-ubiquitous-active-state
-                    (or ido-ubiquitous-active-override
-                        ido-ubiquitous-default-state
-                        'enable)))
-              ;; If ido-ubiquitous is disabled this time, fall back
-              (when (eq ido-ubiquitous-active-state 'disable)
-                (signal 'ido-ubiquitous-fallback
-                        '("`ido-ubiquitous-active-state' is `disable'")))
-              ;; Handle a collection that is a function: either expand
-              ;; completion list now or fall back
-              (when (functionp collection)
-                (if (or ido-ubiquitous-allow-on-functional-collection
-                        (memq ido-ubiquitous-active-override
-                              '(enable enable-old)))
-                    (setq collection (all-completions "" collection predicate)
-                          ;; `all-completions' will apply the predicate,
-                          ;; so it now becomes redundant.
-                          predicate nil)
-                  (signal 'ido-ubiquitous-fallback
-                          '("COLLECTION is a function and there is no override"))))
-              (let ((ido-ubiquitous-enable-next-call t))
-                (ido-completing-read+
-                 prompt collection predicate require-match
-                 initial-input hist def inherit-input-method)))
-          ;; Pass through any known fallback signals to the outer
-          ;; `condition-case'
-          (ido-ubiquitous-fallback
-           (signal (car err) (cdr err)))
-          ;; Convert any other error into a fallback signal.
-          (error
-           (signal 'ido-ubiquitous-fallback
-                   (list (format "ido-ubiquitous encountered an unexpected error: %S"
-                                 err)))))
+        (let* (;; Set the active override and clear the "next" one so it
+               ;; doesn't apply to nested calls.
+               (ido-ubiquitous-active-override ido-ubiquitous-next-override)
+               (ido-ubiquitous-next-override nil)
+               ;; Apply the active override, if any
+               (ido-ubiquitous-active-state
+                (or ido-ubiquitous-active-override
+                    ido-ubiquitous-default-state
+                    'enable)))
+          ;; If ido-ubiquitous is disabled this time, fall back
+          (when (eq ido-ubiquitous-active-state 'disable)
+            (signal 'ido-ubiquitous-fallback
+                    "`ido-ubiquitous-active-state' is `disable'"))
+          ;; Handle a collection that is a function: either expand
+          ;; completion list now or fall back
+          (when (functionp collection)
+            (if (or ido-ubiquitous-allow-on-functional-collection
+                    (memq ido-ubiquitous-active-override
+                          '(enable enable-old)))
+                (setq collection (all-completions "" collection predicate))
+              (signal 'ido-ubiquitous-fallback
+                      "COLLECTION is a function and there is no override")))
+          (let ((ido-ubiquitous-enable-next-call t))
+            (ido-completing-read+
+             prompt collection predicate require-match
+             initial-input hist def inherit-input-method)))
       ;; Handler for ido-ubiquitous-fallback signal
       (ido-ubiquitous-fallback
        (ido-ubiquitous--explain-fallback sig)
        (apply ido-cr+-fallback-function orig-args)))))
-(define-obsolete-function-alias 'completing-read-ido 'completing-read-ido-ubiquitous
+(define-obsolete-function-alias 'completing-read-ido #'completing-read-ido-ubiquitous
   "ido-ubiquitous 3.0")
 
 ;;; Old-style default support
@@ -835,149 +753,35 @@ advice has any effect."
 
 ;;; Overrides
 
-(defun ido-ubiquitous--overrides-have-same-target-p (o1 o2)
-  (cl-destructuring-bind (oride1 type1 text1) o1
-    (cl-destructuring-bind(oride2 type2 text2) o2
-      ;; Avoid warnings about unused vars
-      oride1 oride2
-      (and (string= text1 text2)
-           (eq type1 type2)))))
+(defun ido-ubiquitous-restore-default-overrides (&optional save)
+  "Re-add the default overrides for ido-ubiquitous.
 
-(defun ido-ubiquitous--combine-override-lists (olist1 olist2)
-  "Append OLIST2 to OLIST1, but remove redundant elements.
+This will ensure that the default overrides are all present and
+at the head of the list in `ido-ubiquitous-command-overrides' and
+`ido-ubiquitous-function-overrides'. User-added overrides will
+not be removed, but they may be masked if one of the default
+overrides affects the same functions.
 
-Redundancy is determined using
-`ido-ubiquitous--overrides-have-same-target-p'."
-  (let ((olist2
-         (cl-remove-if
-          (lambda (o2) (cl-member
-                   o2 olist1
-                   :test #'ido-ubiquitous--overrides-have-same-target-p))
-          olist2)))
-    (append olist1 olist2)))
-
-(defun ido-ubiquitous-update-overrides (&optional save quiet)
-  "Re-add the default overrides without erasing custom overrides.
-
-This is useful after an update of ido-ubiquitous that adds new
-default overrides. See `ido-ubiquitous-auto-update-overrides' for
-more information.
-
-If SAVE is non-nil, also save the overrides to the user's custom
-file (but only if they were already customized). When called
-interactively, a prefix argument triggers a save.
-
-When called from Lisp code, this function returns the list of
-variables whose values were modified. In particular, it returns
-non-nil if any variables were modified, and nil if no modifications
-were made."
+With a prefix arg, also save the above variables' new values for
+future sessions."
   (interactive "P")
-  (let ((unmodified-vars nil)
-        (updated-vars nil)
-        (final-message-lines nil)
-        (final-message-is-warning nil))
-    (cl-loop
-     for (var def) in
-     '((ido-ubiquitous-command-overrides
-        ido-ubiquitous-default-command-overrides)
-       (ido-ubiquitous-function-overrides
-        ido-ubiquitous-default-function-overrides))
-     do (let* ((var-state (custom-variable-state var (eval var)))
-               (curval (eval var))
-               (defval (eval def))
-               (newval (ido-ubiquitous--combine-override-lists
-                        curval defval)))
-          (cond
-           ;; Nothing to add to var, do nothing
-           ((and (equal curval newval)
-                 (eq var-state 'saved))
-            (ido-ubiquitous--debug-message
-             "No need to modify value of option `%s'"
-             var)
-            (push var unmodified-vars))
-           ;; Var is not customized, just set the new default
-           ((eq var-state 'standard)
-            (ido-ubiquitous--debug-message
-             "Setting uncustomized option `%s' to its default value"
-             var)
-            (push var unmodified-vars)
-            (set var defval))
-           ;; Var is saved to custom.el, set and save new value (if
-           ;; SAVE is t)
-           ((and save
-                 (eq var-state 'saved))
-            (ido-ubiquitous--debug-message
-             "Updating option `%s' with new overrides and saving it."
-             var)
-             (push var updated-vars)
-             (customize-save-variable var newval))
-           ;; Var is modified but not saved (or SAVE is nil), update it
-           ;; but don't save it
-           (t
-            (ido-ubiquitous--debug-message
-             "Updating option `%s' with new overrides but not saving it for future sessions."
-             var)
-            (push var updated-vars)
-            (customize-set-variable var newval)))))
-    (unless quiet
-      ;; Now compose a single message that summarizes what was done
-      (if (null updated-vars)
-          (push "No updates to ido-ubiquitous override variables were needed."
-                final-message-lines)
-        (push
-         (format "Updated the following ido-ubiquitous override variables: %S"
-                 (sort updated-vars #'string<))
-         final-message-lines)
-        (if save
-            (push
-             "All updated variables were successfully saved."
-             final-message-lines)
-          (push
-           "However, they have not been saved for future sessions. To save them, re-run this command with a prefix argument: `C-u M-x ido-ubiquitous-update-overrides'; or else manually inspect and save their values using `M-x customize-group ido-ubiquitous'."
-           final-message-lines)
-          (setq final-message-is-warning t)))
-      (if final-message-is-warning
-          (display-warning 'ido-ubiquitous
-                           (mapconcat 'identity (nreverse final-message-lines) "\n"))
-        (message (mapconcat 'identity (nreverse final-message-lines) "\n"))))
-    updated-vars))
+  (let ((setter (if save
+                    'customize-save-variable
+                  'customize-set-variable)))
+    (cl-loop for (var def) in '((ido-ubiquitous-command-overrides
+                                 ido-ubiquitous-default-command-overrides)
+                                (ido-ubiquitous-function-overrides
+                                 ido-ubiquitous-default-function-overrides))
+             do (let* ((curval (eval var))
+                       (defval (eval def))
+                       (newval (delete-dups (append defval curval))))
+                  (funcall setter var newval)))
+    (message (if save
+                 "ido-ubiquitous: Restored default command and function overrides and saved for future sessions."
+               "ido-ubiquitous: Restored default command and function overrides for current session only. Call again with prefix to save for future sessions."))))
 
-(defun ido-ubiquitous--find-override-updates (current-value available-updates)
-  (cl-set-difference (ido-ubiquitous--combine-override-lists
-                    current-value available-updates)
-                     current-value))
-
-(defun ido-ubiquitous--maybe-update-overrides ()
-  "Maybe call `ido-ubiquitous-update-overrides.
-
-See `ido-ubiquitous-auto-update-overrides."
-  (if ido-ubiquitous-auto-update-overrides
-      (let* ((command-override-updates
-              (ido-ubiquitous--find-override-updates
-               ido-ubiquitous-command-overrides
-               ido-ubiquitous-default-command-overrides))
-             (function-override-updates
-              (ido-ubiquitous--find-override-updates
-               ido-ubiquitous-function-overrides
-               ido-ubiquitous-default-function-overrides))
-             (update-count
-              (+ (length command-override-updates)
-                 (length function-override-updates))))
-        (if (> update-count 0)
-            (if (eq ido-ubiquitous-auto-update-overrides 'notify)
-                (display-warning
-                 'ido-ubiquitous
-                 (format "There are %s new overrides available. Use `M-x ido-ubiquitous-update-overrides' to enable them. (See `ido-ubiquitous-auto-update-overrides' for more information.)"
-                         update-count))
-              (ido-ubiquitous--debug-message "Applying override updates.")
-              (ido-ubiquitous-update-overrides t))
-          (ido-ubiquitous--debug-message "No override updates availble.")))
-    (ido-ubiquitous--debug-message "Skipping override updates by user preference.")))
-
-(define-obsolete-function-alias
-  'ido-ubiquitous-restore-default-overrides
-  'ido-ubiquitous-update-overrides
-  "ido-ubiquitous 3.9")
+;; TODO: Add notification message for new overrides, and a preference
+;; to disable it. https://github.com/DarwinAwardWinner/ido-ubiquitous/issues/90
 
 (defun ido-ubiquitous-spec-match (spec symbol)
   "Returns t if SPEC matches SYMBOL (which should be a function name).
@@ -1175,6 +979,17 @@ This advice completely overrides the original definition."
 
 ;;; Other
 
+;; This is defined at the end so it goes at the bottom of the
+;; customization group
+;;;###autoload
+(define-minor-mode ido-ubiquitous-debug-mode
+  "If non-nil, ido-ubiquitous will print debug info.
+
+Debug info is printed to the *Messages* buffer."
+  nil
+  :global t
+  :group 'ido-ubiquitous)
+
 (defsubst ido-ubiquitous--fixup-old-advice ()
   ;; Clean up old versions of ido-ubiquitous advice if they exist
   (ignore-errors (ad-remove-advice 'completing-read 'around 'ido-ubiquitous))
@@ -1215,7 +1030,6 @@ It cleans up any traces of old versions of ido-ubiquitous and
 then sets up the mode."
   (ido-ubiquitous--fixup-old-advice)
   (ido-ubiquitous--fixup-old-magit-overrides)
-  (ido-ubiquitous--maybe-update-overrides)
   ;; Make sure the mode is turned on/off as specified by the value of
   ;; the mode variable
   (ido-ubiquitous-mode (if ido-ubiquitous-mode 1 0)))

@@ -6,7 +6,7 @@
 ;; Maintainer: Le Wang
 ;; Description: fuzzy matching with good sorting
 ;; Created: Wed Apr 17 01:01:41 2013 (+0800)
-;; Version: 0.6.1
+;; Version: 0.6.2
 ;; Package-Requires: ((cl-lib "0.3"))
 ;; URL: https://github.com/lewang/flx
 
@@ -14,59 +14,68 @@
 
 ;;; License
 
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 3, or
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
 ;; (at your option) any later version.
 ;;
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;; General Public License for more details.
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
-;; Floor, Boston, MA 02110-1301, USA.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
-;; Implementation notes
-;; --------------------
+;; This package provides fuzzy completion matching with good sorting.
+
+;; The sorting algorithm is a balance between word beginnings
+;; (abbreviation) and contiguous matches (substring).
+
+;; The longer the substring match, the higher it scores.  This maps
+;; well to how we think about matching.
+
+;; In general, it's better form queries with only lowercase characters
+;; so the sorting algorithm can do something smart.
+
+;;; Implementation notes
 ;;
-;; Use defsubst instead of defun
+;; Use defsubst instead of defun.
 ;;
-;; * Using bitmaps to check for matches worked out to be SLOWER than just
-;;   scanning the string and using `flx-get-matches'.
+;; * Using bitmaps to check for matches worked out to be SLOWER than
+;;   just scanning the string and using `flx-get-matches'.
 ;;
-;; * Consing causes GC, which can often slowdown Emacs more than the benefits
-;;   of an optimization.
+;; * Consing causes GC, which can often slowdown Emacs more than the
+;;   benefits of an optimization.
 
 ;;; Acknowledgments
 
 ;; Scott Frazer's blog entry http://scottfrazersblog.blogspot.com.au/2009/12/emacs-better-ido-flex-matching.html
 ;; provided a lot of inspiration.
-;; ido-hacks was helpful for ido optimization
+;; ido-hacks was helpful for ido optimization.
 
 ;;; Code:
 
 (require 'cl-lib)
 
 (defgroup flx nil
-  "Fuzzy matching with good sorting"
+  "Fuzzy matching with good sorting."
   :group 'convenience
   :prefix "flx-")
 
 (defcustom flx-word-separators '(?\  ?- ?_ ?: ?. ?/ ?\\)
-  "List of characters that act as word separators in flx"
+  "List of characters that act as word separators in flx."
   :type '(repeat character)
   :group 'flx)
 
-(defface flx-highlight-face  '((t (:inherit font-lock-variable-name-face :bold t :underline t)))
+(defface flx-highlight-face
+  '((t (:inherit font-lock-variable-name-face :bold t :underline t)))
   "Face used by flx for highlighting flx match characters."
   :group 'flx)
 
-;;; Do we need more word separators than ST?
+;; Do we need more word separators than ST?
 (defsubst flx-word-p (char)
   "Check if CHAR is a word character."
   (and char
@@ -89,8 +98,9 @@ This function is camel-case aware."
            (flx-word-p char))))
 
 (defsubst flx-inc-vec (vec &optional inc beg end)
-  "Increment each element of vectory by INC(default=1)
-from BEG (inclusive) to END (not inclusive)."
+  "Increment each element in VEC between BEG and END by INC.
+INC defaults to 1.  BEG defaults to 0 and is inclusive.
+END is not inclusive and defaults to the length of VEC."
   (or inc
       (setq inc 1))
   (or beg
@@ -146,7 +156,8 @@ See documentation for logic."
                       ;; gets penalized compared to "foo/ab".
                       (if (zerop group-word-count) nil last-char)))
                  (when (flx-boundary-p effective-last-char char)
-                   (setcdr (cdar groups-alist) (cons index (cl-cddar groups-alist))))
+                   (setcdr (cdar groups-alist)
+                           (cons index (cl-cddar groups-alist))))
                  (when (and (not (flx-word-p last-char))
                             (flx-word-p char))
                    (cl-incf group-word-count)))
@@ -220,9 +231,9 @@ See documentation for logic."
 
 
 (defsubst flx-bigger-sublist (sorted-list val)
-  "Return sublist bigger than VAL from sorted SORTED-LIST
+  "Return sublist bigger than VAL from sorted SORTED-LIST.
 
-  if VAL is nil, return entire list."
+If VAL is nil, return entire list."
   (if val
       (cl-loop for sub on sorted-list
             do (when (> (car sub) val)
@@ -230,11 +241,11 @@ See documentation for logic."
       sorted-list))
 
 (defun flx-make-filename-cache ()
-  "Return cache hashtable appropraite for storing filenames."
+  "Return cache hashtable appropriate for storing filenames."
   (flx-make-string-cache 'flx-get-heatmap-file))
 
 (defun flx-make-string-cache (&optional heat-func)
-  "Return cache hashtable appropraite for storing strings."
+  "Return cache hashtable appropriate for storing strings."
   (let ((hash (make-hash-table :test 'equal
                                :size 4096)))
     (puthash 'heatmap-func (or heat-func 'flx-get-heatmap-str) hash)
@@ -337,7 +348,7 @@ For other parameters, see `flx-score'"
         match))))
 
 (defun flx-score (str query &optional cache)
-  "Return best score matching QUERY against STR"
+  "Return best score matching QUERY against STR."
   (unless (or (zerop (length query))
               (zerop (length str)))
     (let*
@@ -349,7 +360,6 @@ For other parameters, see `flx-score'"
 
          ;; Raise recursion limit
          (max-lisp-eval-depth 5000)
-         (max-specpdl-size 10000)
 
          ;; Dynamic Programming table for memoizing flx-find-best-match
          (match-cache (make-hash-table :test 'eql :size 10))
@@ -389,10 +399,12 @@ SCORE of nil means to clear the properties."
       (dolist (char (cdr score))
         (when (and last-char
                    (not (= (1+ last-char) char)))
-          (put-text-property block-started  (1+ last-char) 'face 'flx-highlight-face str)
+          (put-text-property block-started  (1+ last-char)
+                             'face 'flx-highlight-face str)
           (setq block-started char))
         (setq last-char char))
-      (put-text-property block-started  (1+ last-char) 'face 'flx-highlight-face str)
+      (put-text-property block-started  (1+ last-char)
+                         'face 'flx-highlight-face str)
       (when add-score
         (setq str (format "%s [%s]" str (car score)))))
     (if (consp obj)
@@ -404,16 +416,19 @@ SCORE of nil means to clear the properties."
 (defvar flx-file-cache nil
   "Cached heatmap info about strings.")
 
-;;; reset value on every file load.
+;; Reset value on every file load.
 (setq flx-file-cache (flx-make-filename-cache))
 
 (defvar flx-strings-cache nil
   "Cached heatmap info about filenames.")
 
-;;; reset value on every file load.
+;; Reset value on every file load.
 (setq flx-strings-cache (flx-make-string-cache))
 
 
 (provide 'flx)
 
+;; Local Variables:
+;; indent-tabs-mode: nil
+;; End:
 ;;; flx.el ends here
