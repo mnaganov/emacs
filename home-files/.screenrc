@@ -1,0 +1,20 @@
+# Control-/ is the new escape key
+# I use C-z in emacs anyways; to send C-/ to emacs, type C-/ /
+escape ^_/
+# 16 colors is better than 8
+term screen-16color
+vbell off
+startup_message off
+altscreen on
+defscrollback 100000
+# Display the window title and time in the hardstatus line
+hardstatus alwaysfirstline "%{kw}%h%=%0c"
+# C-/ C-c copies the paste buffer to X clipboard
+bind ^C eval writebuf "exec !!! xclip -in -selection clipboard /tmp/screen-exchange"
+# C-/ C-k clears the scrollback
+bind ^K eval "clear" "scrollback 0" "scrollback 100000"
+# Does not work well with emacs 28
+unsetenv COLORTERM
+
+# Scripted creation of pre-configured shells
+screen -t emacs emacs -nw
