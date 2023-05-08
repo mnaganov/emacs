@@ -5,7 +5,7 @@
 (package-initialize)
 (setq package-enable-at-startup nil)
 
-(setq emacs-root "<Where the 'emacs' repository resides, ending with '/'>")
+(setq emacs-root "~/emacs/")
 (setq use-google-stuff nil)
-(setq use-project "<One of project-... names, e.g. 'home'>")
+(setq use-project "home")
 (load-file (concat emacs-root "dot-emacs.el"))
