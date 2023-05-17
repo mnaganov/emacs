@@ -161,6 +161,13 @@
 (add-hook 'java-mode-hook 'flyspell-prog-mode)
 (add-hook 'js2-mode-hook 'flyspell-prog-mode)
 
+;; Langtool, if present
+;; Download from https://languagetool.org/download/LanguageTool-stable.zip
+(setq langtool-language-tool-jar "~/LanguageTool-6.1/languagetool-commandline.jar")
+(setq langtool-default-language "en-US")
+(if (and (eq system-type 'gnu/linux) (file-exists-p langtool-language-tool-jar))
+    (require 'langtool))
+
 ;; GIT and Mercurial support
 (require 'vc-git)
 (require 'vc-hg)

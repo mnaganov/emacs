@@ -102,6 +102,8 @@
  '(highlight ((t (:background "white"))))
  '(isearch ((t (:inherit match))))
  '(isearch-fail ((t (:background "red" :foreground "brightwhite"))))
+ '(langtool-correction-face ((t (:background "brightyellow"))))
+ '(langtool-errline ((t (:inherit error :underline t))))
  '(lazy-highlight ((t (:background "brightyellow"))))
  '(link ((t (:foreground "blue" :underline t))))
  '(magit-blame-heading ((t (:inherit diff-header))))
