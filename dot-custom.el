@@ -53,6 +53,7 @@
  '(ansi-color-bright-yellow ((t (:inherit ansi-color-yellow :bold t))))
  '(compilation-mode-line-fail ((t (:inherit error))))
  '(compilation-mode-line-run ((t (:foreground "blue" :bold t))))
+ '(completions-common-part ((t (:foreground "blue"))))
  '(cua-global-mark ((t (:inherit match))))
  '(cua-rectangle ((t (:inherit region))))
  '(custom-face-tag ((t (:foreground "brightblack"))))
