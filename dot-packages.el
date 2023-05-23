@@ -40,6 +40,7 @@
 ;; == Set up external packages ==
 
 (add-to-list 'load-path (concat emacs-root "site-lisp"))
+(add-to-list 'load-path (concat emacs-root "site-lisp/expand-region"))
 (setq packages-root (concat emacs-root "site-lisp/"))
 
 ;; Swap contents of the buffers
@@ -160,6 +161,13 @@
 (add-hook 'python-mode-hook 'flyspell-prog-mode)
 (add-hook 'java-mode-hook 'flyspell-prog-mode)
 (add-hook 'js2-mode-hook 'flyspell-prog-mode)
+
+;; Expand region: press Alt-Del repeatedly to expand the region
+;; starting from inside.
+;; I've chosen Alt-Del because on my keyboard, 'Del' is near to '=',
+;; so Alt-= runs 'count-words-region', and Alt-Del expands the region.
+(require 'expand-region)
+(global-set-key (kbd "M-<delete>") 'er/expand-region)
 
 ;; Langtool, if present
 ;; Download from https://languagetool.org/download/LanguageTool-stable.zip
