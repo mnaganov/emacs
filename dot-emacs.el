@@ -226,10 +226,7 @@
                                         (setq fill-column 10000)))
 
 ;; Minibuffer completion
-(defun my-icomplete-styles ()
-  (setq-local completion-styles '(initials flex)))
-(add-hook 'icomplete-minibuffer-setup-hook 'my-icomplete-styles)
-(icomplete-mode t)
+(fido-mode t)
 
 ;; == Set up packages ==
 
