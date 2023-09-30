@@ -1,11 +1,5 @@
 ;; == Set up bundled Emacs packages ==
 
-;; ido
-(require 'ido)
-(ido-mode t)
-(ido-everywhere t)
-(setq ido-enable-flex-matching t) ;; fuzzy matching
-
 ;; Move between windows using M-Arrows
 (require 'windmove)
 (windmove-default-keybindings 'meta)
@@ -206,12 +200,6 @@
 ;; Faust
 (require 'faust-mode)
 (add-to-list 'auto-mode-alist '("\\.dsp$" . faust-mode))
-
-;; flx-ido
-(require 'flx-ido)
-(flx-ido-mode t)
-(setq flx-ido-use-faces nil)
-(setq gc-cons-threshold 20000000)
 
 ;; Groovy
 (autoload 'groovy-mode "groovy-mode" "Major mode for editing Groovy code." t)
