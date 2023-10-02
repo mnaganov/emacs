@@ -22,6 +22,8 @@
 
 ;; Support ANSI control sequences in shell
 (require 'ansi-color)
+;; Use of property faces puts less strain compared to overlays used by default
+(setq ansi-color-apply-face-function #'ansi-color-apply-text-property-face)
 (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
 (setq comint-prompt-read-only t)
 
