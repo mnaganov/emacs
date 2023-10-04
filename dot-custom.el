@@ -127,6 +127,7 @@
  '(mode-line ((t (:foreground "white" :background "black"))))
  '(mode-line-inactive ((t (:foreground "black" :background "white"))))
  '(region ((t (:background "brightcyan"))))
+ '(shadow ((t (:foreground "brightblack"))))
  '(show-paren-match ((t (:bold t))))
  '(show-paren-mismatch ((t (:inherit isearch-fail))))
  '(secondary-selection ((t (:background "brightblue"))))
