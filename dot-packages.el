@@ -146,12 +146,14 @@
 
 ;; Fill-Column-Indicator
 (setq-default fill-column 80)
+(add-hook 'c-mode-hook 'display-fill-column-indicator-mode)
 (add-hook 'c++-mode-hook 'display-fill-column-indicator-mode)
 (add-hook 'python-mode-hook 'display-fill-column-indicator-mode)
 (add-hook 'java-mode-hook 'display-fill-column-indicator-mode)
 (add-hook 'js2-mode-hook 'display-fill-column-indicator-mode)
 
 ;; Flyspell for comments
+(add-hook 'c-mode-hook 'flyspell-prog-mode)
 (add-hook 'c++-mode-hook 'flyspell-prog-mode)
 (add-hook 'python-mode-hook 'flyspell-prog-mode)
 (add-hook 'java-mode-hook 'flyspell-prog-mode)
