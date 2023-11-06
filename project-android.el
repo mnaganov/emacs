@@ -99,6 +99,12 @@
     (ansi-color-apply-on-region compilation-filter-start (point))))
 (add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
 
+(defun logcat-no-undo-and-read-only-hook ()
+  (when (s-suffix? "logcat" buffer-file-name)
+    (buffer-disable-undo)
+    (read-only-mode 1)))
+(add-hook 'find-file-hook 'logcat-no-undo-and-read-only-hook)
+
 (defun open-shell-buffer (buffer-name startup-cmd)
   (save-selected-window
     (with-current-buffer (shell buffer-name)
