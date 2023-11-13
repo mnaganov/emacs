@@ -102,7 +102,8 @@
 (defun logcat-no-undo-and-read-only-hook ()
   (when (s-suffix? "logcat" buffer-file-name)
     (buffer-disable-undo)
-    (read-only-mode 1)))
+    (read-only-mode 1)
+    (view-mode)))
 (add-hook 'find-file-hook 'logcat-no-undo-and-read-only-hook)
 
 (defun open-shell-buffer (buffer-name startup-cmd)
