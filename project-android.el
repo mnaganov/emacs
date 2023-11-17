@@ -99,11 +99,15 @@
     (ansi-color-apply-on-region compilation-filter-start (point))))
 (add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
 
+;; Special handling for logcat files.
+(require 'logview)
 (defun logcat-no-undo-and-read-only-hook ()
   (when (s-suffix? "logcat" buffer-file-name)
     (buffer-disable-undo)
     (read-only-mode 1)
-    (view-mode)))
+    (view-mode)
+    (logview-mode)
+    (logview-choose-submode "Android" "Android")))
 (add-hook 'find-file-hook 'logcat-no-undo-and-read-only-hook)
 
 (defun open-shell-buffer (buffer-name startup-cmd)
