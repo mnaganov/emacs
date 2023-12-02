@@ -170,7 +170,7 @@
 ;; Download from https://languagetool.org/download/LanguageTool-stable.zip
 (setq langtool-language-tool-jar "~/LanguageTool-6.1/languagetool-commandline.jar")
 (setq langtool-default-language "en-US")
-(if (and (eq system-type 'gnu/linux) (file-exists-p langtool-language-tool-jar))
+(if (and (or (eq system-type 'gnu/linux) (eq system-type 'darwin)) (file-exists-p langtool-language-tool-jar))
     (require 'langtool))
 
 ;; GIT and Mercurial support
