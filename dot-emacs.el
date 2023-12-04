@@ -153,6 +153,7 @@
       (split-window-horizontally center-width)
       ;; Prevent the center window from being auto splitted on occasion
       (setq split-height-threshold (* (frame-text-height) 2))
+      (setq split-width-threshold nil)
       (save-selected-window
        (other-window 1)
        (split-window-vertically)))))
