@@ -140,12 +140,22 @@
           (concat "/Users/" (user-login-name) "/." name "/")
           (concat (getenv "HOME") "/." name "/" system-name "/"))))
 
+(defun calculate-left-window-width (center-width)
+  "Calculate the width of the left window, based on the width of the center window."
+  ;; The left and right windows are 5/9 and 4/9.
+  (/ (* (- (frame-text-width) center-width) 5) 9))
+
 (unless (or (display-graphic-p) (< (frame-text-width) 160))
   (if (< (frame-text-width) 235)
       (split-window-vertically)
     (let ((center-width 104)
-          (left-width (/ (* (- (frame-text-width) 104) 5) 9)))
-      ;; Create 3 vertical windows. The center window is 104 chars,
+          (left-width (calculate-left-window-width 104)))
+      (if (> left-width 120)
+          ;; Must be plenty of space, make the center window wider
+          (progn
+            (setq center-width 120)
+            (setq left-width (calculate-left-window-width center-width))))
+      ;; Create 3 vertical windows. The center window is `center-width' chars,
       ;; the left and right windows are 5/9 and 4/9. The right one
       ;; is in addition split horizontally in half.
       (split-window-horizontally left-width)
