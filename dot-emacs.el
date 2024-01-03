@@ -59,13 +59,14 @@
 ;; Highlight current line
 (global-hl-line-mode 1)
 ;; But turn it off for compile and comint buffers since it can be slow
-;; for very long lines
-(defun my-turn-off-hl-mode ()
-  (set (make-local-variable 'global-hl-line-mode) nil))
+;; for very long lines. Also turn off undo.
+(defun my-turn-off-slow-funcs ()
+  (set (make-local-variable 'global-hl-line-mode) nil)
+  (buffer-disable-undo))
 (require 'compile)
-(add-hook 'compilation-mode-hook 'my-turn-off-hl-mode)
+(add-hook 'compilation-mode-hook 'my-turn-off-slow-funcs)
 (require 'comint)
-(add-hook 'comint-mode-hook 'my-turn-off-hl-mode)
+(add-hook 'comint-mode-hook 'my-turn-off-slow-funcs)
 
 ;; Instead of 'yes or no' use 'y or n'
 (fset 'yes-or-no-p 'y-or-n-p)
@@ -196,9 +197,6 @@
 
 ;; Always open .h files in c++-mode.
 (add-to-list 'auto-mode-alist '("\\.h$" . c++-mode))
-
-;; Disable Undo for shell buffers
-(add-hook 'shell-mode-hook 'buffer-disable-undo)
 
 ;; Track current dir in shell via procfs on Linux
 (defun shell-procfs-dirtrack (str)
