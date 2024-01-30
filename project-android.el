@@ -3,11 +3,11 @@
 (setq compile-history
       '(". build/envsetup.sh && lunch cf_x86_64_only_phone-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
         ". build/envsetup.sh && lunch cf_x86_64_only_phone-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP atest VtsHalAudioCoreTargetTest"
-        ". build/envsetup.sh && lunch redfin-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
-        ". build/envsetup.sh && lunch redfin-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP ANDROID_SERIAL=06131FDD4000HP atest CtsMediaTestCases:AudioTrackTest"
+        ". build/envsetup.sh && lunch husky-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
+        ". build/envsetup.sh && lunch husky-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP ANDROID_SERIAL=35081FDJG0014N atest CtsMediaTestCases:AudioTrackTest"
         "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r22b ./gradlew assembleDebug"))
 (setq compile-command
-   ". build/envsetup.sh && lunch redfin-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m")
+   ". build/envsetup.sh && lunch husky-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m")
 
 (custom-set-variables
  '(google-use-coding-style nil))
@@ -117,7 +117,7 @@
       (funcall startup-cmd)
       (comint-send-input nil t))))
 (open-shell-buffer "=bramble=" (lambda() (insert-file-contents "~/screen/bramble.cfg" nil)))
-(open-shell-buffer "=redfin=" (lambda() (insert-file-contents "~/screen/redfin.cfg" nil)))
+(open-shell-buffer "=husky=" (lambda() (insert-file-contents "~/screen/husky.cfg" nil)))
 (open-shell-buffer "=raven=" (lambda() (insert-file-contents "~/screen/raven.cfg" nil)))
 (open-shell-buffer "=cuttlefish=" (lambda() (insert-file-contents "~/screen/cuttlefish.cfg" nil)))
 (open-shell-buffer "=aosp=" (lambda() (insert-file-contents "~/screen/aosp.cfg" nil)))
