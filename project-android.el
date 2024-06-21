@@ -116,7 +116,6 @@
       (set-marker comint-last-output-start (point))
       (funcall startup-cmd)
       (comint-send-input nil t))))
-(open-shell-buffer "=bramble=" (lambda() (insert-file-contents "~/screen/bramble.cfg" nil)))
 (open-shell-buffer "=husky=" (lambda() (insert-file-contents "~/screen/husky.cfg" nil)))
 (open-shell-buffer "=raven=" (lambda() (insert-file-contents "~/screen/raven.cfg" nil)))
 (open-shell-buffer "=cuttlefish=" (lambda() (insert-file-contents "~/screen/cuttlefish.cfg" nil)))
