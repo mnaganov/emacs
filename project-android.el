@@ -121,6 +121,6 @@
 (open-shell-buffer "=cuttlefish=" (lambda() (insert-file-contents "~/screen/cuttlefish.cfg" nil)))
 (open-shell-buffer "=aosp=" (lambda() (insert-file-contents "~/screen/aosp.cfg" nil)))
 (open-shell-buffer "=toolbox=" (lambda() (insert (concat "cd ~/code/master && "
-                                       ". build/envsetup.sh && lunch bramble-trunk_staging-userdebug && "
-                                       "export ANDROID_SERIAL=02151FQC200016 "
+                                       ". build/envsetup.sh && lunch husky-trunk_staging-userdebug && "
+                                       "export ANDROID_SERIAL=35081FDJG0014N "
                                        "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r22d"))))
