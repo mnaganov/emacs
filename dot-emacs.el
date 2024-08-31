@@ -74,6 +74,10 @@
 ;; Show column number in mode line
 (column-number-mode 1)
 
+;; Disable bidirectional editing to speed up lines handling
+(setq-default bidi-paragraph-direction 'left-to-right)
+(setq bidi-inhibit-bpa t)
+
 ;; Don't unsplit windows on ESC ESC ESC
 (defadvice keyboard-escape-quit (around my-keyboard-escape-quit activate)
   (let (orig-one-window-p)

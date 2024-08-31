@@ -227,10 +227,12 @@
    "Major mode for editing Markdown files" t)
 (add-to-list 'auto-mode-alist
              '("\\.\\(?:md\\|markdown\\|mkd\\|mdown\\|mkdn\\|mdwn\\)\\'" . markdown-mode))
+(add-hook 'markdown-mode-hook 'visual-line-mode)
 
 (autoload 'gfm-mode "markdown-mode"
    "Major mode for editing GitHub Flavored Markdown files" t)
 (add-to-list 'auto-mode-alist '("README\\.md\\'" . gfm-mode))
+(add-hook 'gfm-mode-hook 'visual-line-mode)
 
 ;; String Inflection: switch between various naming styles.
 (require 'string-inflection)
