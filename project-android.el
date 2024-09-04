@@ -1,13 +1,13 @@
 ;; Project Android stuff
 
 (setq compile-history
-      '(". build/envsetup.sh && lunch cf_x86_64_only_phone-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
-        ". build/envsetup.sh && lunch cf_x86_64_only_phone-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP atest VtsHalAudioCoreTargetTest"
-        ". build/envsetup.sh && lunch husky-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
-        ". build/envsetup.sh && lunch husky-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP ANDROID_SERIAL=35081FDJG0014N atest CtsMediaTestCases:AudioTrackTest"
+      '(". build/envsetup.sh && lunch aosp_cf_x86_64_only_phone-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
+        ". build/envsetup.sh && lunch aosp_cf_x86_64_only_phone-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP atest VtsHalAudioCoreTargetTest"
+        ". build/envsetup.sh && lunch tokay-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
+        ". build/envsetup.sh && lunch tokay-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP ANDROID_SERIAL=3B141FDAQ000DJ atest CtsMediaTestCases:AudioTrackTest"
         "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r22b ./gradlew assembleDebug"))
 (setq compile-command
-   ". build/envsetup.sh && lunch husky-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m")
+   ". build/envsetup.sh && lunch tokay-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m")
 
 (custom-set-variables
  '(google-use-coding-style nil))
@@ -116,11 +116,12 @@
       (set-marker comint-last-output-start (point))
       (funcall startup-cmd)
       (comint-send-input nil t))))
+(open-shell-buffer "=tokay=" (lambda() (insert-file-contents "~/screen/tokay.cfg" nil)))
 (open-shell-buffer "=husky=" (lambda() (insert-file-contents "~/screen/husky.cfg" nil)))
 (open-shell-buffer "=raven=" (lambda() (insert-file-contents "~/screen/raven.cfg" nil)))
 (open-shell-buffer "=cuttlefish=" (lambda() (insert-file-contents "~/screen/cuttlefish.cfg" nil)))
 (open-shell-buffer "=aosp=" (lambda() (insert-file-contents "~/screen/aosp.cfg" nil)))
-(open-shell-buffer "=toolbox=" (lambda() (insert (concat "cd ~/code/master && "
-                                       ". build/envsetup.sh && lunch husky-trunk_staging-userdebug && "
-                                       "export ANDROID_SERIAL=35081FDJG0014N "
-                                       "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r22d"))))
+;; (open-shell-buffer "=toolbox=" (lambda() (insert (concat "cd ~/code/master && "
+;;                                        ". build/envsetup.sh && lunch tokay-trunk_staging-userdebug && "
+;;                                        "export ANDROID_SERIAL=3B141FDAQ000DJ "
+;;                                        "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r22d"))))
