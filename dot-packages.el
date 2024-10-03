@@ -222,6 +222,11 @@
                "\\|Password for"))
         (add-hook 'comint-output-filter-functions 'comint-watch-for-password-prompt))
 
+;; Shell completion
+(require 'native-complete)
+(with-eval-after-load 'shell
+  (native-complete-setup-bash))
+
 ;; Markdown
 (autoload 'markdown-mode "markdown-mode"
    "Major mode for editing Markdown files" t)
