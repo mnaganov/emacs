@@ -91,14 +91,6 @@
           (lambda()
             (setq python-indent 4)))
 
-;; Support ANSI control sequences in the compilation buffer
-;; but only for the actual compilation (not grep etc).
-(require 'ansi-color)
-(defun colorize-compilation-buffer ()
-  (when (bound-and-true-p compilation-shell-minor-mode)
-    (ansi-color-apply-on-region compilation-filter-start (point))))
-(add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
-
 ;; Special handling for logcat files.
 (require 'logview)
 (defun logcat-no-undo-and-read-only-hook ()
