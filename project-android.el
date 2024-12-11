@@ -2,9 +2,9 @@
 
 (setq compile-history
       '(". build/envsetup.sh && lunch aosp_cf_x86_64_only_phone-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
-        ". build/envsetup.sh && lunch aosp_cf_x86_64_only_phone-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP atest VtsHalAudioCoreTargetTest"
+        ". build/envsetup.sh && lunch aosp_cf_x86_64_only_phone-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP ROLLING_TF_SUBPROCESS_OUTPUT=0 atest VtsHalAudioCoreTargetTest"
         ". build/envsetup.sh && lunch tokay-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m"
-        ". build/envsetup.sh && lunch tokay-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP ANDROID_SERIAL=3B141FDAQ000DJ atest CtsMediaTestCases:AudioTrackTest"
+        ". build/envsetup.sh && lunch tokay-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP ANDROID_SERIAL=3B141FDAQ000DJ ROLLING_TF_SUBPROCESS_OUTPUT=0 atest CtsMediaTestCases:AudioTrackTest"
         "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r22b ./gradlew assembleDebug"))
 (setq compile-command
    ". build/envsetup.sh && lunch tokay-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP m")
@@ -90,6 +90,31 @@
 (add-hook 'python-mode-hook
           (lambda()
             (setq python-indent 4)))
+
+;; A quick and dirty solution for supporting `ESC [ F` (cursor to previous line)
+;; ANSI escape sequence. It is important to insert this *before* ansi-color-process-output
+;; because the latter strips out all CSI sequences.
+(defun ansi-csi-cursor-movement (_ignored)
+  (let ((start-marker (if (and (markerp comint-last-output-start)
+                               (eq (marker-buffer comint-last-output-start)
+                                   (current-buffer))
+                               (marker-position comint-last-output-start))
+                          comint-last-output-start
+                        (point-min-marker)))
+        (end-marker (process-mark (get-buffer-process (current-buffer)))))
+    (save-excursion
+      (goto-char start-marker)
+      ;; Find the next escape sequence.
+      (while (re-search-forward ansi-color-control-seq-regexp end-marker t)
+        ;; Extract escape sequence.
+        (let ((esc-beg (match-beginning 0))
+              (esc-end (point)))
+          (when (eq (char-before esc-end) ?F)
+            (goto-char (line-beginning-position))
+            (previous-logical-line)
+            (delete-region (point) esc-end))
+          )))))
+(add-hook 'comint-output-filter-functions 'ansi-csi-cursor-movement)
 
 ;; Special handling for logcat files.
 (require 'logview)
