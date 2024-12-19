@@ -35,6 +35,7 @@
 
 ;; == Set up external packages ==
 
+;; (byte-recompile-directory (expand-file-name "~/emacs/site-lisp") 0)
 (add-to-list 'load-path (concat emacs-root "site-lisp"))
 (add-to-list 'load-path (concat emacs-root "site-lisp/expand-region"))
 (setq packages-root (concat emacs-root "site-lisp/"))
