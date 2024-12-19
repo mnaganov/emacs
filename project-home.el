@@ -1,8 +1,13 @@
 ;; Keybindings
+
+(require 'ag)
 (global-set-key [f5] (lambda () (interactive) (revert-buffer nil t)))
-(if (eq system-type 'windows-nt)
-    (global-set-key [f6] 'rgrep)
-    (global-set-key [f6] 'find-grep))
+(cond ((eq system-type 'windows-nt)
+       (global-set-key [f6] 'rgrep))
+      ((eq system-type 'gnu/linux)
+       (global-set-key [f6] 'ag-project-regexp))
+      (t
+       (global-set-key [f6] 'find-grep)))
 
 (require 'find-things-fast)
 (global-set-key '[f1] 'ftf-find-file)
