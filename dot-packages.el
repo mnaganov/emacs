@@ -39,6 +39,7 @@
 (add-to-list 'load-path (concat emacs-root "site-lisp"))
 (add-to-list 'load-path (concat emacs-root "site-lisp/expand-region"))
 (add-to-list 'load-path (concat emacs-root "site-lisp/haskell-mode"))
+(add-to-list 'load-path (concat emacs-root "site-lisp/rust-mode"))
 (setq packages-root (concat emacs-root "site-lisp/"))
 
 ;; Swap contents of the buffers
@@ -204,6 +205,9 @@
 
 ;; Haskell
 (require 'haskell-mode-autoloads)
+
+;; Rust
+(require 'rust-mode)
 
 ;; Faust
 (require 'faust-mode)
