@@ -38,6 +38,7 @@
 ;; (byte-recompile-directory (expand-file-name "~/emacs/site-lisp") 0)
 (add-to-list 'load-path (concat emacs-root "site-lisp"))
 (add-to-list 'load-path (concat emacs-root "site-lisp/expand-region"))
+(add-to-list 'load-path (concat emacs-root "site-lisp/haskell-mode"))
 (setq packages-root (concat emacs-root "site-lisp/"))
 
 ;; Swap contents of the buffers
@@ -200,6 +201,9 @@
 
 ;; Octave
 (add-to-list 'auto-mode-alist '("\\.m$" . octave-mode))
+
+;; Haskell
+(require 'haskell-mode-autoloads)
 
 ;; Faust
 (require 'faust-mode)
