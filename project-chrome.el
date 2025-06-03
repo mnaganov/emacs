@@ -80,25 +80,8 @@
 (global-set-key '[f1] 'ftf-find-file)
 
 ;;; Define simple CodeSearch mode, bind it to F2
-(defvar my-cs-command '("cs --corpus=clankium   | sed -n -e 's/^clankium\\/src\\///p'" .  22)
-  "The command to be run by the cs function.")
-(define-compilation-mode my-cs-mode "CS"
-  "CodeSearch compilation mode."
-  (setq-local compilation-error-face
-              compilation-info-face))
-(defun my-cs (command-args)
-  (interactive
-   (list (read-shell-command "Run cs (like this): "
-                             my-cs-command
-                             'my-cs-history)))
-  (compilation-start command-args 'my-cs-mode))
-(global-set-key '[f2] 'my-cs)
+(setq my-cs-command-config '(("cs --corpus=clankium   | sed -n -e 's/^clankium\/src\///p'" . 22) . my-cs-chrome-history))
+(global-set-key '[f2] 'my-cs-generalized)
 
-
-(defun open-shell-buffer (buffer-name startup-command)
-  (switch-to-buffer (shell buffer-name))
-  (set-marker comint-last-output-start (point))
-  (insert startup-command)
-  (comint-send-input nil t))
-(open-shell-buffer "=chrome=" "cd ~/chrome/src")
-(open-shell-buffer "=webkit=" "cd ~/chrome/src/third_party/WebKit")
+(open-shell-buffer "=chrome=" (lambda () (insert "cd ~/chrome/src")))
+(open-shell-buffer "=webkit=" (lambda () (insert "cd ~/chrome/src/third_party/WebKit")))

@@ -16,21 +16,10 @@
 
 (require 'find-things-fast)
 (require 'ag)
-(defvar my-cs-command '("cs --corpus=android   | sed -n -e 's/^android\\///p'" .  21)
-  "The command to be run by the cs function.")
-(define-compilation-mode my-cs-mode "CS"
-  "CodeSearch compilation mode."
-  (setq-local compilation-error-face
-              compilation-info-face))
-(defun my-cs (command-args)
-  (interactive
-   (list (read-shell-command "Run cs (like this): "
-                             my-cs-command
-                             'my-cs-history)))
-  (compilation-start command-args 'my-cs-mode))
+(setq my-cs-command-config '(("cs --corpus=android   | sed -n -e 's/^android\///p'" . 21) . my-cs-android-history))
 
 (global-set-key [f1] 'ftf-find-file)
-(global-set-key [f2] 'my-cs)
+(global-set-key [f2] 'my-cs-generalized)
 (global-set-key [f4] 'eglot-rename)
 (global-set-key [f5] (lambda () (interactive) (revert-buffer nil t)))
 (global-set-key [f6] 'ag-project-regexp)
@@ -127,12 +116,6 @@
     (logview-choose-submode "Android" "Android")))
 (add-hook 'find-file-hook 'logcat-no-undo-and-read-only-hook)
 
-(defun open-shell-buffer (buffer-name startup-cmd)
-  (save-selected-window
-    (with-current-buffer (shell buffer-name)
-      (set-marker comint-last-output-start (point))
-      (funcall startup-cmd)
-      (comint-send-input nil t))))
 (open-shell-buffer "=tokay=" (lambda() (insert-file-contents "~/screen/tokay.cfg" nil)))
 (open-shell-buffer "=husky=" (lambda() (insert-file-contents "~/screen/husky.cfg" nil)))
 (open-shell-buffer "=raven=" (lambda() (insert-file-contents "~/screen/raven.cfg" nil)))

@@ -79,13 +79,14 @@
 (setq bidi-inhibit-bpa t)
 
 ;; Don't unsplit windows on ESC ESC ESC
-(defadvice keyboard-escape-quit (around my-keyboard-escape-quit activate)
-  (let (orig-one-window-p)
-    (fset 'orig-one-window-p (symbol-function 'one-window-p))
-    (fset 'one-window-p (lambda (&optional nomini all-frames) t))
-    (unwind-protect
-        ad-do-it
-      (fset 'one-window-p (symbol-function 'orig-one-window-p)))))
+(defun my-around-keyboard-escape-quit (orig-fun &rest args)
+  "Prevent keyboard-escape-quit from deleting other windows.
+Advises `keyboard-escape-quit` around."
+  (let ((orig-one-window-p-fn (symbol-function 'one-window-p)))
+    (cl-letf (((symbol-function 'one-window-p) (lambda (&optional nomini all-frames) t)))
+      (apply orig-fun args))))
+
+(advice-add 'keyboard-escape-quit :around #'my-around-keyboard-escape-quit)
 
 ;; Rebind buffers list to Ibuffer
 (global-set-key (kbd "C-x C-b") 'ibuffer)
@@ -125,52 +126,78 @@
 (global-set-key (kbd "C-c n") 'kill-buffer-file-name-nondirectory)
 
 ;; Quit without annoying confirmation
-(defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
-  "Prevent annoying \"Active processes exist\" query when you quit Emacs."
-  (cl-flet ((process-list ())) ad-do-it))
+(defun my-around-save-buffers-kill-emacs (orig-fun &rest args)
+  "Prevent "Active processes exist" query when quitting Emacs.
+Advises `save-buffers-kill-emacs` around."
+  (cl-letf (((symbol-function 'process-list) (lambda () nil)))
+    (apply orig-fun args)))
+
+(advice-add 'save-buffers-kill-emacs :around #'my-around-save-buffers-kill-emacs)
+
+(defun my-generate-emacs-data-dir-name (base-name storage-type)
+  "Generate a name for an Emacs data directory for BASE-NAME.
+STORAGE-TYPE can be 'temp or 'persistent."
+  (let ((user (user-login-name)))
+    (cond
+     ((eq system-type 'windows-nt)
+      ;; For Windows, both temp and persistent (with FIXME) currently use TEMP
+      (concat (getenv "TEMP") "\\" base-name "\\"))
+     ((eq system-type 'darwin)
+      ;; macOS uses ~/.<base-name>/ for both, effectively persistent
+      (concat "/Users/" user "/." base-name "/"))
+     (t
+      ;; Linux/other Unix-like
+      (if (eq storage-type 'temp)
+          (concat "/tmp/" base-name "/" user "/")
+        ;; Persistent for Linux/other
+        (concat (getenv "HOME") "/." base-name "/" system-name "/"))))))
 
 (defun generate-temp-dir-name (name)
-  "Generate a name for a temporary dir"
-  (if (eq system-type 'windows-nt)
-      (concat (getenv "TEMP") "\\" name "\\")
-      (if (eq system-type 'darwin)
-          (concat "/Users/" (user-login-name) "/." name "/")
-          (concat "/tmp/" name "/" (user-login-name) "/"))))
+  "Generate a name for a temporary dir using NAME as base."
+  (my-generate-emacs-data-dir-name name 'temp))
 
 (defun generate-persistent-dir-name (name)
-  "Generate a name for a persistent storage dir"
-  (if (eq system-type 'windows-nt)
-      (concat (getenv "TEMP") "\\" name "\\") ;; FIXME
-      (if (eq system-type 'darwin)
-          (concat "/Users/" (user-login-name) "/." name "/")
-          (concat (getenv "HOME") "/." name "/" system-name "/"))))
+  "Generate a name for a persistent storage dir using NAME as base."
+  (my-generate-emacs-data-dir-name name 'persistent))
 
 (defun calculate-left-window-width (center-width)
   "Calculate the width of the left window, based on the width of the center window."
   ;; The left and right windows are 5/9 and 4/9.
   (/ (* (- (frame-text-width) center-width) 5) 9))
 
-(unless (or (display-graphic-p) (< (frame-text-width) 160))
+;; Automatically set up a 2- or 3-column window layout at startup
+;; if running in text mode and the frame is wide enough.
+(unless (or (display-graphic-p) (< (frame-text-width) 160)) ; Only apply if not graphical and frame width >= 160
   (if (< (frame-text-width) 235)
+      ;; If frame width is between 160 and 234 columns, split into two vertical windows.
       (split-window-vertically)
-    (let ((center-width 104)
-          (left-width (calculate-left-window-width 104)))
-      (if (> left-width 120)
-          ;; Must be plenty of space, make the center window wider
-          (progn
-            (setq center-width 120)
-            (setq left-width (calculate-left-window-width center-width))))
-      ;; Create 3 vertical windows. The center window is `center-width' chars,
-      ;; the left and right windows are 5/9 and 4/9. The right one
-      ;; is in addition split horizontally in half.
-      (split-window-horizontally left-width)
-      (other-window 1)
-      (split-window-horizontally center-width)
-      ;; Prevent the center window from being auto splitted on occasion
+    ;; If frame width is 235 columns or more, attempt a 3-column layout.
+    (let* ((initial-center-width 104) ; Preferred initial width for the central window
+           (calculated-left-width (calculate-left-window-width initial-center-width))
+           ;; If the calculated left width is very large (>120), it implies a very wide screen.
+           ;; In such cases, increase the center window's width for better balance.
+           (final-center-width (if (> calculated-left-width 120)
+                                   120
+                                 initial-center-width))
+           (final-left-width (if (> calculated-left-width 120)
+                                 (calculate-left-window-width final-center-width)
+                               calculated-left-width)))
+      ;; Create 3 vertical windows.
+      ;; The `calculate-left-window-width` function aims for a 5/9 ratio for the left window
+      ;; and implicitly 4/9 for the right window, relative to the space remaining after
+      ;; the center window is allocated.
+      (split-window-horizontally final-left-width)
+      (other-window 1) ; Move to the newly created right window
+      (split-window-horizontally final-center-width) ; Split it, creating the center and final right window
+      ;; Configure splitting behavior for the center window (which is now current)
+      ;; Prevent the center window from being auto-splitted vertically too easily by new operations.
       (setq split-height-threshold (* (frame-text-height) 2))
+      ;; Allow the center window to be split horizontally if needed by other operations.
       (setq split-width-threshold nil)
+      ;; The rightmost window (which was the result of the second split)
+      ;; is further split vertically in half.
       (save-selected-window
-       (other-window 1)
+       (other-window 1) ; Move to the rightmost window
        (split-window-vertically)))))
 
 ;; Put autosave files (ie #foo#) in one place, *not* scattered all over the
@@ -240,6 +267,27 @@
 
 ;; Minibuffer completion
 (fido-mode t)
+
+(defun open-shell-buffer (buffer-name startup-cmd)
+  (save-selected-window
+    (with-current-buffer (shell buffer-name)
+      (set-marker comint-last-output-start (point))
+      (funcall startup-cmd)
+      (comint-send-input nil t))))
+
+(defvar my-cs-command-config nil "Alist expected to be set by project files. ((COMMAND . DEFAULT_LENGTH) . HISTORY_SYM)")
+(define-compilation-mode my-cs-mode "CS"
+  "CodeSearch compilation mode."
+  (setq-local compilation-error-face compilation-info-face))
+
+(defun my-cs-generalized (command-args)
+  (interactive
+   (unless my-cs-command-config
+     (error "my-cs-command-config is not set for this project"))
+   (list (read-shell-command "Run cs (like this): "
+                             (car my-cs-command-config) ; (COMMAND . DEFAULT_LENGTH)
+                             (cdr my-cs-command-config)))) ; HISTORY_SYM
+  (compilation-start command-args 'my-cs-mode))
 
 ;; == Set up packages ==
 
