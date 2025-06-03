@@ -22,6 +22,13 @@
 
 ;; Support ANSI control sequences in shell
 (require 'ansi-color)
+;; Since we use "inverse" color scheme (see dot-custom.el), invert the order
+;; of grayscale colors which are set via ESC[38;5;⟨n⟩m sequence.
+(defun invert-ansi-grayscale (l)
+  (let ((color (car l)))
+    (if (and (>= color 232) (<= color 255))
+        (list (- 487 color)) l)))
+(advice-add 'ansi-color--code-as-hex :filter-args 'invert-ansi-grayscale)
 ;; Use of property faces puts less strain compared to overlays used by default
 (setq ansi-color-apply-face-function #'ansi-color-apply-text-property-face)
 (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
