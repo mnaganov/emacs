@@ -44,6 +44,7 @@
 
 ;; (byte-recompile-directory (expand-file-name "~/emacs/site-lisp") 0)
 (add-to-list 'load-path (concat emacs-root "site-lisp"))
+(add-to-list 'load-path (concat emacs-root "site-lisp/chatgpt-shell"))
 (add-to-list 'load-path (concat emacs-root "site-lisp/expand-region"))
 (add-to-list 'load-path (concat emacs-root "site-lisp/haskell-mode"))
 (add-to-list 'load-path (concat emacs-root "site-lisp/rust-mode"))
