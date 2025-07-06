@@ -262,3 +262,9 @@
 ;; C-c C-b in C mode is for sending bug reports.
 (add-hook 'c++-mode-hook
           (lambda () (local-set-key (kbd "C-c C-b") 'string-inflection-all-cycle)))
+
+;; chatgpt-shell
+;; (require 'chatgpt-shell)
+;; (set-variable chatgpt-shell-openai-key "...")
+;; (chatgpt-shell-swap-model)
+;; (chatgpt-shell-swap-system-prompt)
