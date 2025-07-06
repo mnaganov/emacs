@@ -250,6 +250,7 @@
 (add-to-list 'auto-mode-alist
              '("\\.\\(?:md\\|markdown\\|mkd\\|mdown\\|mkdn\\|mdwn\\)\\'" . markdown-mode))
 (add-hook 'markdown-mode-hook 'visual-line-mode)
+(set-variable 'markdown-fontify-code-blocks-natively t)
 
 (autoload 'gfm-mode "markdown-mode"
    "Major mode for editing GitHub Flavored Markdown files" t)
