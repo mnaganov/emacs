@@ -269,3 +269,21 @@
 ;; (set-variable chatgpt-shell-openai-key "...")
 ;; (chatgpt-shell-swap-model)
 ;; (chatgpt-shell-swap-system-prompt)
+
+;; NOTE: If at some point you decide you need `xterm-color`,
+;; here is how to set it up:
+;;
+;; (require 'xterm-color)
+;; (setq compilation-environment '("TERM=xterm-16color"))
+;;
+;; ;; This is to avoid problems with `ag`
+;; (defun my-advice-compilation-filter (f proc string)
+;;   (funcall f proc (if (string-prefix-p "*compilation" (buffer-name (process-buffer proc)))
+;;                       (xterm-color-filter string) string)))
+;; (advice-add 'compilation-filter :around #'my-advice-compilation-filter)
+;;
+;; ;; This is to get proper basic colors in "non-window" mode
+;; (custom-set-variables
+;;  '(xterm-color-use-bold-for-bright t)
+;;  '(xterm-color-names ["#000000" "#cd0000" "#00cd00" "#cdcd00" "#0000ee" "#cd00cd" "#00cdcd" "#e5e5e5"])
+;;  '(xterm-color-names-bright ["#7f7f7f" "#ff0000" "#00ff00" "#ffff00" "#5c5cff" "#ff00ff" "#00ffff" "#ffffff"]))
