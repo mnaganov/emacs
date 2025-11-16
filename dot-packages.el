@@ -170,12 +170,11 @@
 (add-hook 'java-mode-hook 'flyspell-prog-mode)
 (add-hook 'js2-mode-hook 'flyspell-prog-mode)
 
-;; Expand region: press Alt-Del repeatedly to expand the region
+;; Expand region: press Alt-= repeatedly to expand the region
 ;; starting from inside.
-;; I've chosen Alt-Del because on my keyboard, 'Del' is near to '=',
-;; so Alt-= runs 'count-words-region', and Alt-Del expands the region.
+;; I've chosen Alt-= because it used to run 'count-words-region'.
 (require 'expand-region)
-(global-set-key (kbd "M-<delete>") 'er/expand-region)
+(global-set-key (kbd "M-=") 'er/expand-region)
 
 ;; Langtool, if present
 ;; Download from https://languagetool.org/download/LanguageTool-stable.zip
