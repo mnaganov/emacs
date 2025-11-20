@@ -31,6 +31,7 @@
 (require 'map)
 
 (defvar chatgpt-shell-proxy)
+(declare-function chatgpt-shell--unsorted-collection "chatgpt-shell")
 (declare-function chatgpt-shell-previous-source-block "chatgpt-shell")
 
 (defcustom chatgpt-shell-anthropic-key nil
@@ -57,21 +58,50 @@ If you use Claude through a proxy service, change the URL base."
 (defcustom chatgpt-shell-anthropic-thinking-budget-tokens nil
   "The token budget allocated for Anthropic model thinking.
 
-Needs `chatgpt-shell-anthropic-thinking-budget-tokens' set to
-non-nil. nil means to use the maximum number of thinking tokens
-allowed."
+nil means to use the maximum number of thinking tokens allowed."
   :type '(choice integer (const nil))
   :group 'chatgpt-shell)
+
+(defun chatgpt-shell-anthropic-reasoning-effort-selector (model)
+  "Select the reasoning effort for the Anthropic MODEL."
+  (let* ((min (map-elt model :thinking-budget-min))
+         (max (1- (map-elt model :max-tokens)))
+         (response (completing-read (format "Thinking budget tokens (%d-%d): " min max)
+                                    (chatgpt-shell--unsorted-collection
+                                     '("disable" "max"))))
+         (budget (cond
+                  ((equal response "disable")
+                   0)
+                  ((equal response "max")
+                   nil)
+                  (t
+                   (string-to-number response)))))
+    (unless (or (not budget)
+                (eql budget 0)
+                (and (integerp budget) (<= min budget max)))
+      (user-error "Thinking budget tokens must be in the range %d-%d" min max))
+    `(((:symbol . chatgpt-shell-anthropic-thinking-budget-tokens)
+       (:value . ,(if (eql budget 0)
+                      chatgpt-shell-anthropic-thinking-budget-tokens
+                    budget))
+       (:kind . thinking-budget)
+       (:max .  ,(null budget)))
+      ((:symbol . chatgpt-shell-anthropic-thinking)
+       (:value . ,(not (eql budget 0)))
+       (:kind . thinking-toggle)))))
 
 (cl-defun chatgpt-shell-anthropic--make-model (&key version
                                                     short-version
                                                     token-width
                                                     max-tokens
-                                                    context-window)
+                                                    context-window
+                                                    thinking-budget-min
+                                                    reasoning-effort-selector)
   "Create an Anthropic model.
 
-Set VERSION, SHORT-VERSION, TOKEN-WIDTH, MAX-TOKENS, CONTEXT-WINDOW and
-VALIDATE-COMMAND handler."
+Set VERSION, SHORT-VERSION, TOKEN-WIDTH, MAX-TOKENS,
+CONTEXT-WINDOW, THINKING-BUDGET-MIN and
+REASONING-EFFORT-SELECTOR."
   (unless version
     (error "Missing mandatory :version param"))
   (unless token-width
@@ -99,6 +129,8 @@ VALIDATE-COMMAND handler."
     (:headers . chatgpt-shell-anthropic--make-headers)
     (:url-base . chatgpt-shell-anthropic-api-url-base)
     (:key . chatgpt-shell-anthropic-key)
+    (:thinking-budget-min . ,thinking-budget-min)
+    (:reasoning-effort-selector . ,reasoning-effort-selector)
     (:validate-command . chatgpt-shell-anthropic--validate-command)
     (:icon . "anthropic.png")))
 
@@ -118,25 +150,50 @@ VALIDATE-COMMAND handler."
    ;; A token is equivalent to _about_ 4 characters.
    ;;
    ;; claude-4-sonnet-latest and claude-4-sonnet-latest are not supported yet.
+   (chatgpt-shell-anthropic--make-model :version "claude-opus-4-1-20250805"
+                                        :short-version "opus-4.1"
+                                        :token-width  4
+                                        :thinking-budget-min 1024
+                                        :reasoning-effort-selector #'chatgpt-shell-anthropic-reasoning-effort-selector
+                                        :max-tokens 32000
+                                        :context-window 200000)
    (chatgpt-shell-anthropic--make-model :version "claude-opus-4-20250514"
                                         :short-version "opus-4"
                                         :token-width  4
+                                        :thinking-budget-min 1024
+                                        :reasoning-effort-selector #'chatgpt-shell-anthropic-reasoning-effort-selector
                                         :max-tokens 32000
+                                        :context-window 200000)
+   (chatgpt-shell-anthropic--make-model :version "claude-sonnet-4-5-20250929"
+                                        :short-version "sonnet-4.5"
+                                        :token-width  4
+                                        :thinking-budget-min 1024
+                                        :reasoning-effort-selector #'chatgpt-shell-anthropic-reasoning-effort-selector
+                                        :max-tokens 64000
                                         :context-window 200000)
    (chatgpt-shell-anthropic--make-model :version "claude-sonnet-4-20250514"
                                         :short-version "sonnet-4"
                                         :token-width  4
+                                        :thinking-budget-min 1024
+                                        :reasoning-effort-selector #'chatgpt-shell-anthropic-reasoning-effort-selector
                                         :max-tokens 64000
                                         :context-window 200000)
    (chatgpt-shell-anthropic--make-model :version "claude-3-7-sonnet-latest"
                                         :short-version "3.7-sonnet"
                                         :token-width  4
+                                        :thinking-budget-min 1024
+                                        :reasoning-effort-selector #'chatgpt-shell-anthropic-reasoning-effort-selector
                                         :max-tokens 64000
                                         :context-window 200000)
    (chatgpt-shell-anthropic--make-model :version "claude-3-5-sonnet-latest"
                                         :short-version "3.5-sonnet"
                                         :token-width  4
                                         :max-tokens 8192
+                                        :context-window 200000)
+   (chatgpt-shell-anthropic--make-model :version "claude-haiku-4-5-20251001"
+                                        :short-version "haiku-4.5"
+                                        :token-width  4
+                                        :max-tokens 64000
                                         :context-window 200000)
    (chatgpt-shell-anthropic--make-model :version "claude-3-5-haiku-latest"
                                         :short-version "3.5-haiku"
@@ -205,7 +262,7 @@ or
      (when chatgpt-shell-anthropic-thinking
        (when (and chatgpt-shell-anthropic-thinking-budget-tokens
                   (>= chatgpt-shell-anthropic-thinking-budget-tokens (map-elt model :max-tokens)))
-         (error "chatgpt-shell-anthropic-thinking-budget-tokens must be smaller than %d"
+         (error "Error: chatgpt-shell-anthropic-thinking-budget-tokens must be smaller than %d"
                 (map-elt model :max-tokens)))
        (let ((chatgpt-shell-anthropic-thinking-budget-tokens
               (if chatgpt-shell-anthropic-thinking-budget-tokens
@@ -239,9 +296,19 @@ or
    :filter #'chatgpt-shell-anthropic--extract-claude-response
    :shell shell))
 
-(defun chatgpt-shell-anthropic--extract-claude-response (raw-response)
-  "Extract Claude response from RAW-RESPONSE."
-  (if-let* ((whole (shell-maker--json-parse-string raw-response))
+(defun chatgpt-shell-anthropic--extract-claude-response (output)
+  "Process pending OUTPUT to extract Claude response.
+
+OUTPUT is always of the form:
+
+  ((:function-calls . ...)
+   (:pending . ...)
+   (:filtered . ...))
+
+and must be returned in the same form."
+  (when (stringp output)
+    (error "Please upgrade shell-maker to 0.79.1 or newer"))
+  (if-let* ((whole (shell-maker--json-parse-string (map-elt output :pending)))
             (response (or (let-alist whole
                             .error.message)
                           (let-alist whole
@@ -250,37 +317,36 @@ or
                                            .text))
                                        .content "")))))
       response
-    (if-let ((chunks (shell-maker--split-text raw-response)))
-      (let ((response)
-            (pending)
-            (result))
-        (mapc (lambda (chunk)
-                ;; Response chunks come in the form:
-                ;; event: message_start
-                ;; data: {...}
-                ;; event: content_block_start
-                ;; data: {...}
-                (if-let* ((is-data (equal (map-elt chunk :key) "data:"))
-                          (obj (shell-maker--json-parse-string (map-elt chunk :value)))
-                          (text (let-alist obj
-                                  (or .text
-                                      .content_block.text
-                                      .delta.text
-                                      .error.message
-                                      ""))))
-                    (unless (string-empty-p text)
-                      (setq response (concat response text)))
-                  (setq pending (concat pending
-                                        (or (map-elt chunk :key) "")
-                                        (map-elt chunk :value)))))
-              chunks)
-        (setq result
-              (list (cons :filtered (unless (string-empty-p response)
-                                      response))
-                    (cons :pending pending)))
-        result)
-      (list (cons :filtered nil)
-            (cons :pending raw-response)))))
+    (if-let ((chunks (shell-maker--split-text (map-elt output :pending))))
+        (let ((response)
+              (pending)
+              (result))
+          (mapc (lambda (chunk)
+                  ;; Response chunks come in the form:
+                  ;; event: message_start
+                  ;; data: {...}
+                  ;; event: content_block_start
+                  ;; data: {...}
+                  (if-let* ((is-data (equal (map-elt chunk :key) "data:"))
+                            (obj (shell-maker--json-parse-string (map-elt chunk :value)))
+                            (text (let-alist obj
+                                    (or .text
+                                        .content_block.text
+                                        .delta.text
+                                        .error.message
+                                        ""))))
+                      (unless (string-empty-p text)
+                        (setq response (concat response text)))
+                    (setq pending (concat pending
+                                          (or (map-elt chunk :key) "")
+                                          (map-elt chunk :value)))))
+                chunks)
+          (setq result
+                (list (cons :filtered (unless (string-empty-p response)
+                                        response))
+                      (cons :pending pending)))
+          result)
+      output)))
 
 (provide 'chatgpt-shell-anthropic)
 

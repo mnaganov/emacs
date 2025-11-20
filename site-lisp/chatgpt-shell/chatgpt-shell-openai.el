@@ -30,6 +30,7 @@
 (require 'map)
 (require 'shell-maker)
 
+(declare-function chatgpt-shell--unsorted-collection "chatgpt-shell")
 (declare-function chatgpt-shell-crop-context "chatgpt-shell")
 (declare-function chatgpt-shell--make-chatgpt-url "chatgpt-shell")
 (declare-function chatgpt-shell-validate-no-system-prompt "chatgpt-shell")
@@ -38,20 +39,28 @@
 (defcustom chatgpt-shell-openai-reasoning-effort "medium"
   "The amount of reasoning effort to use for OpenAI reasoning models.
 
- It can be \"low\", \"medium\" or \"high\". Lower values
-are faster and cheaper but higher values may work better for more
-difficult problems."
+ It can be \"minimal\", \"low\", \"medium\" or \"high\". Lower
+values are faster and cheaper but higher values may work better
+for more difficult problems."
   :type 'string
   :safe #'stringp
-  :options '("low" "medium" "high")
+  :options '("minimal" "low" "medium" "high")
   :group 'chatgpt-shell)
 
-(cl-defun chatgpt-shell-openai-make-model (&key version short-version token-width context-window validate-command (headers #'chatgpt-shell-openai--make-headers) (key chatgpt-shell-openai-key) (url-base 'chatgpt-shell-api-url-base) (path "/v1/chat/completions") (provider "OpenAI") (label "ChatGPT") (handler #'chatgpt-shell-openai--handle-chatgpt-command) (filter #'chatgpt-shell-openai--filter-output) reasoning-effort icon other-params)
+(defun chatgpt-shell-openai-make-reasoning-effort-selector (choices)
+  "Create a function for the :reasoning-effort-selector parameter using CHOICES."
+  (lambda (_model)
+    (let ((effort (completing-read "Reasoning effort: " (chatgpt-shell--unsorted-collection choices) nil t)))
+      `(((:symbol . chatgpt-shell-openai-reasoning-effort)
+         (:value . ,effort)
+         (:kind . thinking-budget))))))
+
+(cl-defun chatgpt-shell-openai-make-model (&key version short-version token-width context-window validate-command (headers #'chatgpt-shell-openai--make-headers) (key chatgpt-shell-openai-key) (url-base 'chatgpt-shell-api-url-base) (path "/v1/chat/completions") (provider "OpenAI") (label "ChatGPT") (handler #'chatgpt-shell-openai--handle-chatgpt-command) (filter #'chatgpt-shell-openai--filter-output) reasoning-effort reasoning-effort-selector icon function-calling other-params)
   "Create an OpenAI model.
 
 Set VERSION, SHORT-VERSION, TOKEN-WIDTH, CONTEXT-WINDOW,
 VALIDATE-COMMAND, HEADERS, KEY, URL-BASE, PATH, PROVIDER, LABEL,
-HANDLER, REASONING-EFFORT, FILTER, ICON, and OTHER-PARAMS."
+HANDLER, REASONING-EFFORT, FILTER, ICON, FUNCTION-CALLING, and OTHER-PARAMS."
   (unless version
     (error "Missing mandatory :version param"))
   (unless token-width
@@ -76,27 +85,64 @@ HANDLER, REASONING-EFFORT, FILTER, ICON, and OTHER-PARAMS."
             (:url . chatgpt-shell-openai--make-url)
             (:key . ,key)
             (:reasoning-effort . ,reasoning-effort)
+            (:reasoning-effort-selector . ,reasoning-effort-selector)
             (:url-base . ,url-base)
             (:validate-command . ,(or validate-command 'chatgpt-shell-openai--validate-command))
             (:other-params . ,other-params)
-            (:icon . ,(or icon "openai.png")))))
+            (:icon . ,(or icon "openai.png"))
+            (:function-calling . ,function-calling))))
 
 (defun chatgpt-shell-openai-models ()
   "Build a list of all OpenAI LLM models available."
   ;; Context windows have been verified as of 11/26/2024.
   (list (chatgpt-shell-openai-make-model
+         :version "gpt-5.1"
+         :function-calling t
+         :token-width 3
+         ;; https://platform.openai.com/docs/models/gpt-5
+         :reasoning-effort t
+         :reasoning-effort-selector (chatgpt-shell-openai-make-reasoning-effort-selector '("none" "low" "medium" "high"))
+         :context-window 400000)
+        (chatgpt-shell-openai-make-model
+         :version "gpt-5"
+         :function-calling t
+         :token-width 3
+         ;; https://platform.openai.com/docs/models/gpt-5
+         :reasoning-effort t
+         :reasoning-effort-selector (chatgpt-shell-openai-make-reasoning-effort-selector '("minimal" "low" "medium" "high"))
+         :context-window 400000)
+        (chatgpt-shell-openai-make-model
+         :version "gpt-5-mini"
+         :function-calling t
+         :token-width 3
+         ;; https://platform.openai.com/docs/models/gpt-5-mini
+         :reasoning-effort t
+         :reasoning-effort-selector (chatgpt-shell-openai-make-reasoning-effort-selector '("minimal" "low" "medium" "high"))
+         :context-window 400000)
+        (chatgpt-shell-openai-make-model
+         :version "gpt-5-nano"
+         :function-calling t
+         :token-width 3
+         ;; https://platform.openai.com/docs/models/gpt-5-nano
+         :reasoning-effort t
+         :reasoning-effort-selector (chatgpt-shell-openai-make-reasoning-effort-selector '("minimal" "low" "medium" "high"))
+         :context-window 400000)
+        (chatgpt-shell-openai-make-model
          :version "gpt-4.1"
          :token-width 3
+         :function-calling t
          ;; https://platform.openai.com/docs/models/gpt-4.1
          :context-window 1047576)
         (chatgpt-shell-openai-make-model
          :version "gpt-4.1-mini"
          :token-width 3
+         :function-calling t
          ;; https://platform.openai.com/docs/models/gpt-4.1-mini
          :context-window 1047576)
         (chatgpt-shell-openai-make-model
          :version "gpt-4.1-nano"
          :token-width 3
+         :function-calling t
          ;; https://platform.openai.com/docs/models/gpt-4.1-nano
          :context-window 1047576)
         (chatgpt-shell-openai-make-model
@@ -107,6 +153,7 @@ HANDLER, REASONING-EFFORT, FILTER, ICON, and OTHER-PARAMS."
         (chatgpt-shell-openai-make-model
          :version "gpt-4o"
          :token-width 3
+         :function-calling t
          ;; https://platform.openai.com/docs/models/gpt-4o
          :context-window 128000)
         (chatgpt-shell-openai-make-model
@@ -117,6 +164,7 @@ HANDLER, REASONING-EFFORT, FILTER, ICON, and OTHER-PARAMS."
         (chatgpt-shell-openai-make-model
          :version "gpt-4o-mini"
          :token-width 3
+         :function-calling t
          ;; https://platform.openai.com/docs/models/gpt-4o-mini
          :context-window 128000)
         (chatgpt-shell-openai-make-model
@@ -127,31 +175,39 @@ HANDLER, REASONING-EFFORT, FILTER, ICON, and OTHER-PARAMS."
         (chatgpt-shell-openai-make-model
          :version "o4-mini"
          :token-width 3
+         :function-calling t
          :context-window 200000
          :reasoning-effort t
+         :reasoning-effort-selector (chatgpt-shell-openai-make-reasoning-effort-selector '("low" "medium" "high"))
          :validate-command #'chatgpt-shell-validate-no-system-prompt)
         (chatgpt-shell-openai-make-model
          :version "o3"
          :token-width 3
+         :function-calling t
          :context-window 200000
          :reasoning-effort t
+         :reasoning-effort-selector (chatgpt-shell-openai-make-reasoning-effort-selector '("low" "medium" "high"))
          :validate-command #'chatgpt-shell-validate-no-system-prompt)
         (chatgpt-shell-openai-make-model
          :version "o3-mini"
          :token-width 3
+         :function-calling t
          :context-window 200000
          :reasoning-effort t
          :validate-command #'chatgpt-shell-validate-no-system-prompt)
         (chatgpt-shell-openai-make-model
          :version "o1"
          :token-width 3
+         :function-calling t
          ;; https://platform.openai.com/docs/models/o1
          :context-window 200000
          :reasoning-effort t
+         :reasoning-effort-selector (chatgpt-shell-openai-make-reasoning-effort-selector '("low" "medium" "high"))
          :validate-command #'chatgpt-shell-validate-no-system-prompt)
         (chatgpt-shell-openai-make-model
          :version "o1-preview"
          :token-width 3
+         :function-calling t
          ;; https://platform.openai.com/docs/models/gpt-01
          :context-window 128000
          ;; Reasoning effort is only supported for o1-pro, o1 and o3-mini.
@@ -166,6 +222,7 @@ HANDLER, REASONING-EFFORT, FILTER, ICON, and OTHER-PARAMS."
         (chatgpt-shell-openai-make-model
          :version "gpt-4.5-preview"
          :token-width 3
+         :function-calling t
          ;; https://platform.openai.com/docs/models#gpt-4-5
          :context-window 128000)
         (chatgpt-shell-openai-make-model
@@ -189,6 +246,39 @@ If you use ChatGPT through a proxy service, change the URL base."
   :type '(choice (function :tag "Function")
                  (string :tag "String"))
   :group 'chatgpt-shell)
+
+(defvar chatgpt-shell-openai--use-function-calling nil
+  "Tool/function calling is highly experimental.
+
+When non-nil, attempt to use `chatgpt-shell-openai--tools'.
+
+Note that `chatgpt-shell-openai--use-function-calling' and
+`chatgpt-shell-openai--tools' are bound to change.
+
+Only models with :function-calling t wil attempt to use
+this feature.")
+
+(defvar chatgpt-shell-openai--tools
+  '((:name "get_current_weather"
+     :function chatgpt-shell-apply-fetch-weather
+     :description "Get the current weather for given coordinate. Requires cities or other locations as coordinate."
+     :async t
+     :args ((:name "lat"
+             :type string
+             :description "Location latitude")
+            (:name "lon"
+             :type string
+             :description "Location longitude")
+            (:name "unit"
+             :type string
+             :enum ["celsius" "fahrenheit"]
+             :optional t))))
+  "Known tools for function calling.
+
+Note: Tools are created using plists unlike the rest of the codebase to be
+compatible with gptel.el and llm.el tools as per agreed spec:
+
+https://github.com/ahyatt/llm/discussions/124#discussioncomment-11877109")
 
 (cl-defun chatgpt-shell-openai--make-chatgpt-messages (&key model system-prompt prompt prompt-url context)
   "Create ChatGPT messages using MODEL.
@@ -238,81 +328,231 @@ CONTEXT: Excludes PROMPT."
         (t
          nil)))
 
-(cl-defun chatgpt-shell-openai-make-chatgpt-request-data (&key system-prompt prompt prompt-url context version temperature reasoning-effort streaming other-params)
-  "Make request data with MESSAGES.
+(cl-defun chatgpt-shell-openai-make-chatgpt-request-data (&key system-prompt prompt prompt-url context messages version temperature reasoning-effort streaming tools other-params)
+  "Make request data.
 
 Optionally set PROMPT, VERSION, TEMPERATURE, STREAMING, SYSTEM-PROMPT,
 and OTHER-PARAMS (list)."
   (unless version
     (error "Missing mandatory :version param"))
+  (when (and messages (or prompt prompt-url system-prompt context))
+    (error ":messages cannot be used with either :prompt :prompt-url :system-prompt or :context"))
   (append
    `((model . ,version)
-     (messages . ,(vconcat (chatgpt-shell-openai--make-chatgpt-messages
-                            :system-prompt system-prompt
-                            :prompt prompt
-                            :prompt-url prompt-url
-                            :context context))))
+     (messages . ,(vconcat (if messages
+                               messages
+                             (chatgpt-shell-openai--make-chatgpt-messages
+                              :system-prompt system-prompt
+                              :prompt prompt
+                              :prompt-url prompt-url
+                              :context context))))
+     )
    (when temperature
      `((temperature . ,temperature)))
+   (when tools
+     `((tools . ,(vconcat
+                  (mapcar (lambda (tool)
+                            ;; TODO: This is ChatGPT-specific. Generalize.
+                            (chatgpt-shell-openai--tool-to-openai-format tool))
+                          tools)))))
+   (when tools
+     '((tool_choice . "auto")))
    (when reasoning-effort
      `((reasoning_effort . ,reasoning-effort)))
    (when streaming
      `((stream . t)))
    other-params))
 
-(defun chatgpt-shell-openai--filter-output (raw-response)
-  "Extract ChatGPT response from RAW-RESPONSE.
+(defun chatgpt-shell-openai--tool-to-openai-format (tool)
+  "Convert TOOL from generic schema to OpenAI format."
+  `((type . "function")
+    (function . ((name . ,(plist-get tool :name))
+                 (description . ,(plist-get tool :description))
+                 (parameters . ,(chatgpt-shell-openai--args-to-openai-params
+                                 (plist-get tool :args)))))))
 
-When ChatGPT responses are streamed, they arrive in the form:
+(defun chatgpt-shell-openai--args-to-openai-params (args)
+  "Convert ARGS list to OpenAI parameters format."
+  (if (null args)
+      ;; No arguments case
+      `((type . "object")
+        (properties . ()))
+    ;; Has arguments
+    (let ((properties '())
+          (required '()))
+      (dolist (arg args)
+        (let ((name (plist-get arg :name))
+              (type (symbol-name (plist-get arg :type)))
+              (desc (plist-get arg :description))
+              (enum (plist-get arg :enum))
+              (optional (plist-get arg :optional)))
+          (push `(,(intern name) . ((type . ,type)
+                                    ,@(when desc `((description . ,desc)))  ; Only add if desc exists
+                                    ,@(when enum `((enum . ,enum)))))
+                properties)
+          (unless optional
+            (push name required))))
+      `((type . "object")
+        (properties . ,(nreverse properties))
+        ,@(when required `((required . ,(vconcat (nreverse required)))))))))
 
+(defun chatgpt-shell-apply-fetch-weather (args on-finished)
+  "Fetch weather data from MET Norway API using ARGS and invoking ON-FINISHED.
+
+ARGS is of the form:
+
+\((lat . \"1\")
+  (lon . \"1\"))
+
+ON-FINISHED param is of the form:
+
+\((error . \"some error\"))
+
+or
+
+\((content . \"30C and Sunny\"))"
+  (cond ((null args)
+         (funcall on-finished '((error . "Error: Missing lat and long arguments"))))
+        ((string-empty-p (string-trim (or args "")))
+         (funcall on-finished '((error . "Error: Missing lat and long arguments"))))
+        (t
+         (if-let* ((obj (condition-case nil
+                            (json-read-from-string args)
+                          (error nil)))
+                   (lat (string-to-number (map-elt obj 'lat "")))
+                   (lon (string-to-number (map-elt obj 'lon ""))))
+             (cond ((equal lat 0)
+                    (funcall on-finished '((error . "Error: Invalid lat"))))
+                   ((equal lon 0)
+                    (funcall on-finished '((error . "Error: Invalid lon"))))
+                   (t
+                    ;; TODO: Move to a separate file.
+                    (let ((weather (chatgpt-shell-fetch-weather lat lon)))
+                      (funcall on-finished `((content . ,(condition-case nil
+                                                             (json-encode weather)
+                                                           (error nil))))))))
+           (funcall on-finished '((error . "Error: Couldn't parse arguments")))))))
+
+(defun chatgpt-shell-fetch-weather (lat lon)
+  "Fetch weather data from MET Norway API for LAT and LON.
+
+  Return the parsed JSON object."
+  (when-let* ((url (format "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=%s&lon=%s" lat lon))
+              (args (list "-s" url))
+              (data (with-temp-buffer
+                      (apply #'call-process "curl" nil t nil args)
+                      (goto-char (point-min))
+                      (json-parse-buffer :object-type 'alist)))
+              (now (current-time))
+              (entry (seq-find
+                      (lambda (entry)
+                        (let-alist entry
+                          (time-less-p now (date-to-time .time))))
+                      (let-alist data
+                        .properties.timeseries)))
+              (unit (let-alist data
+                      .properties.meta.units.air_temperature)))
+    (let-alist entry
+      `((temperature . ,(format "%.1f%s"
+                                .data.instant.details.air_temperature
+                                (cond
+                                 ((string= unit "celsius") "°C")
+                                 ((string= unit "fahrenheit") "°F")
+                                 (t (concat " " unit)))))
+        (symbol . ,(alist-get 'symbol_code .data.next_1_hours.summary))))))
+
+(defun chatgpt-shell-openai--filter-output (output)
+  "Process pending OUTPUT to extract ChatGPT response.
+
+OUTPUT is always of the form:
+
+  ((:function-calls . ...)
+   (:pending . ...)
+   (:filtered . ...))
+
+and must be returned in the same form.
+
+Processing means processing :pending content into :filtered.
+
+When ChatGPT responses are streamed, :pending arrives as:
   data: {...json...}
-  data: {...jdon...}
-
+  data: {...json...}
 Otherwise:
-
   {...json...}."
-  (if-let* ((whole (shell-maker--json-parse-string raw-response))
-            (response (or (let-alist whole
-                            .error.message)
-                          (let-alist whole
-                            (mapconcat (lambda (choice)
-                                         (let-alist choice
-                                           (or .delta.content
-                                               .message.content)))
-                                       .choices "")))))
-      response
-    (when-let ((chunks (shell-maker--split-text raw-response)))
-      (let ((response)
+  (cond ((stringp output)
+         (error "Please upgrade shell-maker to 0.79.1 or newer")
+         (setq output (list (cons :pending output))))
+        ((equal (string-trim (map-elt output :pending))
+                "data: [DONE]")
+         (setf (map-elt output :pending) "")))
+  (if-let* ((whole (shell-maker--json-parse-string (map-elt output :pending)))
+            (response-text (or (let-alist whole
+                                 .error.message)
+                               (let-alist whole
+                                 (mapconcat (lambda (choice)
+                                              (let-alist choice
+                                                (or .delta.content
+                                                    .message.content)))
+                                            .choices "")))))
+      (list (cons :filtered response-text))
+    (when-let ((chunks (shell-maker--split-text (map-elt output :pending))))
+      (let ((response-text)
             (pending)
-            (result))
-        (mapc (lambda (chunk)
-                ;; Response chunks come in the form:
-                ;;   data: {...}
-                ;;   data: {...}
-                (if-let* ((is-data (equal (map-elt chunk :key) "data:"))
-                          (obj (shell-maker--json-parse-string (map-elt chunk :value)))
-                          (text (or
-                                 ;; .choices[i].message.content
-                                 ;; .choices[i].delta.content
-                                 (let-alist obj
-                                   (mapconcat (lambda (choice)
-                                                (let-alist choice
-                                                  (or (and (not (eq .delta.content :null))
-                                                           .delta.content)
-                                                      .message.content
-                                                      "")))
-                                              .choices "")))))
-                    (unless (string-empty-p text)
-                      (setq response (concat response text)))
-                  (setq pending (concat pending
-                                        (or (map-elt chunk :key) "")
-                                        (map-elt chunk :value)))))
-              chunks)
-        (setq result
-              (list (cons :filtered (unless (string-empty-p response)
-                                      response))
-                    (cons :pending pending)))
-        result))))
+            (function-calls (map-elt output :function-calls)))
+        (mapc
+         (lambda (chunk)
+           (if-let* ((is-data (equal (map-elt chunk :key) "data:"))
+                     (obj (shell-maker--json-parse-string (map-elt chunk :value))))
+               (let-alist obj
+                 ;; Extract content
+                 (let ((text (mapconcat (lambda (choice)
+                                          (let-alist choice
+                                            (or (and (not (eq .delta.content :null))
+                                                     .delta.content)
+                                                .message.content
+                                                "")))
+                                        .choices "")))
+                   (unless (string-empty-p text)
+                     (setq response-text (concat response-text text))))
+                 ;; Extract function calls/arguments
+                 (mapc (lambda (choice)
+                         (let-alist choice
+                           (mapc
+                            (lambda (tool-call)
+                              ;; Function/tool call is of the form:
+                              ;; '((:name . ...)
+                              ;;    (:id . ...)
+                              ;;    (:index . ...)
+                              ;;    (:arguments . ...))
+                              (let-alist tool-call
+                                (when .index ;; LOOKS LIKE ID IS NOT ACCESSIBLE HERE!!!! or MAYBE we should be resolving by index
+                                  (let ((call (map-elt function-calls .index)))
+                                    (when .index
+                                      (setf (map-elt call :index) .index))
+                                    (when .id
+                                      (setf (map-elt call :id) .id))
+                                    (when .function.name
+                                      (setf (map-elt call :name) .function.name))
+                                    (when .function.arguments
+                                      (setf (map-elt call :arguments)
+                                            (concat (map-elt call :arguments)
+                                                    .function.arguments)))
+                                    (setf (map-elt function-calls .index) call)))))
+                            .delta.tool_calls)
+                           (when (equal .finish_reason
+                                        "tool_calls")
+                             (setf (map-elt output :incoming-requests)
+                                   (map-values function-calls)))))
+                       .choices))
+             (setq pending (concat pending
+                                   (or (map-elt chunk :key) "")
+                                   (map-elt chunk :value)))))
+         chunks)
+        (setf (map-elt output :function-calls) function-calls)
+        (setf (map-elt output :filtered) (unless (string-empty-p response-text)
+                                           response-text))
+        (setf (map-elt output :pending) pending)
+        output))))
 
 (cl-defun chatgpt-shell-openai--make-url (&key _command model _settings)
   "Create the API URL using MODEL."
@@ -337,11 +577,11 @@ or
 
 (setq chatgpt-shell-openai-key \"my-key\")"))
 
-(cl-defun chatgpt-shell-openai--make-payload (&key model context settings)
-  "Create the API payload using MODEL CONTEXT and SETTINGS."
-  (funcall
-   #'chatgpt-shell-openai-make-chatgpt-request-data
+(cl-defun chatgpt-shell-openai--make-payload (&key model prompt-url context settings)
+  "Create the API payload using MODEL PROMPT-URL CONTEXT and SETTINGS."
+  (chatgpt-shell-openai-make-chatgpt-request-data
    :system-prompt (map-elt settings :system-prompt)
+   :prompt-url prompt-url
    :context context
    :version (map-elt model :version)
    :temperature (map-elt settings :temperature)
@@ -350,29 +590,108 @@ or
    :streaming (map-elt settings :streaming)
    :other-params (map-elt model :other-params)))
 
-(cl-defun chatgpt-shell-openai--handle-chatgpt-command (&key model command context shell settings (key #'chatgpt-shell-openai-key) (filter #'chatgpt-shell-openai--filter-output) (missing-key-msg "Your chatgpt-shell-openai-key is missing"))
-  "Handle ChatGPT COMMAND (prompt) using MODEL, CONTEXT, SHELL, and SETTINGS."
-  (unless (funcall key)
-    (funcall (map-elt shell :write-output) missing-key-msg)
-    (funcall (map-elt shell :finish-output) nil))
+(cl-defun chatgpt-shell-openai--make-http-request (&key messages async url model settings proxy headers filter shell)
+  "Like `shell-maker-make-http-request' but with OpenAI function calling support.
+
+MESSAGES, ASYNC, URL, MODEL, SETTINGS, PROXY, HEADERS, FILTER,
+and SHELL are all the same."
   (shell-maker-make-http-request
-   :async t
-   :url (chatgpt-shell-openai--make-url :model model)
-   :proxy chatgpt-shell-proxy
+   :async async
+   :url url
+   :proxy proxy
    :data (chatgpt-shell-openai-make-chatgpt-request-data
-          :prompt command
-          :system-prompt (map-elt settings :system-prompt)
-          :context context
+          :messages messages
           :version (map-elt model :version)
           :temperature (map-elt settings :temperature)
           :reasoning-effort (and (map-elt model :reasoning-effort)
                                  chatgpt-shell-openai-reasoning-effort)
+          :tools (when (and (map-elt model :function-calling)
+                            chatgpt-shell-openai--use-function-calling)
+                   chatgpt-shell-openai--tools)
           :streaming (map-elt settings :streaming)
           :other-params (map-elt model :other-params))
+   :headers headers
+   :on-incoming-requests
+   (lambda (incoming-requests)
+     (chatgpt-shell-openai--service-incoming-requests
+      incoming-requests
+      (when (map-elt model :function-calling)
+        chatgpt-shell-openai--tools)
+      (lambda (serviced-requests)
+        (chatgpt-shell-openai--make-http-request
+         :messages
+         (vconcat (append (vconcat messages)
+                          `[((role . "assistant")
+                             (tool_calls . ,(vconcat
+                                             (mapcar
+                                              (lambda (incoming-request)
+                                                `((id . ,(map-elt incoming-request :id))
+                                                  (type . "function")
+                                                  (function . ((name . ,(map-elt incoming-request :name))
+                                                               (arguments . ,(map-elt incoming-request :arguments))))))
+                                              incoming-requests))))]
+                          serviced-requests))
+         :async async
+         :url url
+         :model model
+         :settings settings
+         :proxy proxy
+         :headers headers
+         :filter filter
+         :shell shell))))
+   :filter filter
+   :shell shell))
+
+(cl-defun chatgpt-shell-openai--handle-chatgpt-command
+    (&key model command context shell settings
+          (key #'chatgpt-shell-openai-key)
+          (filter #'chatgpt-shell-openai--filter-output)
+          (missing-key-msg "Your chatgpt-shell-openai-key is missing"))
+  "Handle ChatGPT COMMAND (prompt) using MODEL, CONTEXT, SHELL, and SETTINGS."
+  (unless (funcall key)
+    (funcall (map-elt shell :write-output) missing-key-msg)
+    (funcall (map-elt shell :finish-output) nil))
+  (chatgpt-shell-openai--make-http-request
+   :messages (chatgpt-shell-openai--make-chatgpt-messages
+              :model model
+              :system-prompt (map-elt settings :system-prompt)
+              :prompt command
+              :context context)
+   :async t
+   :url (chatgpt-shell-openai--make-url :model model)
+   :proxy chatgpt-shell-proxy
+   :model model
+   :settings settings
    :headers (list "Content-Type: application/json; charset=utf-8"
                   (format "Authorization: Bearer %s" (funcall key)))
    :filter filter
    :shell shell))
+
+(defun chatgpt-shell-openai--service-incoming-requests (incoming-requests tools on-finished)
+  "Service all INCOMING-REQUESTS using TOOLS, invoking ON-FINISHED when finished."
+  (let ((serviced-requests nil))
+    (mapc (lambda (incoming-request)
+            (if-let* ((tool (seq-find (lambda (tool)
+                                        (equal (format "%s" (map-elt incoming-request :name))
+                                               (plist-get tool :name)))
+                                      tools))
+                      (request-handler (plist-get tool :function))
+                      (request-id (map-elt incoming-request :id)))
+                (funcall request-handler
+                         (map-elt incoming-request :arguments)
+                         (lambda (result)
+                           (setq serviced-requests
+                                 (append serviced-requests
+                                         ;; TODO: This is ChatGPT-specific. Generalize.
+                                         `(((role . "tool")
+                                            (tool_call_id . ,request-id)
+                                            (content . ,(json-encode (or (map-elt result 'error)
+                                                                         (map-elt result 'content)
+                                                                         "")))))))
+                           (when (equal (length incoming-requests)
+                                        (length serviced-requests))
+                             (funcall on-finished serviced-requests))))))
+          incoming-requests)))
 
 (defun chatgpt-shell-openai--user-assistant-messages (history)
   "Convert HISTORY to ChatGPT format.

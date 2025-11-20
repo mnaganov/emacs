@@ -26,7 +26,7 @@
   "Create an OpenRouter model.
 
 Set LABEL, VERSION, SHORT-VERSION, TOKEN-WIDTH, CONTEXT-WINDOW,
-VALIDATE-COMMAND and OTHER-PARAMS for `chatgpt-shell-openai-make-model'."
+REASONING-EFFORT, VALIDATE-COMMAND and OTHER-PARAMS for `chatgpt-shell-openai-make-model'."
   (chatgpt-shell-openai-make-model
    :label label
    :version version
@@ -102,27 +102,55 @@ VALIDATE-COMMAND and OTHER-PARAMS for `chatgpt-shell-openai-make-model'."
          :validate-command #'chatgpt-shell-validate-no-system-prompt
          :other-params '((provider (require_parameters . t))))
         (chatgpt-shell-openrouter-make-model
-         :version "qwen/qwen-2.5-coder-32b-instruct"
-         :short-version "qwen-2.5-coder-32b"
+         :version "qwen/qwen3-coder"
+         :short-version "qwen3-coder"
          :label "Qwen"
          :token-width 16
-         ;; See https://openrouter.ai/qwen/qwen-2.5-coder-32b-instruct
-         :context-window 33000
+         ;; See https://openrouter.ai/qwen/qwen3-coder
+         :context-window 262144
          ;; Multiple quantizations are offered for this model by different
          ;; providers so we restrict to one for consistency. Note that the sense
          ;; in which provider is used here means the providers available through
          ;; OpenRouter. This is different from the meaning of the :provider
          ;; argument.
          ;;
-         ;; See https://openrouter.ai/qwen/qwen-2.5-coder-32b-instruct
-         :other-params '((provider (quantizations . ["bf16"]))))
+         ;; See https://openrouter.ai/qwen/qwen3-coder
+         :other-params '((provider (quantizations . ["fp4"]))))
+        (chatgpt-shell-openrouter-make-model
+         :version "openai/gpt-oss-120b"
+         :label "ChatGPT"
+         :token-width 3
+         :reasoning-effort chatgpt-shell-openai-reasoning-effort
+         ;; https://platform.openai.com/docs/models/gpt-oss-120b
+         :context-window 131072)
+        (chatgpt-shell-openrouter-make-model
+         :version "openai/gpt-oss-20b"
+         :label "ChatGPT"
+         :token-width 3
+         :reasoning-effort chatgpt-shell-openai-reasoning-effort
+         ;; https://platform.openai.com/docs/models/gpt-oss-20b
+         :context-window 131072)
         (chatgpt-shell-openrouter-make-model
          :version "anthropic/claude-3.7-sonnet"
          :short-version "claude-3.7-sonnet"
          :label "Claude"
          :token-width 4
          ;; See https://openrouter.ai/anthropic/claude-3.7-sonnet
-         :context-window 200000)))
+         :context-window 200000)
+        (chatgpt-shell-openrouter-make-model
+         :version "google/gemini-2.5-flash"
+         :short-version "gemini-2.5-flash"
+         :label "Gemini"
+         :token-width 4
+         ;; See https://openrouter.ai/google/gemini-2.5-flash
+         :context-window 1048576)
+        (chatgpt-shell-openrouter-make-model
+         :version "google/gemini-2.5-pro"
+         :short-version "gemini-2.5-pro"
+         :label "Gemini"
+         :token-width 4
+         ;; See https://openrouter.ai/google/gemini-2.5-pro
+         :context-window 1048576)))
 
 (defcustom chatgpt-shell-openrouter-api-url-base "https://openrouter.ai/api"
   "OpenRouter API's base URL.
@@ -164,12 +192,46 @@ If you use OpenRouter through a proxy service, change the URL base."
    :filter #'chatgpt-shell-openrouter--filter-output
    :missing-key-msg "Your chatgpt-shell-openrouter-key is missing"))
 
-(defun chatgpt-shell-openrouter--filter-output (raw-response)
-  "Filter RAW-RESPONSE when processing responses are sent.
+(defun chatgpt-shell-openrouter--filter-output (object)
+  "Process OBJECT to extract pending output.
+
+Filter OBJECT when processing responses are sent.
 
 This occurs for example with OpenAI's o1 model through OpenRouter."
-  (unless (string= (string-trim raw-response) ": OPENROUTER PROCESSING")
-    (chatgpt-shell-openai--filter-output raw-response)))
+  (let ((pending (map-elt object :pending))
+        (result ""))
+
+    ;; Extract all content from complete data lines
+    (with-temp-buffer
+      (insert pending)
+      (goto-char (point-min))
+      (let ((new-pending ""))
+        (while (not (eobp))
+          (cond
+           ((looking-at "^data: \\({.*}\\)$")
+            (let ((json-str (match-string 1)))
+              (condition-case nil
+                  (let* ((json (json-read-from-string json-str))
+                         (content (let-alist json
+                                    (let-alist (elt .choices 0)
+                                      .delta.content))))
+                    (when content
+                      (setq result (concat result content))))
+                (error nil))
+              (forward-line)))
+
+           ((looking-at "^:")
+            ;; Skip comment lines like ": OPENROUTER PROCESSING"
+            (forward-line))
+
+           (t
+            ;; Keep incomplete lines as pending
+            (setq new-pending (concat new-pending (buffer-substring (point) (line-end-position)) "\n"))
+            (forward-line))))
+        (setq pending new-pending)))
+
+    (list (cons :filtered result)
+          (cons :pending pending))))
 
 (defun chatgpt-shell-openrouter--make-headers (&rest args)
   "Create the API headers.

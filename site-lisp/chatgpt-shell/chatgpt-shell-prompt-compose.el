@@ -37,6 +37,7 @@
 (require 'svg nil :noerror)
 
 (declare-function chatgpt-shell--eshell-last-last-command "chatgpt-shell")
+(declare-function chatgpt-shell--fetch-model-icon "chatgpt-shell")
 (declare-function chatgpt-shell--minibuffer-prompt "chatgpt-shell")
 (declare-function chatgpt-shell--model-label "chatgpt-shell")
 (declare-function chatgpt-shell--model-short-version "chatgpt-shell")
@@ -115,8 +116,8 @@ t if invoked from a transient frame (quitting closes the frame).")
     (define-key map (kbd "M-n") #'chatgpt-shell-prompt-compose-next-history)
     map))
 
-(define-derived-mode chatgpt-shell-prompt-compose-mode fundamental-mode "ChatGPT Compose"
-  "Major mode for composing ChatGPT prompts from a dedicated buffer."
+(define-derived-mode chatgpt-shell-prompt-compose-mode fundamental-mode "LLM Prompt Compose"
+  "Major mode for composing chatgpt-shell LLM prompts from a dedicated buffer."
   :keymap chatgpt-shell-prompt-compose-mode-map)
 
 (defvar chatgpt-shell-prompt-compose-view-mode-map
@@ -291,6 +292,8 @@ Set TRANSIENT-FRAME-P to also close frame on exit."
   (interactive)
   (unless (derived-mode-p 'chatgpt-shell-prompt-compose-mode)
     (user-error "Not in a shell compose buffer"))
+  (when chatgpt-shell-prompt-compose-view-mode
+    (chatgpt-shell-prompt-compose-reply))
   (let ((candidate (with-current-buffer (chatgpt-shell--primary-buffer)
                      (completing-read
                       "History: "
@@ -402,63 +405,76 @@ Optionally set its PROMPT and RESPONSE."
   (catch 'exit
     (unless (derived-mode-p 'chatgpt-shell-prompt-compose-mode)
       (user-error "Not in a shell compose buffer"))
-    (with-current-buffer (chatgpt-shell--primary-buffer)
-      (when shell-maker--busy
-        (unless (y-or-n-p "Abort?")
-          (throw 'exit nil))
-        (shell-maker-interrupt t)
-        (with-current-buffer (chatgpt-shell-prompt-compose-buffer)
+    (let ((shell-buffer (chatgpt-shell--primary-buffer))
+          (compose-buffer (chatgpt-shell-prompt-compose-buffer)))
+      (with-current-buffer shell-buffer
+        (when shell-maker--busy
+          (unless (y-or-n-p "Abort?")
+            (throw 'exit nil))
+          (shell-maker-interrupt t)
+          (with-current-buffer compose-buffer
+            (progn
+              (chatgpt-shell-prompt-compose-view-mode -1)
+              (chatgpt-shell-prompt-compose--initialize)))
+          (user-error "Aborted")))
+      (when (and chatgpt-shell-prompt-compose-view-mode
+                 (chatgpt-shell-block-action-at-point))
+        (chatgpt-shell-execute-block-action-at-point)
+        (throw 'exit nil))
+      (when (string-empty-p
+             (string-trim (chatgpt-shell-prompt-compose--text)))
+        (chatgpt-shell-prompt-compose--initialize)
+        (user-error "Nothing to send"))
+      (if chatgpt-shell-prompt-compose-view-mode
           (progn
             (chatgpt-shell-prompt-compose-view-mode -1)
-            (chatgpt-shell-prompt-compose--initialize)))
-        (user-error "Aborted")))
-    (when (and chatgpt-shell-prompt-compose-view-mode
-               (chatgpt-shell-block-action-at-point))
-      (chatgpt-shell-execute-block-action-at-point)
-      (throw 'exit nil))
-    (when (string-empty-p
-           (string-trim (chatgpt-shell-prompt-compose--text)))
-      (chatgpt-shell-prompt-compose--initialize)
-      (user-error "Nothing to send"))
-    (if chatgpt-shell-prompt-compose-view-mode
-        (progn
-          (chatgpt-shell-prompt-compose-view-mode -1)
-          (chatgpt-shell-prompt-compose--initialize)
-          ;; TODO: Consolidate, but until then keep in sync with
-          ;; instructions from `chatgpt-shell-prompt-compose-show-buffer'.
-          (message (concat "Type "
-                           (propertize "C-c C-c" 'face 'help-key-binding)
-                           " to send prompt. "
-                           (propertize "C-c C-k" 'face 'help-key-binding)
-                           " to cancel and exit. ")))
-      (let ((prompt (string-trim
-                     (chatgpt-shell-prompt-compose--text))))
-        (let ((inhibit-read-only t))
-          (markdown-overlays-put))
-        (chatgpt-shell-prompt-compose-view-mode +1)
-        (chatgpt-shell-prompt-compose--initialize prompt)
-        (setq view-exit-action 'kill-buffer)
-        (when (string-equal prompt "clear")
-          (view-mode -1)
-          (chatgpt-shell-prompt-compose--initialize))
-        (if chatgpt-shell-prompt-compose--exit-on-submit
-            (let ((view-exit-action nil))
-              (quit-window t (get-buffer-window (chatgpt-shell-prompt-compose-buffer)))
-              (chatgpt-shell-send-to-buffer prompt nil nil nil 'shell))
-          (chatgpt-shell-send-to-buffer prompt nil nil
-                                        (lambda (_input _output _success)
-                                          (with-current-buffer (chatgpt-shell-prompt-compose-buffer)
-                                            (let ((inhibit-read-only t))
-                                              (markdown-overlays-put))
-                                            (when (chatgpt-shell-markdown-block-at-point)
-                                              (chatgpt-shell-mark-block)))
-                                          (when chatgpt-shell-compose-auto-transient
-                                            (call-interactively 'chatgpt-shell-prompt-compose-transient)))
-                                        'inline))
-        ;; Point should go to beginning of response after submission.
-        (chatgpt-shell-prompt-compose--goto-response)
-        (let ((inhibit-read-only t))
-          (markdown-overlays-put))))))
+            (chatgpt-shell-prompt-compose--initialize)
+            ;; TODO: Consolidate, but until then keep in sync with
+            ;; instructions from `chatgpt-shell-prompt-compose-show-buffer'.
+            (message (concat "Type "
+                             (propertize "C-c C-c" 'face 'help-key-binding)
+                             " to send prompt. "
+                             (propertize "C-c C-k" 'face 'help-key-binding)
+                             " to cancel and exit. ")))
+        (let ((prompt (string-trim
+                       (chatgpt-shell-prompt-compose--text))))
+          (let ((inhibit-read-only t))
+            (markdown-overlays-put))
+          (chatgpt-shell-prompt-compose-view-mode +1)
+          (chatgpt-shell-prompt-compose--initialize prompt)
+          (setq view-exit-action 'kill-buffer)
+          (when (string-equal prompt "clear")
+            (view-mode -1)
+            (chatgpt-shell-prompt-compose--initialize))
+          (if chatgpt-shell-prompt-compose--exit-on-submit
+              (let ((view-exit-action nil))
+                (quit-window t (get-buffer-window compose-buffer))
+                (chatgpt-shell-send-to-buffer prompt nil nil nil 'shell))
+            (chatgpt-shell-prompt-compose--send-prompt
+             :prompt prompt
+             :compose-buffer compose-buffer))
+          ;; Point should go to beginning of response after submission.
+          (chatgpt-shell-prompt-compose--goto-response)
+          (let ((inhibit-read-only t))
+            (markdown-overlays-put)))))))
+
+(cl-defun chatgpt-shell-prompt-compose--send-prompt (&key prompt compose-buffer)
+  "Send PROMPT from COMPOSE-BUFFER."
+  (unless prompt
+    (error "Must have a prompt"))
+  (unless compose-buffer
+    (error "Must have a compose-buffer"))
+  (deactivate-mark)
+  (chatgpt-shell-send-to-buffer prompt nil nil
+                                (lambda (_input _output _success)
+                                  (with-current-buffer compose-buffer
+                                    (let ((inhibit-read-only t))
+                                      (markdown-overlays-put))
+                                    (when (chatgpt-shell-markdown-block-at-point)
+                                      (chatgpt-shell-mark-block)))
+                                  (when chatgpt-shell-compose-auto-transient
+                                    (call-interactively 'chatgpt-shell-prompt-compose-transient)))
+                                'inline))
 
 (defun chatgpt-shell-prompt-compose-next-interaction (&optional backwards)
   "Show next interaction (request / response).
@@ -520,7 +536,7 @@ If BACKWARDS is non-nil, go to previous interaction."
     (chatgpt-shell-prompt-compose-view-mode +1)))
 
 (defun chatgpt-shell-prompt-compose--history-label ()
-  "Return the position in history of the primary shell buffer."
+  "Return a label with position in history of the primary shell buffer."
   (if (display-graphic-p)
       (let* ((pos (or (chatgpt-shell-prompt-compose--position)
                       (cons 1 1)))
@@ -528,7 +544,7 @@ If BACKWARDS is non-nil, go to previous interaction."
              (image-height 90)
              (text-height 25)
              (svg (svg-create (frame-pixel-width) image-height))
-             (icon-filename (chatgpt-shell-prompt-compose--fetch-model-icon
+             (icon-filename (chatgpt-shell--fetch-model-icon
                              (map-elt (chatgpt-shell--resolved-model) :icon))))
         (when icon-filename
           (svg-embed svg icon-filename
@@ -546,10 +562,10 @@ If BACKWARDS is non-nil, go to previous interaction."
                               (chatgpt-shell--model-label)
                               (chatgpt-shell--model-short-version))
                   :x (+ image-width 10) :y (* 2 text-height)
-                  :fill "#C3E88D")
+                  :fill (face-attribute 'font-lock-string-face :foreground))
         (svg-text svg (or (chatgpt-shell--system-prompt-name) "No system prompt")
                   :x (+ image-width 10) :y (* 3 text-height)
-                  :fill "#FF5370")
+                  :fill (face-attribute 'font-lock-variable-name-face :foreground))
         (propertize (format "%s\n\n" (with-temp-buffer
                                        (svg-insert-image svg)
                                        (buffer-string)))
@@ -695,11 +711,9 @@ Useful if sending a request failed, perhaps from failed connectivity."
                                     (ring-elements comint-input-ring))))))
              (inhibit-read-only t))
     (chatgpt-shell-prompt-compose--initialize prompt)
-    (chatgpt-shell-send-to-buffer prompt nil nil
-                                  (lambda (_input _output _success)
-                                    (with-current-buffer (chatgpt-shell-prompt-compose-buffer)
-                                      (markdown-overlays-put)))
-                                  'inline)))
+    (chatgpt-shell-prompt-compose--send-prompt
+     :prompt prompt
+     :compose-buffer (chatgpt-shell-prompt-compose-buffer))))
 
 (defun chatgpt-shell-prompt-compose-insert-block-at-point ()
   "Insert block at point at last known location."
@@ -855,10 +869,12 @@ Useful if sending a request failed, perhaps from failed connectivity."
   (with-current-buffer (chatgpt-shell--primary-buffer)
     (when shell-maker--busy
       (user-error "Busy, please wait")))
-  (let ((prompt "show entire snippet")
+  (let ((prompt "show me the entire snippet for relevant class, struct, method, or function")
         (inhibit-read-only t))
     (chatgpt-shell-prompt-compose--initialize prompt)
-    (chatgpt-shell-send-to-buffer prompt nil nil nil 'inline)))
+    (chatgpt-shell-prompt-compose--send-prompt
+     :prompt prompt
+     :compose-buffer (chatgpt-shell-prompt-compose-buffer))))
 
 (defun chatgpt-shell-prompt-compose-request-more ()
   "Request more data.  This is useful if you already requested examples."
@@ -871,7 +887,9 @@ Useful if sending a request failed, perhaps from failed connectivity."
   (let ((prompt "give me more")
         (inhibit-read-only t))
     (chatgpt-shell-prompt-compose--initialize prompt)
-    (chatgpt-shell-send-to-buffer prompt nil nil nil 'inline)))
+    (chatgpt-shell-prompt-compose--send-prompt
+     :prompt prompt
+     :compose-buffer (chatgpt-shell-prompt-compose-buffer))))
 
 (defun chatgpt-shell-prompt-compose-other-buffer ()
   "Jump to the shell buffer (compose's other buffer)."
@@ -879,31 +897,6 @@ Useful if sending a request failed, perhaps from failed connectivity."
   (unless (derived-mode-p 'chatgpt-shell-prompt-compose-mode)
     (user-error "Not in a shell compose buffer"))
   (switch-to-buffer (chatgpt-shell--primary-buffer)))
-
-(defun chatgpt-shell-prompt-compose--fetch-model-icon (icon)
-  "Download ICON filename from GitHub, only if it exists and save as binary."
-  (when icon
-    (let* ((mode (if (eq (frame-parameter nil 'background-mode) 'dark) "dark" "light"))
-           (url (concat "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/"
-                        mode "/" icon))
-           (filename (file-name-nondirectory url))
-           (cache-dir (file-name-concat (temporary-file-directory) "chatgpt-shell" mode))
-           (cache-path (expand-file-name filename cache-dir)))
-      (unless (file-exists-p cache-path)
-        (make-directory cache-dir t)
-        (let ((buffer (url-retrieve-synchronously url t t 5.0)))
-          (when buffer
-            (with-current-buffer buffer
-              (goto-char (point-min))
-              (if (re-search-forward "^HTTP/1.1 200 OK" nil t)
-                  (progn
-                    (re-search-forward "\r?\n\r?\n")
-                    (let ((coding-system-for-write 'no-conversion))
-                      (write-region (point) (point-max) cache-path)))
-                (message "Icon fetch failed: %s" url)))
-            (kill-buffer buffer))))
-      (when (file-exists-p cache-path)
-        cache-path))))
 
 (provide 'chatgpt-shell-prompt-compose)
 

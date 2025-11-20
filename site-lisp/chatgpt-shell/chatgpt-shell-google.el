@@ -34,6 +34,7 @@
 (require 'json)
 
 (defvar chatgpt-shell-proxy)
+(declare-function chatgpt-shell--unsorted-collection "chatgpt-shell")
 
 (defcustom chatgpt-shell-google-key nil
   "Google API key as a string or a function that loads and returns it."
@@ -51,13 +52,50 @@ If you use Gemini through a proxy service, change the URL base."
   :safe #'stringp
   :group 'chatgpt-shell)
 
+(defcustom chatgpt-shell-google-thinking-budget-tokens 'dynamic
+  "The token budget allocated for Google model thinking.
+
+nil means to use the maximum number of thinking tokens allowed.
+Set this to 0 to disable thinking on models that support no
+thinking. =\\'dynamic means to let the model decide how many
+thinking tokens to use based on the complexity of the query. See
+https://ai.google.dev/gemini-api/docs/thinking."
+  :type '(choice integer (const nil) (const dynamic))
+  :group 'chatgpt-shell)
+
+(defun chatgpt-shell-google-reasoning-effort-selector (model)
+  "Select the reasoning effort for the Google MODEL."
+  (let* ((min (map-elt model :thinking-budget-min))
+         (max (map-elt model :thinking-budget-max))
+         (response (completing-read (format "Thinking budget tokens (%d-%d): " min max)
+                                    (chatgpt-shell--unsorted-collection
+                                     (append (and (= min 0) (list "disable"))
+                                             (list "dynamic" "max")))))
+         (budget (cond
+                  ((equal response "disable")
+                   0)
+                  ((equal response "dynamic")
+                   'dynamic)
+                  ((equal response "max")
+                   nil)
+                  (t
+                   (string-to-number response)))))
+    (unless (or (memq budget '(dynamic nil))
+                (and (integerp budget) (<= min budget max)))
+      (user-error "Thinking budget tokens must be in the range %d-%d" min max))
+    `(((:symbol . chatgpt-shell-google-thinking-budget-tokens)
+       (:value . ,budget)
+       (:kind . thinking-budget)
+       (:max . ,(null budget))))))
+
 ;; https://ai.google.dev/gemini-api/docs/tokens
 ;; A token is equivalent to _about_ 4 characters.
-(cl-defun chatgpt-shell-google-make-model (&key version short-version path token-width context-window grounding-search)
+(cl-defun chatgpt-shell-google-make-model (&key version short-version path token-width context-window grounding-search url-context thinking-budget-min thinking-budget-max reasoning-effort-selector)
   "Create a Google model.
 
 Set VERSION, SHORT-VERSION, PATH, TOKEN-WIDTH, CONTEXT-WINDOW,
-VALIDATE-COMMAND, and GROUNDING-SEARCH handler."
+GROUNDING-SEARCH handler, URL-CONTEXT, THINKING-BUDGET-MIN,
+THINKING-BUDGET-MAX and REASONING-EFFORT-SELECTOR."
   (unless version
     (error "Missing mandatory :version param"))
   (unless short-version
@@ -76,6 +114,10 @@ VALIDATE-COMMAND, and GROUNDING-SEARCH handler."
     (:token-width . ,token-width)
     (:context-window . ,context-window)
     (:grounding-search . ,grounding-search)
+    (:url-context . ,url-context)
+    (:thinking-budget-min . ,thinking-budget-min)
+    (:thinking-budget-max . ,thinking-budget-max)
+    (:reasoning-effort-selector . ,reasoning-effort-selector)
     (:url-base . chatgpt-shell-google-api-url-base)
     (:handler . chatgpt-shell-google--handle-gemini-command)
     (:filter . chatgpt-shell-google--extract-gemini-response)
@@ -124,7 +166,7 @@ https://generativelanguage.googleapis.com"
            (model-urlpath (concat "/v1beta/" .name))
            ;; The api-response descriptor does not stipulate whether grounding is supported.
            ;; This logic applies a heuristic based on the model name (aka version).
-           (model-supports-grounding (string-match-p (rx bol (or "gemini-1.5" "gemini-2.0")) model-version)))
+           (model-supports-grounding (string-match-p (rx bol (or "gemini-1.5" "gemini-2.0" "gemini-2.5")) model-version)))
       (chatgpt-shell-google-make-model :version model-version
                                        :short-version model-shortversion
                                        :grounding-search model-supports-grounding
@@ -135,19 +177,22 @@ https://generativelanguage.googleapis.com"
 (cl-defun chatgpt-shell-google-load-models (&key override)
   "Query Google for the list of Gemini LLM models available.
 
-By default, this package uses a static list of models as returned from
-`chatgpt-shell-google-models'.  But some users may want to choose from
-a fresher set of available models.
+By default, this package adds a list of statically-defined models, as
+returned from `chatgpt-shell-google-models', into `chatgpt-shell-models'.
+But some users may want to choose from a fresher set of available models.
 
 This function retrieves data from
-https://ai.google.dev/gemini-api/docs/models/gemini.  This fn then
+https://ai.google.dev/gemini-api/docs/models/gemini, and
 appends the models retrieved to the `chatgpt-shell-models' list, unless
 a model with the same name is already present.
 
 By default, replace the existing Google models in `chatgpt-shell-models'
 with the newly retrieved models.  When OVERRIDE is non-nil, which
 happens when the function is invoked interactively with a prefix
-argument, replace all the Google models with those retrieved."
+argument, replace all the Google models with those retrieved.
+
+One note: models loaded this way do not get a
+`thinking-budget-min' or `thinking-budget-max'."
 
   (interactive (list :override current-prefix-arg))
   (let* ((goog-predicate (lambda (model)
@@ -168,6 +213,7 @@ argument, replace all the Google models with those retrieved."
       (message "Added %d Gemini model(s); kept %d existing Gemini model(s)"
                (length new-gemini-models)
                (length existing-gemini-models)))))
+
 
 (defun chatgpt-shell-google-toggle-grounding-with-google-search ()
   "Toggle the `:grounding-search' boolean for the currently-selected model.
@@ -207,53 +253,82 @@ Returns the new boolean value of `:grounding-search'."
       (message "Grounding in Google search: %s" (if toggled "ON" "OFF"))
       toggled)))
 
-(defun chatgpt-shell-google--get-grounding-in-search-tool-keyword (model)
-  "Retrieves the keyword for the grounding tool.
-
-This gets set once for each MODEL, based on a heuristic."
-  (when-let* ((current-model model)
-              (is-google (string= (map-elt current-model :provider) "Google"))
-              (version (map-elt current-model :version)))
-    (if (string-match "1\\.5" version)
-        "google_search_retrieval"
-      "google_search")))
-
 (defun chatgpt-shell-google-models ()
   "Build a list of Google LLM models available."
   ;; Context windows have been verified as of 11/26/2024. See
   ;; https://ai.google.dev/gemini-api/docs/models/gemini.
-  (list (chatgpt-shell-google-make-model :version "gemini-2.5-flash"
+  (list (chatgpt-shell-google-make-model :version "gemini-3-pro-preview"
+                                         :short-version "gemini-3-pro-preview"
+                                         :path "/v1beta/models/gemini-3-pro-preview"
+                                         :grounding-search t
+                                         :url-context t
+                                         :thinking-budget-min 1
+                                         :thinking-budget-max 65535
+                                         :reasoning-effort-selector #'chatgpt-shell-google-reasoning-effort-selector
+                                         :token-width 4
+                                         :context-window 1048576)
+        (chatgpt-shell-google-make-model :version "gemini-flash-latest"
+                                         :short-version "flash-latest"
+                                         :path "/v1beta/models/gemini-flash-latest"
+                                         :thinking-budget-min 0
+                                         :thinking-budget-max 24576
+                                         :reasoning-effort-selector #'chatgpt-shell-google-reasoning-effort-selector
+                                         :grounding-search t
+                                         :url-context t
+                                         :token-width 4
+                                         :context-window 1048576)
+        (chatgpt-shell-google-make-model :version "gemini-flash-lite-latest"
+                                         :short-version "flash-lite-latest"
+                                         :path "/v1beta/models/gemini-flash-lite-latest"
+                                         :thinking-budget-min 0
+                                         :thinking-budget-max 24576
+                                         :reasoning-effort-selector #'chatgpt-shell-google-reasoning-effort-selector
+                                         :grounding-search t
+                                         :url-context t
+                                         :token-width 4
+                                         :context-window 1048576)
+        (chatgpt-shell-google-make-model :version "gemini-pro-latest"
+                                         :short-version "pro-latest"
+                                         :path "/v1beta/models/gemini-pro-latest"
+                                         :grounding-search t
+                                         :url-context t
+                                         :thinking-budget-min 128
+                                         :thinking-budget-max 32768
+                                         :reasoning-effort-selector #'chatgpt-shell-google-reasoning-effort-selector
+                                         :token-width 4
+                                         :context-window 1048576)
+        (chatgpt-shell-google-make-model :version "gemini-2.5-flash"
                                          :short-version "gemini-2.5-flash"
                                          :path "/v1beta/models/gemini-2.5-flash"
+                                         :thinking-budget-min 0
+                                         :thinking-budget-max 24576
+                                         :reasoning-effort-selector #'chatgpt-shell-google-reasoning-effort-selector
                                          :grounding-search t
+                                         :url-context t
                                          :token-width 4
                                          :context-window 1048576)
         (chatgpt-shell-google-make-model :version "gemini-2.5-pro"
                                          :short-version "gemini-2.5-pro"
                                          :path "/v1beta/models/gemini-2.5-pro"
                                          :grounding-search t
+                                         :url-context t
+                                         :thinking-budget-min 128
+                                         :thinking-budget-max 32768
+                                         :reasoning-effort-selector #'chatgpt-shell-google-reasoning-effort-selector
                                          :token-width 4
                                          :context-window 1048576)
         (chatgpt-shell-google-make-model :version "gemini-2.0-flash"
                                          :short-version "2.0-flash"
                                          :path "/v1beta/models/gemini-2.0-flash"
                                          :grounding-search t
+                                         :url-context t
                                          :token-width 4
                                          :context-window 1048576)
         (chatgpt-shell-google-make-model :version "gemini-2.0-flash-lite"
                                          :short-version "2.0-flash-lite"
                                          :path "/v1beta/models/gemini-2.0-flash-lite"
                                          :grounding-search t
-                                         :token-width 4
-                                         :context-window 1048576)
-        (chatgpt-shell-google-make-model :version "gemini-1.5-pro-latest"
-                                         :short-version "1.5-pro-latest"
-                                         :path "/v1beta/models/gemini-1.5-pro-latest"
-                                         :token-width 4
-                                         :context-window 2097152)
-        (chatgpt-shell-google-make-model :version "gemini-1.5-flash-latest"
-                                         :short-version "1.5-flash-latest"
-                                         :path "/v1beta/models/gemini-1.5-flash-latest"
+                                         :url-context t
                                          :token-width 4
                                          :context-window 1048576)))
 
@@ -292,14 +367,14 @@ or
           (if (map-elt settings :streaming)
               ":streamGenerateContent"
             ":generateContent")
-          "?key="
-          (or (chatgpt-shell-google-key)
-              (error "Your chatgpt-shell-google-key is missing"))
-          "&alt=sse")) ;; Needed or streaming doesn't work.
+          "?alt=sse")) ;; Needed or streaming doesn't work.
 
 (cl-defun chatgpt-shell-google--make-headers (&key _model _settings)
   "Create the API headers."
-  (list "Content-Type: application/json; charset=utf-8"))
+  (list "Content-Type: application/json; charset=utf-8"
+        (concat "x-goog-api-key: "
+                (or (chatgpt-shell-google-key)
+                    (error "Your chatgpt-shell-google-key is missing")))))
 
 (cl-defun chatgpt-shell-google--make-payload (&key model context settings)
   "Create the API payload using MODEL CONTEXT and SETTINGS."
@@ -320,7 +395,8 @@ or
           :context context
           :model model
           :settings settings)
-   :headers (list "Content-Type: application/json; charset=utf-8")
+   :headers (chatgpt-shell-google--make-headers :model model
+                                                :settings settings)
    :filter #'chatgpt-shell-google--extract-gemini-response
    :shell shell))
 
@@ -336,13 +412,30 @@ or
                     (append context
                             (when prompt
                               (list (cons prompt nil))))))))
-   (when (map-elt model :grounding-search)
-     ;; Grounding in Google Search is supported for both Gemini 1.5 and 2.0 models.
-     ;; But the API is slightly different between them. This uses the correct tool name.
-     `((tools . ((,(intern (chatgpt-shell-google--get-grounding-in-search-tool-keyword model)) . ())))))
-   `((generation_config . ((temperature . ,(or (map-elt settings :temperature) 1))
-                           ;; 1 is most diverse output.
-                           (topP . 1))))))
+   `((tools . ,(append (when (map-elt model :grounding-search) '((google_search . nil)))
+                       (when (map-elt model :url-context) '((url_context . nil))))))
+   `((generation_config . ,(append
+                            `((temperature . ,(or (map-elt settings :temperature) 1)))
+                            ;; 1 is most diverse output.
+                            '((topP . 1))
+                            ;; Include thinking parameters if it is supported for
+                            ;; this model.
+                            (let ((min (map-elt model :thinking-budget-min))
+                                  (max (map-elt model :thinking-budget-max)))
+                              (when (or min max)
+                                (let ((chatgpt-shell-google-thinking-budget-tokens
+                                       (cond
+                                        ((not chatgpt-shell-google-thinking-budget-tokens)
+                                         max)
+                                        ;; -1 is always valid and indicates dynamic thinking. See
+                                        ;; https://ai.google.dev/gemini-api/docs/thinking.
+                                        ((eq chatgpt-shell-google-thinking-budget-tokens 'dynamic)
+                                         -1)
+                                        ((<= min chatgpt-shell-google-thinking-budget-tokens max)
+                                         chatgpt-shell-google-thinking-budget-tokens)
+                                        (t
+                                         (error "Error: chatgpt-shell-google-thinking-budget-tokens must be between %d and %d (inclusive) or 'dynamic" min max)))))
+                                  `((thinkingConfig . ((thinkingBudget . ,chatgpt-shell-google-thinking-budget-tokens))))))))))))
 
 (defun chatgpt-shell-google--gemini-user-model-messages (context)
   "Convert CONTEXT to gemini messages.
@@ -369,9 +462,21 @@ For example:
      context)
     (nreverse result)))
 
-(defun chatgpt-shell-google--extract-gemini-response (raw-response)
-  "Extract Gemini response from RAW-RESPONSE."
-  (if-let* ((whole (shell-maker--json-parse-string raw-response))
+(defun chatgpt-shell-google--extract-gemini-response (output)
+  "Process pending OUTPUT to extract Gemini response.
+
+OUTPUT is always of the form:
+
+  ((:function-calls . ...)
+   (:pending . ...)
+   (:filtered . ...))
+
+and must be returned in the same form.
+
+Processing means processing :pending content into :filtered."
+  (when (stringp output)
+    (error "Please upgrade shell-maker to 0.79.1 or newer"))
+  (if-let* ((whole (shell-maker--json-parse-string (map-elt output :pending)))
             (response (or (let-alist whole
                             .error.message)
                           (let-alist whole
@@ -380,8 +485,8 @@ For example:
                                            (or .delta.content
                                                .message.content)))
                                        .choices "")))))
-      response
-    (if-let ((chunks (shell-maker--split-text raw-response)))
+      (list (cons :filtered response))
+    (if-let ((chunks (shell-maker--split-text (map-elt output :pending))))
         (let ((response)
               (pending)
               (result))
@@ -434,8 +539,7 @@ For example:
                                         response))
                       (cons :pending pending)))
           result)
-      (list (cons :filtered nil)
-            (cons :pending raw-response)))))
+      output)))
 
 (provide 'chatgpt-shell-google)
 
