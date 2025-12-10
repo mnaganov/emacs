@@ -1,7 +1,7 @@
 ;; Project Android stuff
 
 (setq compile-history
-%      '(". build/envsetup.sh && lunch aosp_cf_x86_64_only_phone-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP SOONG_INCREMENTAL_ANALYSIS=true m"
+      '(". build/envsetup.sh && lunch aosp_cf_x86_64_only_phone-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP SOONG_INCREMENTAL_ANALYSIS=true m"
         ". build/envsetup.sh && lunch aosp_cf_x86_64_only_phone-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP SOONG_INCREMENTAL_ANALYSIS=true ROLLING_TF_SUBPROCESS_OUTPUT=0 atest VtsHalAudioCoreTargetTest"
         ". build/envsetup.sh && lunch tokay-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP SOONG_INCREMENTAL_ANALYSIS=true m"
         ". build/envsetup.sh && lunch tokay-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP SOONG_INCREMENTAL_ANALYSIS=true ANDROID_SERIAL=3B141FDAQ000DJ ROLLING_TF_SUBPROCESS_OUTPUT=0 atest CtsMediaAudioTestCases"
