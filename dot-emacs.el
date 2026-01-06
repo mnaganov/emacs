@@ -231,13 +231,6 @@
 (if (eq system-type 'gnu/linux)
    (add-hook 'shell-mode-hook 'shell-procfs-dirtrack-mode))
 
-;; Set fill column for the scratch buffer to a large value so it can be
-;; used for joining columns of text into a single line by executing
-;; `fill-region' (M-Q) on the selection.
-;; We identify the *scratch* buffer via its mode.
-(add-hook 'lisp-interaction-mode-hook (lambda()
-                                        (setq fill-column 10000)))
-
 ;; Minibuffer completion
 (fido-mode t)
 
