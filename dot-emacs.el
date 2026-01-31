@@ -129,6 +129,9 @@
   "Prevent annoying \"Active processes exist\" query when you quit Emacs."
   (cl-flet ((process-list ())) ad-do-it))
 
+;; Change the threshold for "large" files warning.
+(setq large-file-warning-threshold 100000000)
+
 (defun generate-temp-dir-name (name)
   "Generate a name for a temporary dir"
   (if (eq system-type 'windows-nt)
