@@ -45,6 +45,7 @@
 ;; (byte-recompile-directory (expand-file-name "~/emacs/site-lisp") 0)
 (add-to-list 'load-path (concat emacs-root "site-lisp"))
 (add-to-list 'load-path (concat emacs-root "site-lisp/expand-region"))
+(add-to-list 'load-path (concat emacs-root "site-lisp/gptel"))
 (add-to-list 'load-path (concat emacs-root "site-lisp/haskell-mode"))
 (add-to-list 'load-path (concat emacs-root "site-lisp/rust-mode"))
 (setq packages-root (concat emacs-root "site-lisp/"))
@@ -273,6 +274,15 @@
 (setq completion-styles '(orderless basic)
       completion-category-overrides '((file (styles partial-completion))))
 (setq orderless-matching-styles '(orderless-flex))
+
+;; gptel
+;; (require 'gptel-gemini)
+;; (setq gptel-backend
+;;       (gptel-make-gemini "Gemini"
+;;         :key "..."
+;;         :stream t
+;;         :models '(gemini-3-pro-preview
+;;                   gemini-3-flash-preview)))
 
 ;; NOTE: If at some point you decide you need `xterm-color`,
 ;; here is how to set it up:
