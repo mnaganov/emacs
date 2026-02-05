@@ -67,6 +67,10 @@
 (add-hook 'compilation-mode-hook 'my-turn-off-slow-funcs)
 (require 'comint)
 (add-hook 'comint-mode-hook 'my-turn-off-slow-funcs)
+;; Allow moving between compile command and its output by words
+(add-hook 'comint-mode-hook
+          (lambda ()
+            (setq-local inhibit-field-text-motion t)))
 
 ;; Instead of 'yes or no' use 'y or n'
 (fset 'yes-or-no-p 'y-or-n-p)
