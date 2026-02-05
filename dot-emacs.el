@@ -238,9 +238,6 @@
 (if (eq system-type 'gnu/linux)
    (add-hook 'shell-mode-hook 'shell-procfs-dirtrack-mode))
 
-;; Minibuffer completion
-(fido-mode t)
-
 ;; == Set up packages ==
 
 (load-file (concat emacs-root "dot-packages.el"))

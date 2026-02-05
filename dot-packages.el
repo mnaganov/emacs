@@ -265,6 +265,16 @@
 (add-hook 'java-mode-hook
           (lambda () (local-set-key (kbd "C-c C-b") 'string-inflection-all-cycle)))
 
+;; Minibuffer completion
+(require 'vertico)
+(vertico-mode)
+(require 'vertico-flat)
+(vertico-flat-mode)
+(require 'orderless)
+(setq completion-styles '(orderless basic)
+      completion-category-overrides '((file (styles partial-completion))))
+(setq orderless-matching-styles '(orderless-flex))
+
 ;; chatgpt-shell
 ;; (require 'chatgpt-shell)
 ;; (set-variable chatgpt-shell-openai-key "...")
