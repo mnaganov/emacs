@@ -238,6 +238,20 @@
 (if (eq system-type 'gnu/linux)
    (add-hook 'shell-mode-hook 'shell-procfs-dirtrack-mode))
 
+;; Make `ffap` to navigate to the line if it is specified
+(defun my-ffap-jump-to-line (orig-fun &rest args)
+  "Advice to jump to the line number if the filename at point ends with :LINENUM."
+  (let* ((string-at-point (thing-at-point 'symbol))
+         (line-number (and (stringp string-at-point)
+                           (string-match ":\\([0-9]+\\)\\'" string-at-point)
+                           (string-to-number (match-string 1 string-at-point)))))
+    ;; Call the original ffap function (which switches buffers)
+    (apply orig-fun args)
+    ;; If we found a line number, jump to it in the new buffer
+    (when line-number
+      (goto-line line-number))))
+(advice-add 'find-file-at-point :around #'my-ffap-jump-to-line)
+
 ;; == Set up packages ==
 
 (load-file (concat emacs-root "dot-packages.el"))
