@@ -275,14 +275,18 @@
       completion-category-overrides '((file (styles partial-completion))))
 (setq orderless-matching-styles '(orderless-flex))
 
-;; gptel
-;; (require 'gptel-gemini)
-;; (setq gptel-backend
-;;       (gptel-make-gemini "Gemini"
-;;         :key "..."
-;;         :stream t
-;;         :models '(gemini-3-pro-preview
-;;                   gemini-3-flash-preview)))
+;; gptel for Gemini
+(require 'gptel-gemini)
+(let ((key-file (expand-file-name "~/gemini.key")))
+  (when (file-exists-p key-file)
+    (with-temp-buffer
+      (insert-file-contents key-file)
+      (let ((api-key (string-trim (buffer-string))))
+        (setq gptel-backend
+              (gptel-make-gemini "Gemini"
+                :key api-key
+                :stream t
+                :models '(gemini-3-pro-preview gemini-3-flash-preview)))))))
 
 ;; NOTE: If at some point you decide you need `xterm-color`,
 ;; here is how to set it up:
