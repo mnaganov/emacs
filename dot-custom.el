@@ -104,7 +104,7 @@
  '(eglot-highlight-symbol-face ((t (:inherit underline))))
  '(error ((t (:foreground "red" :bold t))))
  '(eww-form-text ((t (:inherit widget-field))))
- '(font-lock-builtin-face ((t (:foreground "black"))))
+ '(font-lock-builtin-face ((t (:foreground "blue"))))
  '(font-lock-comment-face ((t (:foreground "brightblack"))))
  '(font-lock-constant-face ((t (:foreground "cyan"))))
  '(font-lock-function-name-face ((t (:bold t))))
