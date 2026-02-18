@@ -12,11 +12,11 @@
 (custom-set-variables
  '(google-use-coding-style nil))
 
-;; Keybindings
-
 (require 'find-things-fast)
 (require 'ag)
-(defvar my-cs-command '("cs --corpus=android   | sed -n -e 's/^android\\///p'" .  21)
+
+;; Keybindings
+(defvar my-cs-command '("cs '  repo:googleplex-android/platform/superproject/main branch:main' | sed -n -e 's@^googleplex-android/platform/superproject/main/@@p'" . 5)
   "The command to be run by the cs function.")
 (define-compilation-mode my-cs-mode "CS"
   "CodeSearch compilation mode."
