@@ -49,6 +49,7 @@
 (add-to-list 'load-path (concat emacs-root "site-lisp/haskell-mode"))
 (add-to-list 'load-path (concat emacs-root "site-lisp/rust-mode"))
 (setq packages-root (concat emacs-root "site-lisp/"))
+(load "comint-9term.el")
 
 ;; Swap contents of the buffers
 (require 'buffer-move)
