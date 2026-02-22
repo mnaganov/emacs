@@ -8,6 +8,8 @@
 (defvar-local comint-9term-lines-below-scroll 0)
 (defvar-local comint-9term-virtual-col nil)
 (defvar-local comint-9term-partial-seq "")
+(defvar-local comint-9term-height-override nil)
+(defvar-local comint-9term-origin nil)
 
 (defun comint-9term-parse-params (params-str &optional default)
   (setq default (or default 1))
@@ -17,9 +19,25 @@
                           (split-string params-str ";"))))
       params)))
 
+(defun comint-9term-max-height ()
+  (or comint-9term-height-override
+      (let ((env-lines (getenv "LINES")))
+        (if env-lines
+            (string-to-number env-lines)
+          (condition-case nil
+              (frame-height)
+            (error 24))))))
+
+(defun comint-9term-start-line ()
+  (let ((total (line-number-at-pos (point-max)))
+        (height (comint-9term-max-height))
+        (origin (or comint-9term-origin 1)))
+    (max (1- origin) (if (> total height) (- total height) 0))))
+
 (defun comint-9term-handle-csi (char params)
   (let ((n (or (nth 0 params) 1))
-        (m (or (nth 1 params) 1)))
+        (m (or (nth 1 params) 1))
+        (max-h (comint-9term-max-height)))
     (cond
      ((eq char ?A) ; CUU - Cursor Up
       (let ((col (or comint-9term-virtual-col (current-column))))
@@ -59,17 +77,11 @@
             (setq comint-9term-virtual-col target)
           (setq comint-9term-virtual-col nil))))
      ((or (eq char ?H) (eq char ?f)) ; CUP / HVP - Cursor Position
-      (if comint-9term-scroll-bottom
-          (let* ((height (1+ comint-9term-scroll-bottom))
-                 (total-lines (line-number-at-pos (point-max)))
-                 (start-line (if (> total-lines height) (- total-lines height) 0))
-                 (target-line (+ start-line (max 1 n))))
-            (goto-char (point-min))
-            (let ((lines-left (forward-line (1- (max 1 target-line)))))
-              (when (> lines-left 0)
-                (insert (make-string lines-left ?\n)))))
+      (setq n (min n max-h))
+      (let* ((start-line (comint-9term-start-line))
+             (target-line (+ start-line (max 1 n))))
         (goto-char (point-min))
-        (let ((lines-left (forward-line (1- (max 1 n)))))
+        (let ((lines-left (forward-line (1- (max 1 target-line)))))
           (when (> lines-left 0)
             (insert (make-string lines-left ?\n)))))
       (let ((target (1- (max 1 m))))
@@ -103,6 +115,7 @@
      ((eq char ?r) ; DECSTBM - Set Scrolling Region
       (let ((bottom (nth 1 params)))
         (when (and bottom (> n 0))
+          (setq bottom (min bottom max-h))
           (setq comint-9term-scroll-bottom bottom)
           (setq comint-9term-lines-below-scroll 1)))))))
 
@@ -118,9 +131,7 @@
           (setq comint-9term-virtual-col nil)
           (let* ((should-scroll
                   (and (> comint-9term-lines-below-scroll 0)
-                       (let* ((total (line-number-at-pos (point-max)))
-                              (height (1+ comint-9term-scroll-bottom))
-                              (start (if (> total height) (- total height) 0))
+                       (let* ((start (comint-9term-start-line))
                               (current (line-number-at-pos)))
                          (>= (- current start) comint-9term-scroll-bottom)))))
             (if should-scroll
@@ -145,13 +156,15 @@
              (let ((gap (- comint-9term-virtual-col (current-column))))
                (when (> gap 0) (insert (make-string gap ?\s))))
              (setq comint-9term-virtual-col nil))
+          (while (and (not (eobp)) (get-text-property (point) 'invisible))
+            (delete-char 1))
           (if (and (not (eobp)) (not (eq (following-char) ?\n)))
               (delete-char 1))
           (insert (char-to-string c))))
         (set-marker pm (point))))))
 
 (defun comint-9term-filter (string)
-  (condition-case nil
+  (condition-case err
       (let ((proc (get-buffer-process (current-buffer))))
         (if (not proc)
             string
@@ -160,6 +173,15 @@
                   (inhibit-field-text-motion t)
                   (start 0)
                   (min-p (process-mark proc)))
+              ;; Check for LINES= override
+              (when (string-match "LINES=\\([0-9]+\\)" string)
+                (setq comint-9term-height-override (string-to-number (match-string 1 string))))
+              
+              ;; Initialize origin if needed
+              (unless comint-9term-origin
+                (when (string-match "\033" string)
+                  (setq comint-9term-origin (1- (line-number-at-pos (process-mark proc))))))
+
               ;; Prepend any partial sequence from previous run
               (when (and comint-9term-partial-seq (> (length comint-9term-partial-seq) 0))
                 (setq string (concat comint-9term-partial-seq string))
@@ -182,7 +204,11 @@
                        ((memq char '(?A ?B ?C ?D ?F ?G ?H ?f ?J ?K ?r))
                         (comint-9term-handle-csi char (comint-9term-parse-params params (if (memq char '(?J ?K)) 0 1))))
                        ((eq char ?m)
-                        (comint-9term-insert-and-overwrite (match-string 0 string))))))
+                        (let ((start (point))
+                              (sgr (match-string 0 string)))
+                          (insert sgr)
+                          (when (fboundp 'ansi-color-apply-on-region)
+                            (ansi-color-apply-on-region start (point))))))))
                    (is-sc
                     (let ((esc-char (aref (match-string 4 string) 0)))
                       (cond
@@ -205,9 +231,7 @@
                   (setq comint-9term-partial-seq "")))
 
               (setq min-p (min min-p (point)))
-              (set-marker (process-mark proc) (point))
-              (when (fboundp 'ansi-color-apply-on-region)
-                (ansi-color-apply-on-region (min min-p (process-mark proc)) (point-max)))))))
+              (set-marker (process-mark proc) (point))))))
     (error (message "Filter error: %S" err) nil))
   "")
 
@@ -217,7 +241,14 @@
   (make-local-variable 'comint-9term-lines-below-scroll)
   (make-local-variable 'comint-9term-virtual-col)
   (make-local-variable 'comint-9term-partial-seq)
-  (add-hook 'comint-preoutput-filter-functions 'comint-9term-filter nil t))
+  (make-local-variable 'comint-9term-height-override)
+  (add-hook 'comint-preoutput-filter-functions 'comint-9term-filter nil t)
+  
+  (add-hook 'after-change-major-mode-hook
+            (lambda ()
+              (setq-local comint-output-filter-functions
+                          (remq 'ansi-color-process-output comint-output-filter-functions)))
+            nil t))
 
 (add-hook 'comint-mode-hook 'comint-9term-setup)
 (add-hook 'compilation-shell-minor-mode-hook 'comint-9term-setup)
