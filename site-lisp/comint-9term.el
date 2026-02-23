@@ -189,7 +189,7 @@
 
               (comint-watch-for-password-prompt string)
 
-              (while (string-match "\033\\(\\[\\([?0-9;]*\\)\\([A-Za-z]\\)\\|]\\(?:.*?\\)\007\\|\\([78]\\)\\)" string start)
+              (while (string-match "\033\\(\\[\\([?0-9;]*\\)\\([A-Za-z]\\)\\|]\\(?:.*?\\)\\(?:\007\\|\033\\\\\\)\\|\\([78]\\)\\)" string start)
                 (let* ((pre-text (substring string start (match-beginning 0)))
                        (is-csi (match-beginning 2))
                        (is-sc (match-beginning 4))
