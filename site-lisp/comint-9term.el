@@ -10,6 +10,7 @@
 (defvar-local comint-9term-partial-seq "")
 (defvar-local comint-9term-height-override nil)
 (defvar-local comint-9term-origin nil)
+(defvar-local comint-9term-term-height nil)
 
 (defun comint-9term-parse-params (params-str &optional default)
   (setq default (or default 1))
@@ -21,6 +22,7 @@
 
 (defun comint-9term-max-height ()
   (or comint-9term-height-override
+      comint-9term-term-height
       (let ((env-lines (getenv "LINES")))
         (if env-lines
             (string-to-number env-lines)
@@ -242,6 +244,14 @@
   (make-local-variable 'comint-9term-virtual-col)
   (make-local-variable 'comint-9term-partial-seq)
   (make-local-variable 'comint-9term-height-override)
+  (make-local-variable 'comint-9term-term-height)
+  (add-function :filter-return
+                (local 'window-adjust-process-window-size-function)
+                (lambda (size)
+                  (when size
+                    (setq comint-9term-term-height (cdr size)))
+                  size)
+                '((name . comint-9term-resize)))
   (add-hook 'comint-preoutput-filter-functions 'comint-9term-filter nil t)
   
   (add-hook 'after-change-major-mode-hook
