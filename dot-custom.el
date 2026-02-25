@@ -6,6 +6,7 @@
  '(ag-reuse-buffers t)
  '(company-idle-delay 3)
  '(compilation-scroll-output t)
+ '(eat-term-name "eat-color")
  '(eglot-ignored-server-capabilities '(:inlayHintProvider))
  '(eldoc-echo-area-prefer-doc-buffer t)
  '(eldoc-echo-area-use-multiline-p nil)

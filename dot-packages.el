@@ -155,6 +155,19 @@
         ))
 
 (require 'eat)
+(add-hook 'eat-mode-hook
+          (lambda ()
+            (set (make-local-variable 'global-hl-line-mode) nil)))
+(defun my-eat-report-black-foreground ()
+  "Force Eat to report black foreground (RGB: 0/0/0)."
+  (funcall (eat--t-term-input-fn eat--t-term) eat--t-term
+           "\e]10;rgb:0000/0000/0000\e\\"))
+(defun my-eat-report-white-background ()
+  "Force Eat to report white background (RGB: ffff/ffff/ffff)."
+  (funcall (eat--t-term-input-fn eat--t-term) eat--t-term
+           "\e]11;rgb:ffff/ffff/ffff\e\\"))
+(advice-add 'eat--t-report-foreground-color :override #'my-eat-report-black-foreground)
+(advice-add 'eat--t-report-background-color :override #'my-eat-report-white-background)
 
 ;; == Other packages ==
 
