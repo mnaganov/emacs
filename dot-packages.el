@@ -154,6 +154,8 @@
          (setq interprogram-cut-function 'osc52-then-remote-xclip-cut-function))
         ))
 
+(require 'eat)
+
 ;; == Other packages ==
 
 ;; Fill-Column-Indicator
