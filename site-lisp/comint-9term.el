@@ -6,6 +6,7 @@
 (defvar-local comint-9term-saved-pos nil)
 (defvar-local comint-9term-scroll-bottom nil)
 (defvar-local comint-9term-lines-below-scroll 0)
+(defvar-local comint-9term-scroll-offset 0)
 (defvar-local comint-9term-virtual-col nil)
 (defvar-local comint-9term-partial-seq "")
 (defvar-local comint-9term-height-override nil)
@@ -35,10 +36,13 @@
             (error 24))))))
 
 (defun comint-9term-start-line ()
-  (let ((total (line-number-at-pos (point-max)))
-        (height (comint-9term-max-height))
-        (origin (or comint-9term-origin 1)))
-    (max (1- origin) (if (> total height) (- total height) 0))))
+  (let* ((total (line-number-at-pos (point-max)))
+         (max-h (comint-9term-max-height))
+         (effective-h (if (eq comint-9term-scroll-bottom 1) 1 max-h))
+         (origin (or comint-9term-origin 1)))
+    (max (1- origin)
+         comint-9term-scroll-offset
+         (if (> total effective-h) (- total effective-h) 0))))
 
 (defun comint-9term-pad-to-virtual-col ()
   "Insert spaces if virtual column is set, filling the gap."
@@ -112,10 +116,13 @@
          ((= n 2) (delete-region beg end)))))
      ((eq char ?r) ; DECSTBM - Set Scrolling Region
       (let ((bottom (nth 1 params)))
-        (when (and bottom (> n 0))
-          (setq bottom (min bottom max-h))
-          (setq comint-9term-scroll-bottom bottom)
-          (setq comint-9term-lines-below-scroll 1)))))))
+        (if (and bottom (> n 0))
+            (progn
+              (setq bottom (min bottom max-h))
+              (setq comint-9term-scroll-bottom bottom)
+              (setq comint-9term-lines-below-scroll 1))
+          (setq comint-9term-scroll-bottom nil)
+          (setq comint-9term-lines-below-scroll 0)))))))
 
 (defun comint-9term-insert-and-overwrite (text)
   "Insert TEXT at process-mark."
@@ -133,7 +140,10 @@
                               (current (line-number-at-pos)))
                          (>= (- current start) comint-9term-scroll-bottom)))))
             (if should-scroll
-                (progn (end-of-line) (insert "\n"))
+                (progn
+                  (end-of-line)
+                  (insert "\n")
+                  (setq comint-9term-scroll-offset (1+ comint-9term-scroll-offset)))
               (let ((lines-left (forward-line 1)))
                 (if (> lines-left 0)
                     (insert "\n")
@@ -232,6 +242,7 @@
   (make-local-variable 'comint-9term-saved-pos)
   (make-local-variable 'comint-9term-scroll-bottom)
   (make-local-variable 'comint-9term-lines-below-scroll)
+  (make-local-variable 'comint-9term-scroll-offset)
   (make-local-variable 'comint-9term-virtual-col)
   (make-local-variable 'comint-9term-partial-seq)
   (make-local-variable 'comint-9term-height-override)
