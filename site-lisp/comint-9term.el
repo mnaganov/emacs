@@ -1,4 +1,4 @@
-;;; comint-9term.el --- Advanced ANSI escape sequences for comint-mode
+;;; comint-9term.el --- Advanced ANSI escape sequences for comint-mode -*- lexical-binding: t -*-
 
 ;; Restriction: do not add `(require 'ansi-color)`
 ;; Restriction: do not add `(provide 'comint-9term)`
@@ -172,70 +172,77 @@
         (if (not proc)
             string
           (with-current-buffer (process-buffer proc)
-            (let ((inhibit-read-only t)
-                  (inhibit-field-text-motion t)
-                  (start 0)
-                  (min-p (process-mark proc)))
-              ;; Check for LINES= override
-              (when (string-match "LINES=\\([0-9]+\\)" string)
-                (setq comint-9term-height-override (string-to-number (match-string 1 string))))
-              
-              ;; Initialize origin if needed
-              (unless comint-9term-origin
-                (when (string-match "\e" string)
-                  (setq comint-9term-origin (1- (line-number-at-pos (process-mark proc))))))
+                                        (let ((inhibit-read-only t)
+                                              (inhibit-field-text-motion t)
+                                              (start 0)
+                                              (min-p (marker-position (process-mark proc)))
+                                              (max-p (marker-position (process-mark proc))))                          ;; Check for LINES= override
+                          (when (string-match "LINES=\\([0-9]+\\)" string)
+                            (setq comint-9term-height-override (string-to-number (match-string 1 string))))
 
-              ;; Prepend any partial sequence from previous run
-              (when (and comint-9term-partial-seq (> (length comint-9term-partial-seq) 0))
-                (setq string (concat comint-9term-partial-seq string))
-                (setq comint-9term-partial-seq ""))
+                          ;; Initialize origin if needed
+                          (unless comint-9term-origin
+                            (when (string-match "\e" string)
+                              (setq comint-9term-origin (1- (line-number-at-pos (process-mark proc))))))
 
-              (comint-watch-for-password-prompt string)
+                          ;; Prepend any partial sequence from previous run
+                          (when (and comint-9term-partial-seq (> (length comint-9term-partial-seq) 0))
+                            (setq string (concat comint-9term-partial-seq string))
+                            (setq comint-9term-partial-seq ""))
 
-              (while (string-match comint-9term-control-seq-regexp string start)
-                (let* ((pre-text (substring string start (match-beginning 0)))
-                       (is-csi (match-beginning 2))
-                       (is-sc (match-beginning 4))
-                       (seq-end (match-end 0)))
-                  (comint-9term-insert-and-overwrite pre-text)
-                  (setq min-p (min min-p (point)))
-                  (cond
-                   (is-csi
-                    (let ((char (aref (match-string 3 string) 0))
-                          (params (match-string 2 string)))
-                      (cond
-                       ((memq char '(?A ?B ?C ?D ?F ?G ?H ?f ?J ?K ?r))
-                        (comint-9term-handle-csi char (comint-9term-parse-params params (if (memq char '(?J ?K)) 0 1))))
-                       ((eq char ?m)
-                        (let ((start (point))
-                              (sgr (match-string 0 string)))
-                          (insert sgr)
-                          (when (fboundp 'ansi-color-apply-on-region)
-                            (ansi-color-apply-on-region start (point))))))))
-                   (is-sc
-                    (let ((esc-char (aref (match-string 4 string) 0)))
-                      (cond
-                       ((eq esc-char ?7)
-                        (let ((m (point-marker)))
-                          (set-marker-insertion-type m nil)
-                          (setq comint-9term-saved-pos m)))
-                       ((eq esc-char ?8) (when comint-9term-saved-pos (goto-char comint-9term-saved-pos)))))))
-                  (setq min-p (min min-p (point)))
-                  (set-marker (process-mark proc) (point))
-                  (setq start seq-end)))
+                          (comint-watch-for-password-prompt string)
 
-              ;; Handle remainder and check for partial sequence
-              (let ((remainder (substring string start)))
-                (if (string-match "\e" remainder)
-                    (let ((esc-idx (match-beginning 0)))
-                      (comint-9term-insert-and-overwrite (substring remainder 0 esc-idx))
-                      (setq comint-9term-partial-seq (substring remainder esc-idx)))
-                  (comint-9term-insert-and-overwrite remainder)
-                  (setq comint-9term-partial-seq "")))
+                          (while (string-match comint-9term-control-seq-regexp string start)
+                            (let* ((pre-text (substring string start (match-beginning 0)))
+                                   (is-csi (match-beginning 2))
+                                   (is-sc (match-beginning 4))
+                                   (seq-end (match-end 0)))
+                              (comint-9term-insert-and-overwrite pre-text)
+                              (setq min-p (min min-p (point)))
+                              (setq max-p (max max-p (point)))
+                              (cond
+                               (is-csi
+                                (let ((char (aref (match-string 3 string) 0))
+                                      (params (match-string 2 string)))
+                                  (cond
+                                   ((memq char '(?A ?B ?C ?D ?F ?G ?H ?f ?J ?K ?r))
+                                    (comint-9term-handle-csi char (comint-9term-parse-params params (if (memq char '(?J ?K)) 0 1))))
+                                   ((eq char ?m)
+                                    (let ((start (point))
+                                          (sgr (match-string 0 string)))
+                                      (insert sgr)
+                                      (when (fboundp 'ansi-color-apply-on-region)
+                                        (ansi-color-apply-on-region start (point))))))))
+                               (is-sc
+                                (let ((esc-char (aref (match-string 4 string) 0)))
+                                  (cond
+                                   ((eq esc-char ?7)
+                                    (let ((m (point-marker)))
+                                      (set-marker-insertion-type m nil)
+                                      (setq comint-9term-saved-pos m)))
+                                   ((eq esc-char ?8) (when comint-9term-saved-pos (goto-char comint-9term-saved-pos)))))))
+                              (setq min-p (min min-p (point)))
+                              (setq max-p (max max-p (point)))
+                              (set-marker (process-mark proc) (point))
+                              (setq start seq-end)))
 
-              (setq min-p (min min-p (point)))
-              (set-marker (process-mark proc) (point))))))
-    (error (message "Filter error: %S" err) nil))
+                          ;; Handle remainder and check for partial sequence
+                          (let ((remainder (substring string start)))
+                            (if (string-match "\e" remainder)
+                                (let ((esc-idx (match-beginning 0)))
+                                  (comint-9term-insert-and-overwrite (substring remainder 0 esc-idx))
+                                  (setq comint-9term-partial-seq (substring remainder esc-idx)))
+                              (comint-9term-insert-and-overwrite remainder)
+                              (setq comint-9term-partial-seq "")))
+
+                                                      (setq min-p (min min-p (point)))
+                                                      (setq max-p (max max-p (point)))
+                                                      (set-marker (process-mark proc) (point))
+
+                                                                                  (let ((clamped-max (min max-p (point-max))))
+                                                                                    (when (and (fboundp 'comint--mark-as-output)                                                                   (not comint-use-prompt-regexp)
+                                                                   (< min-p clamped-max))
+                                                          (comint--mark-as-output min-p clamped-max)))))))    (error (message "Filter error: %S" err) nil))
   "")
 
 (defun comint-9term-setup ()
@@ -255,7 +262,7 @@
                   size)
                 '((name . comint-9term-resize)))
   (add-hook 'comint-preoutput-filter-functions 'comint-9term-filter nil t)
-  
+
   (add-hook 'after-change-major-mode-hook
             (lambda ()
               (setq-local comint-output-filter-functions
