@@ -42,9 +42,7 @@
 
 ;;; Code:
 
-(require 'gptel-openai)
-(eval-when-compile
-  (require 'subr-x))
+(eval-when-compile (require 'subr-x))
 (require 'compat nil t)
 (require 'cl-lib)
 (require 'url)
@@ -63,6 +61,7 @@
 (declare-function gptel--transform-apply-preset "gptel")
 (declare-function gptel--insert-response "gptel")
 (declare-function gptel-curl--stream-insert-response "gptel")
+(declare-function gptel-make-openai "gptel-openai")
 
 
 ;;; User options
@@ -323,193 +322,181 @@ the same as t."
           (repeat symbol))
   :group 'gptel)
 
-(defvar gptel--known-backends)
+(defvar gptel--known-backends nil
+  "Alist of LLM backends known to gptel.
 
-(defconst gptel--openai-models
-  '((gpt-4o
-     :description "Advanced model for complex tasks; cheaper & faster than GPT-Turbo"
-     :capabilities (media tool-use json url)
-     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
-     :context-window 128
-     :input-cost 2.50
-     :output-cost 10
-     :cutoff-date "2023-10")
-    (gpt-4o-mini
-     :description "Cheap model for fast tasks; cheaper & more capable than GPT-3.5 Turbo"
-     :capabilities (media tool-use json url)
-     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
-     :context-window 128
-     :input-cost 0.15
-     :output-cost 0.60
-     :cutoff-date "2023-10")
-    (gpt-4.1
-     :description "Flagship model for complex tasks"
-     :capabilities (media tool-use json url)
-     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
-     :context-window 1024
-     :input-cost 2.0
-     :output-cost 8.0
-     :cutoff-date "2024-05")
-    (gpt-4.5-preview
-     :description "DEPRECATED: Use gpt-4.1 instead"
-     :capabilities (media tool-use url)
-     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
-     :context-window 128
-     :input-cost 75
-     :output-cost 150
-     :cutoff-date "2023-10")
-    (gpt-4.1-mini
-     :description "Balance between intelligence, speed and cost"
-     :capabilities (media tool-use json url)
-     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
-     :context-window 1024
-     :input-cost 0.4
-     :output-cost 1.6)
-    (gpt-4.1-nano
-     :description "Fastest, most cost-effective GPT-4.1 model"
-     :capabilities (media tool-use json url)
-     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
-     :context-window 1024
-     :input-cost 0.10
-     :output-cost 0.40
-     :cutoff-date "2024-05")
-    (gpt-4-turbo
-     :description "Previous high-intelligence model"
-     :capabilities (media tool-use url)
-     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
-     :context-window 128
-     :input-cost 10
-     :output-cost 30
-     :cutoff-date "2023-11")
-    (gpt-4
-     :description "GPT-4 snapshot from June 2023 with improved function calling support"
-     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
-     :capabilities (media url)
-     :context-window 8.192
-     :input-cost 30
-     :output-cost 60
-     :cutoff-date "2023-11")
-    (gpt-5
-     :description "Flagship model for coding, reasoning, and agentic tasks across domains"
-     :capabilities (media tool-use json url)
-     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
-     :context-window 400
-     :input-cost 1.25
-     :output-cost 10
-     :cutoff-date "2024-09")
-    (gpt-5-mini
-     :description "Faster, more cost-efficient version of GPT-5"
-     :capabilities (media tool-use json url)
-     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
-     :context-window 400
-     :input-cost 0.25
-     :output-cost 2.0
-     :cutoff-date "2024-09")
-    (gpt-5-nano
-     :description "Fastest, cheapest version of GPT-5"
-     :capabilities (media tool-use json url)
-     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
-     :context-window 400
-     :input-cost 0.05
-     :output-cost 0.40
-     :cutoff-date "2024-09")
-    (gpt-5.1
-     :description "The best model for coding and agentic tasks"
-     :capabilities (media tool-use json url)
-     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
-     :context-window 400
-     :input-cost 1.25
-     :output-cost 10
-     :cutoff-date "2024-09")
-    (gpt-5.2
-     :description "The best model for coding and agentic tasks"
-     :capabilities (media tool-use json url)
-     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
-     :context-window 400
-     :input-cost 1.75
-     :output-cost 14
-     :cutoff-date "2025-08")
-    (o1
-     :description "Reasoning model designed to solve hard problems across domains"
-     :capabilities (media reasoning)
-     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
-     :context-window 200
-     :input-cost 15
-     :output-cost 60
-     :cutoff-date "2023-10")
-    (o1-mini
-     :description "Faster and cheaper reasoning model good at coding, math, and science"
-     :context-window 128
-     :input-cost 3
-     :output-cost 12
-     :cutoff-date "2023-10"
-     :capabilities (nosystem reasoning))
-    (o3
-     :description "Well-rounded and powerful model across domains"
-     :capabilities (reasoning media tool-use json url)
-     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
-     :context-window 200
-     :input-cost 2
-     :output-cost 8
-     :cutoff-date "2024-05")
-    (o3-mini
-     :description "High intelligence at the same cost and latency targets of o1-mini"
-     :context-window 200
-     :input-cost 1.10
-     :output-cost 4.40
-     :cutoff-date "2023-10"
-     :capabilities (reasoning tool-use json))
-    (o4-mini
-     :description "Fast, effective reasoning with efficient performance in coding and visual tasks"
-     :capabilities (reasoning media tool-use json url)
-     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
-     :context-window 200
-     :input-cost 1.10
-     :output-cost 4.40
-     :cutoff-date "2024-05")
-    (gpt-3.5-turbo
-     :description "More expensive & less capable than GPT-4o-mini; use that instead"
-     :capabilities (tool-use)
-     :context-window 16.358
-     :input-cost 0.50
-     :output-cost 1.50
-     :cutoff-date "2021-09")
-    (gpt-3.5-turbo-16k
-     :description "More expensive & less capable than GPT-4o-mini; use that instead"
-     :capabilities (tool-use)
-     :context-window 16.385
-     :input-cost 3
-     :output-cost 4
-     :cutoff-date "2021-09"))
-  "List of available OpenAI models and associated properties.
-Keys:
+This is an alist mapping user-provided names to backend structs,
+see `gptel-backend'.
 
-- `:description': a brief description of the model.
+You can have more than one backend pointing to the same resource
+with differing settings.")
 
-- `:capabilities': a list of capabilities supported by the model.
+(defvar gptel--openai nil)
+(make-obsolete-variable 'gptel--openai "No longer used" "v0.9.9.5")
 
-- `:mime-types': a list of supported MIME types for media files.
+(defcustom gptel-backend nil
+  "LLM backend to use.
 
-- `:context-window': the context window size, in thousands of tokens.
+This is the default \"backend\" used by gptel, an object specifying
+connection, authentication and model information required to send LLM
+requests.
 
-- `:input-cost': the input cost, in US dollars per million tokens.
+There are two ways to set `gptel-backend':
 
-- `:output-cost': the output cost, in US dollars per million tokens.
+1. with `setopt' or the Customize interface,
+2. and via constructors (such as `gptel-make-openai') in Elisp code.
 
-- `:cutoff-date': the knowledge cutoff date.
+When using `setopt' or the customize interface, a backend may be
+specified in a list such as
 
-- `:request-params': a plist of additional request parameters to
-  include when using this model.
+  (BACKEND-TYPE NAME . PLIST)
 
-Information about the OpenAI models was obtained from the following
-sources:
+where:
 
-- <https://platform.openai.com/docs/pricing>
-- <https://platform.openai.com/docs/models>")
+BACKEND-TYPE is one of `gptel-openai' (all OpenAI-compatible
+services), `gptel-anthropic', `gptel-gemini', `gptel-ollama',
+`gptel-kagi', `gptel--gh' (GitHub Copilot), `gptel-bedrock' (AWS
+Bedrock), `gptel-perplexity', `gptel-deepseek' or `gptel-privategpt'.
 
-(defcustom gptel-model 'gpt-4o-mini
+NAME is a string, any backend name of your choosing.
+
+PLIST is an optional plist specifying connection and authentication
+information, with keys
+
+:protocol       - \"http\" or \"https\"
+:host           - Host, such as \"api.openai.com\" or \"localhost:1616\"
+:endpoint       - connection endpoint, such as \"/v1/chat/completions\"
+:header         - HTTP header to inclue with the request, a string
+                  or function
+:key            - API key, if required for authentication
+                  String, symbol or function, see `gptel-api-key'
+:models         - List of supported models (symbols, see
+                  `gptel--openai-models' for an example)
+:stream         - Whether to stream responses, boolean
+:request-params - Additional parameters to send with backend queries, as
+                  a plist.  This plist is converted to JSON when sending.
+                  This is meant for request parameters that gptel does not
+                  provide user options for.
+:curl-args      - list of strings representing additional Curl arguments (if
+                  `gptel-use-curl' is set)
+
+When using the OpenAI, Anthropic, Gemini, Kagi, Github Copilot,
+Perplexity or Deepseek backends, all plist keys are optional.  For other
+services, specifying some fields may be required.  Examples:
+
+  (setopt gptel-backend \\='(gptel-openai \"OpenAI\"
+                          :key gptel-api-key-from-auth-source
+                          :stream t))
+
+  (setopt gptel-backend \\='(gptel-anthropic \"Claude\" :key \"sk-...\"))
+
+  (setopt gptel-backend \\='(gptel-ollama \"Ollama\"
+                          :host \"localhost:11434\"
+                          :models \\='(qwen3:4b llama3.1:8b)
+                          :stream t))
+
+This list of keys is non-exhaustive.  Some backends (such as
+`gptel-bedrock') recognize or require additional keys.  To see what
+other keys are available, check the corresponding constructor (such as
+`gptel-make-bedrock').
+
+When not using `setopt', backends for LLM providers (local or remote)
+may be constructed and registered using one of the available backend
+constructor functions:
+
+- `gptel-make-openai'
+- `gptel-make-anthropic'
+- `gptel-make-gemini'
+- `gptel-make-ollama'
+- `gptel-make-azure'
+- `gptel-make-gpt4all'
+- `gptel-make-kagi'
+- `gptel-make-privategpt'
+- `gptel-make-perplexity'
+- `gptel-make-deepseek'
+- `gptel-make-xai'
+- `gptel-make-gh-copilot'
+- `gptel-make-bedrock'
+
+In addition, `gptel-backend' can be assigned to them.  Examples:
+
+  (setq gptel-backend (gptel-make-openai \"llamacpp\"
+                        :host \"localhost:8080\"
+                        :protocol \"http\"
+                        :models \\='(gpt-oss-120b glm-4.7-flash)))
+
+  (setq gptel-backend (gptel-make-gemini \"Gemini\"
+                        :key gptel-api-key :stream t))
+
+  (setq gptel-backend (gptel-make-anthropic \"Claude-think\"
+                        :key gptel-api-key
+                        :request-params
+                        \\='(:thinking (:type \"enabled\" :budget_tokens 1024)
+                          :max_tokens 2048)))
+
+See their documentation for more information and the package README for
+examples.  Once registered, backends may be retrieved using
+`gptel-get-backend' or switched to interactively from gptel's menu (see
+`gptel-menu')."
+  :safe #'always
+  :type
+  (let ((types '( choice :tag "Type"
+                  (const :tag "OpenAI compatible" gptel-openai)
+                  (const gptel-anthropic)
+                  (const gptel-gemini)
+                  (const gptel-ollama)
+                  (const gptel-kagi)
+                  (const :tag "GitHub Copilot" gptel-gh)
+                  (const gptel-bedrock)
+                  (const gptel-perplexity)
+                  (const gptel-deepseek)
+                  (const gptel-privategpt))))
+    `(choice
+      (const :tag "No backend" nil)
+      (cons :tag "(BACKEND-TYPE NAME . PLIST)" ;accommodate (gptel-openai "chatgpt" . plist)
+            ,types (cons string
+                         (plist :value-type (choice string symbol function))))
+      (cons :tag "(BACKEND-TYPE . PLIST)" ;accommodate (gptel-openai :name "chatgpt" . plist)
+            ,types (plist :value-type (choice string symbol function)))))
+  :get
+  (lambda (sym)
+    (when-let* ((backend (default-toplevel-value sym))
+                (type (type-of backend))
+                (plist (list :protocol (gptel-backend-protocol backend)
+                             :host (gptel-backend-host backend)
+                             :endpoint (gptel-backend-endpoint backend)
+                             :header (gptel-backend-header backend)
+                             :key (gptel-backend-key backend)
+                             :models (gptel-backend-models backend)
+                             :stream (gptel-backend-stream backend)
+                             :curl-args (gptel-backend-curl-args backend)
+                             :request-params (gptel-backend-request-params backend))))
+      (apply #'list type (gptel-backend-name backend)
+             (cl-loop for (k v) on plist by #'cddr
+                      if (and (readablep v) (not (null v)))
+                      collect k and collect v))))
+  :set
+  (lambda (sym val)
+    (cond
+     ((null val) (set-default-toplevel-value sym val))
+     ((listp val)
+      (let* ((name (if (stringp (cadr val)) ;explicit and implicit :name specification
+                       (cadr val) (plist-get (cdr val) :name)))
+             (args (if name (cddr val) (cdr val)))
+             type)
+        (cl-remf args :name)
+        (if (memq (car val) '(gptel-gh gptel--gh))
+            (setq type 'gptel-gh-copilot)
+          (setq type (car val)))
+        (set-default-toplevel-value
+         sym (apply (intern (concat "gptel-make-"
+                                    (substring (symbol-name type) 6)))
+                    name args))))
+     ((gptel-backend-p val) (set-default-toplevel-value sym val)))))
+
+(defcustom gptel-model nil
   (concat
-   "Model for chat.
+   "Model for gptel queries.
 
 The name of the model, as a symbol.  This is the name as expected
 by the LLM provider's API.
@@ -519,40 +506,12 @@ To set the model for a chat session interactively call
   :safe #'always
   :type `(choice
 	  (symbol :tag "Specify model name")
-	  ,@(mapcar (lambda (model)
-		      (list 'const :tag (symbol-name (car model))
-			    (car model)))
-		    gptel--openai-models)))
-
-(defvar gptel--openai
-  (gptel-make-openai
-      "ChatGPT"
-    :key 'gptel-api-key
-    :stream t
-    :models gptel--openai-models))
-
-(defcustom gptel-backend gptel--openai
-  "LLM backend to use.
-
-This is the default \"backend\", an object of type
-`gptel-backend' containing connection, authentication and model
-information.
-
-A backend for ChatGPT is pre-defined by gptel.  Backends for
-other LLM providers (local or remote) may be constructed using
-one of the available backend creation functions:
-- `gptel-make-openai'
-- `gptel-make-azure'
-- `gptel-make-ollama'
-- `gptel-make-gpt4all'
-- `gptel-make-gemini'
-See their documentation for more information and the package
-README for examples."
-  :safe #'always
-  :type `(choice
-          (const :tag "ChatGPT" ,gptel--openai)
-          (restricted-sexp :match-alternatives (gptel-backend-p 'nil)
-			   :tag "Other backend")))
+	  ,@(cl-loop
+             for (_name . backend) in gptel--known-backends
+             append (mapcar
+                     (lambda (model) (list 'const :tag (symbol-name model)
+			              model))
+                     (gptel-backend-models backend)))))
 
 (defvar gptel-expert-commands nil
   "Whether experimental gptel options should be enabled.
@@ -787,9 +746,115 @@ binary-encoded.")
   "\\(?:\\(?1:!\\)?\\(?2:\\[\\)\\(?3:\\^?\\(?:\\\\\\]\\|[^]]\\)*\\|\\)\\(?4:\\]\\)\\(?5:(\\)\\s-*\\(?6:[^)]*?\\)\\(?:\\s-+\\(?7:\"[^\"]*\"\\)\\)?\\s-*\\(?8:)\\)\\|\\(<\\)\\([a-z][a-z0-9.+-]\\{1,31\\}:[^]	\n<>,;()]+\\)\\(>\\)\\)"
   "Link regex for `gptel-mode' in Markdown mode.")
 
+(defvar gptel--mode-description-alist
+  '((js2-mode      . "Javascript")
+    (sh-mode       . "Shell")
+    (enh-ruby-mode . "Ruby")
+    (yaml-mode     . "Yaml")
+    (yaml-ts-mode  . "Yaml")
+    (rustic-mode   . "Rust")
+    (tuareg-mode   . "OCaml"))
+  "Mapping from unconventionally named major modes to languages.
+
+This is used when generating system prompts for rewriting and
+when including context from these major modes.")
+
 
 ;;; Utility functions
 
+;;;; JSON parsing helpers
+;; JSON conversion semantics used by gptel
+;; empty object "{}" => empty list '() == nil
+;; null              => :null
+;; false             => :json-false
+
+;; TODO(tool) Except when reading JSON from a string, where null => nil
+
+(defmacro gptel--json-read ()
+  "Parse JSON at point in buffer."
+  (if (fboundp 'json-parse-buffer)
+      `(json-parse-buffer
+        :object-type 'plist
+        :null-object :null
+        :false-object :json-false)
+    (require 'json)
+    (defvar json-object-type)
+    (defvar json-null)
+    (declare-function json-read "json" ())
+    `(let ((json-object-type 'plist)
+           (json-null :null))
+       (json-read))))
+
+(defmacro gptel--json-read-string (str)
+  "Pasre JSON string STR."
+  (if (fboundp 'json-parse-string)
+      `(json-parse-string ,str
+        :object-type 'plist
+        :null-object nil
+        :false-object :json-false)
+    (require 'json)
+    (defvar json-object-type)
+    (declare-function json-read-from-string "json" ())
+    `(let ((json-object-type 'plist))
+      (json-read-from-string ,str))))
+
+(defmacro gptel--json-encode (object)
+  "Serialize OBJECT as JSON."
+  (if (fboundp 'json-serialize)
+      `(json-serialize ,object
+        :null-object :null
+        :false-object :json-false)
+    (require 'json)
+    (defvar json-false)
+    (defvar json-null)
+    (declare-function json-encode "json" (object))
+    `(let ((json-false :json-false)
+           (json-null  :null))
+      (json-encode ,object))))
+
+(defun gptel--process-models (models)
+  "Convert items in MODELS to symbols with appropriate properties."
+  (let ((models-processed))
+    (dolist (model models)
+      (cl-etypecase model
+        (string (push (intern model) models-processed))
+        (symbol (push model models-processed))
+        (cons
+         (cl-destructuring-bind (name . props) model
+           (setf (symbol-plist name)
+                 ;; MAYBE: Merging existing symbol plists is safer, but makes it
+                 ;; difficult to reset a symbol plist, since removing keys from
+                 ;; it (as opposed to setting them to nil) is more work.
+                 ;;
+                 ;; (map-merge 'plist (symbol-plist name) props)
+                 props)
+           (push name models-processed)))))
+    (nreverse models-processed)))
+
+;;;; Backend interface
+(defun gptel-get-backend (name)
+  "Return gptel backend with NAME.
+
+Throw an error if there is no match."
+  (or (alist-get name gptel--known-backends nil nil #'equal)
+      (user-error "Backend %s is not known to be defined"
+                  name)))
+
+(gv-define-setter gptel-get-backend (val name)
+  `(setf (alist-get ,name gptel--known-backends
+          nil t #'equal)
+    ,val))
+
+(cl-defstruct
+    (gptel-backend (:constructor gptel--make-backend)
+                   (:copier gptel--copy-backend))
+  name host header protocol stream
+  endpoint key models url request-params
+  curl-args
+  (coding-system
+   nil :documentation "Can be set to `binary' if the backend expects non UTF-8 output."))
+
+;;;; Misc utilities
 (defun gptel-api-key-from-auth-source (&optional host user)
   "Lookup api key in the auth source.
 By default, the LLM host for the active backend is used as HOST,
@@ -922,6 +987,7 @@ MODE-SYM is typically a major-mode symbol."
      (skip-syntax-forward "w.")
      ,(macroexp-progn body)))
 
+;; NOTE: Remove after we drop Emacs 27.1 (#724)
 (defmacro gptel--temp-buffer (buf)
   "Generate a temp buffer BUF.
 
@@ -1837,8 +1903,8 @@ cases.
 
 The INFO plist has (at least) the following keys:
 :data         - The request data included with the query
-:position     - marker at the point the request was sent, unless
-                POSITION is specified.
+:position     - marker where the response will (nominally) be inserted.
+                Of course, the insertion is left to the CALLBACK.
 :buffer       - The buffer current when the request was sent,
                 unless BUFFER is specified.
 :status       - Short string describing the result of the request,
@@ -1965,8 +2031,8 @@ be used to rerun or continue the request at a later time."
          (gptel--schema schema)
          (prompt-buffer
           (cond                       ;prompt from buffer or explicitly supplied
-           ((null prompt)
-            (gptel--create-prompt-buffer (point)))
+           ((null prompt)           ;Send text up to end of word (for evil-mode users)
+            (gptel--create-prompt-buffer (gptel--at-word-end (point))))
            ((stringp prompt)
             (gptel--with-buffer-copy buffer nil nil
               (insert prompt)
@@ -2334,6 +2400,12 @@ PROMPTS is the plist of previous user queries and LLM responses.")
   "Check if MODEL is available in BACKEND, adjust accordingly.
 
 If SHOOSH is true, don't issue a warning."
+  (unless backend
+    (display-warning
+     'gptel "No gptel-backend defined: defaulting to ChatGPT")
+    (setq gptel-backend
+          (gptel-make-openai "ChatGPT" :key 'gptel-api-key :stream t)
+          backend gptel-backend))
   (let ((available (gptel-backend-models backend)))
     (when (stringp model)
       (unless shoosh

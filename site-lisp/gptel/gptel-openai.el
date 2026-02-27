@@ -23,142 +23,15 @@
 
 ;;; Code:
 (require 'cl-generic)
-(eval-when-compile
-  (require 'cl-lib))
+(eval-when-compile (require 'cl-lib))
 (require 'map)
+(eval-and-compile (require 'gptel-request))
 
-(defvar gptel-model)
-(defvar gptel-stream)
-(defvar gptel-use-curl)
-(defvar gptel-backend)
-(defvar gptel-temperature)
-(defvar gptel-max-tokens)
-(defvar gptel--system-message)
 (defvar json-object-type)
 (defvar gptel-mode)
-(defvar gptel-track-response)
-(defvar gptel-track-media)
-(defvar gptel-use-tools)
-(defvar gptel-tools)
-(defvar gptel--schema)
-(defvar gptel--request-params)
 (declare-function gptel-context--collect-media "gptel-context")
-(declare-function gptel--base64-encode "gptel")
-(declare-function gptel--trim-prefixes "gptel")
-(declare-function gptel--parse-media-links "gptel")
-(declare-function gptel--model-capable-p "gptel")
-(declare-function gptel--model-name "gptel")
-(declare-function gptel--get-api-key "gptel")
-(declare-function gptel--insert-file-string "gptel")
-(declare-function prop-match-value "text-property-search")
-(declare-function text-property-search-backward "text-property-search")
 (declare-function json-read "json")
-(declare-function gptel-prompt-prefix-string "gptel")
-(declare-function gptel-response-prefix-string "gptel")
-(declare-function gptel--merge-plists "gptel")
-(declare-function gptel--model-request-params "gptel")
 (declare-function gptel-context--wrap "gptel-context")
-(declare-function gptel--inject-prompt "gptel")
-(declare-function gptel--parse-tools "gptel")
-(declare-function gptel--parse-schema "gptel")
-(declare-function gptel--preprocess-schema "gptel")
-(declare-function gptel--dispatch-schema-type "gptel")
-
-;; JSON conversion semantics used by gptel
-;; empty object "{}" => empty list '() == nil
-;; null              => :null
-;; false             => :json-false
-
-;; TODO(tool) Except when reading JSON from a string, where null => nil
-
-(defmacro gptel--json-read ()
-  (if (fboundp 'json-parse-buffer)
-      `(json-parse-buffer
-        :object-type 'plist
-        :null-object :null
-        :false-object :json-false)
-    (require 'json)
-    (defvar json-object-type)
-    (defvar json-null)
-    (declare-function json-read "json" ())
-    `(let ((json-object-type 'plist)
-           (json-null :null))
-      (json-read))))
-
-(defmacro gptel--json-read-string (str)
-  (if (fboundp 'json-parse-string)
-      `(json-parse-string ,str
-        :object-type 'plist
-        :null-object nil
-        :false-object :json-false)
-    (require 'json)
-    (defvar json-object-type)
-    (declare-function json-read-from-string "json" ())
-    `(let ((json-object-type 'plist))
-      (json-read-from-string ,str))))
-
-(defmacro gptel--json-encode (object)
-  (if (fboundp 'json-serialize)
-      `(json-serialize ,object
-        :null-object :null
-        :false-object :json-false)
-    (require 'json)
-    (defvar json-false)
-    (defvar json-null)
-    (declare-function json-encode "json" (object))
-    `(let ((json-false :json-false)
-           (json-null  :null))
-      (json-encode ,object))))
-
-(defun gptel--process-models (models)
-  "Convert items in MODELS to symbols with appropriate properties."
-  (let ((models-processed))
-    (dolist (model models)
-      (cl-etypecase model
-        (string (push (intern model) models-processed))
-        (symbol (push model models-processed))
-        (cons
-         (cl-destructuring-bind (name . props) model
-           (setf (symbol-plist name)
-                 ;; MAYBE: Merging existing symbol plists is safer, but makes it
-                 ;; difficult to reset a symbol plist, since removing keys from
-                 ;; it (as opposed to setting them to nil) is more work.
-                 ;;
-                 ;; (map-merge 'plist (symbol-plist name) props)
-                 props)
-           (push name models-processed)))))
-    (nreverse models-processed)))
-
-;;; Common backend struct for LLM support
-(defvar gptel--known-backends nil
-  "Alist of LLM backends known to gptel.
-
-This is an alist mapping user-provided names to backend structs,
-see `gptel-backend'.
-
-You can have more than one backend pointing to the same resource
-with differing settings.")
-
-(defun gptel-get-backend (name)
-  "Return gptel backend with NAME.
-
-Throw an error if there is no match."
-  (or (alist-get name gptel--known-backends nil nil #'equal)
-      (user-error "Backend %s is not known to be defined"
-                  name)))
-
-(gv-define-setter gptel-get-backend (val name)
-  `(setf (alist-get ,name gptel--known-backends
-          nil t #'equal)
-    ,val))
-
-(cl-defstruct
-    (gptel-backend (:constructor gptel--make-backend)
-                   (:copier gptel--copy-backend))
-  name host header protocol stream
-  endpoint key models url request-params
-  curl-args
-  (coding-system nil :documentation "Can be set to `binary' if the backend expects non UTF-8 output."))
 
 ;;; OpenAI (ChatGPT)
 (cl-defstruct (gptel-openai (:constructor gptel--make-openai)
@@ -529,9 +402,192 @@ Media files, if present, are placed in `gptel-context'."
                    (t current))))
         (plist-get (car prompts) :content))))
 
+(defconst gptel--openai-models
+  '((gpt-4o-mini
+     :description "Cheap model for fast tasks; cheaper & more capable than GPT-3.5 Turbo"
+     :capabilities (media tool-use json url)
+     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
+     :context-window 128
+     :input-cost 0.15
+     :output-cost 0.60
+     :cutoff-date "2023-10")
+    (gpt-4o
+     :description "Advanced model for complex tasks; cheaper & faster than GPT-Turbo"
+     :capabilities (media tool-use json url)
+     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
+     :context-window 128
+     :input-cost 2.50
+     :output-cost 10
+     :cutoff-date "2023-10")
+    (gpt-4.1
+     :description "Flagship model for complex tasks"
+     :capabilities (media tool-use json url)
+     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
+     :context-window 1024
+     :input-cost 2.0
+     :output-cost 8.0
+     :cutoff-date "2024-05")
+    (gpt-4.5-preview
+     :description "DEPRECATED: Use gpt-4.1 instead"
+     :capabilities (media tool-use url)
+     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
+     :context-window 128
+     :input-cost 75
+     :output-cost 150
+     :cutoff-date "2023-10")
+    (gpt-4.1-mini
+     :description "Balance between intelligence, speed and cost"
+     :capabilities (media tool-use json url)
+     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
+     :context-window 1024
+     :input-cost 0.4
+     :output-cost 1.6)
+    (gpt-4.1-nano
+     :description "Fastest, most cost-effective GPT-4.1 model"
+     :capabilities (media tool-use json url)
+     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
+     :context-window 1024
+     :input-cost 0.10
+     :output-cost 0.40
+     :cutoff-date "2024-05")
+    (gpt-4-turbo
+     :description "Previous high-intelligence model"
+     :capabilities (media tool-use url)
+     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
+     :context-window 128
+     :input-cost 10
+     :output-cost 30
+     :cutoff-date "2023-11")
+    (gpt-4
+     :description "GPT-4 snapshot from June 2023 with improved function calling support"
+     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
+     :capabilities (media url)
+     :context-window 8.192
+     :input-cost 30
+     :output-cost 60
+     :cutoff-date "2023-11")
+    (gpt-5
+     :description "Flagship model for coding, reasoning, and agentic tasks across domains"
+     :capabilities (media tool-use json url)
+     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
+     :context-window 400
+     :input-cost 1.25
+     :output-cost 10
+     :cutoff-date "2024-09")
+    (gpt-5-mini
+     :description "Faster, more cost-efficient version of GPT-5"
+     :capabilities (media tool-use json url)
+     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
+     :context-window 400
+     :input-cost 0.25
+     :output-cost 2.0
+     :cutoff-date "2024-09")
+    (gpt-5-nano
+     :description "Fastest, cheapest version of GPT-5"
+     :capabilities (media tool-use json url)
+     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
+     :context-window 400
+     :input-cost 0.05
+     :output-cost 0.40
+     :cutoff-date "2024-09")
+    (gpt-5.1
+     :description "The best model for coding and agentic tasks"
+     :capabilities (media tool-use json url)
+     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
+     :context-window 400
+     :input-cost 1.25
+     :output-cost 10
+     :cutoff-date "2024-09")
+    (gpt-5.2
+     :description "The best model for coding and agentic tasks"
+     :capabilities (media tool-use json url)
+     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
+     :context-window 400
+     :input-cost 1.75
+     :output-cost 14
+     :cutoff-date "2025-08")
+    (o1
+     :description "Reasoning model designed to solve hard problems across domains"
+     :capabilities (media reasoning)
+     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
+     :context-window 200
+     :input-cost 15
+     :output-cost 60
+     :cutoff-date "2023-10")
+    (o1-mini
+     :description "Faster and cheaper reasoning model good at coding, math, and science"
+     :context-window 128
+     :input-cost 3
+     :output-cost 12
+     :cutoff-date "2023-10"
+     :capabilities (nosystem reasoning))
+    (o3
+     :description "Well-rounded and powerful model across domains"
+     :capabilities (reasoning media tool-use json url)
+     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
+     :context-window 200
+     :input-cost 2
+     :output-cost 8
+     :cutoff-date "2024-05")
+    (o3-mini
+     :description "High intelligence at the same cost and latency targets of o1-mini"
+     :context-window 200
+     :input-cost 1.10
+     :output-cost 4.40
+     :cutoff-date "2023-10"
+     :capabilities (reasoning tool-use json))
+    (o4-mini
+     :description "Fast, effective reasoning with efficient performance in coding and visual tasks"
+     :capabilities (reasoning media tool-use json url)
+     :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
+     :context-window 200
+     :input-cost 1.10
+     :output-cost 4.40
+     :cutoff-date "2024-05")
+    (gpt-3.5-turbo
+     :description "More expensive & less capable than GPT-4o-mini; use that instead"
+     :capabilities (tool-use)
+     :context-window 16.358
+     :input-cost 0.50
+     :output-cost 1.50
+     :cutoff-date "2021-09")
+    (gpt-3.5-turbo-16k
+     :description "More expensive & less capable than GPT-4o-mini; use that instead"
+     :capabilities (tool-use)
+     :context-window 16.385
+     :input-cost 3
+     :output-cost 4
+     :cutoff-date "2021-09"))
+  "List of available OpenAI models and associated properties.
+Keys:
+
+- `:description': a brief description of the model.
+
+- `:capabilities': a list of capabilities supported by the model.
+
+- `:mime-types': a list of supported MIME types for media files.
+
+- `:context-window': the context window size, in thousands of tokens.
+
+- `:input-cost': the input cost, in US dollars per million tokens.
+
+- `:output-cost': the output cost, in US dollars per million tokens.
+
+- `:cutoff-date': the knowledge cutoff date.
+
+- `:request-params': a plist of additional request parameters to
+  include when using this model.
+
+Information about the OpenAI models was obtained from the following
+sources:
+
+- <https://platform.openai.com/docs/pricing>
+- <https://platform.openai.com/docs/models>")
+
 ;;;###autoload
 (cl-defun gptel-make-openai
-    (name &key curl-args models stream key request-params
+    (name &key curl-args (models gptel--openai-models)
+          stream key request-params
           (header
            (lambda () (when-let* ((key (gptel--get-api-key)))
                    `(("Authorization" . ,(concat "Bearer " key))))))

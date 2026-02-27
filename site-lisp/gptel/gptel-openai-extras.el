@@ -24,10 +24,11 @@
 
 ;;; Code:
 (require 'cl-generic)
-(eval-when-compile
-  (require 'cl-lib))
+(eval-when-compile (require 'cl-lib))
 (require 'map)
-(require 'gptel)
+(eval-and-compile
+  (require 'gptel-request)
+  (require 'gptel-openai))
 
 (defvar json-object-type)
 

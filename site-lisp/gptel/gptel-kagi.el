@@ -23,10 +23,9 @@
 ;; This file adds support for the Kagi FastGPT LLM API to gptel
 
 ;;; Code:
-(require 'gptel)
 (require 'cl-generic)
-(eval-when-compile
-  (require 'cl-lib))
+(eval-when-compile (require 'cl-lib))
+(eval-and-compile (require 'gptel-request))
 
 (declare-function gptel-context--wrap "gptel-context")
 

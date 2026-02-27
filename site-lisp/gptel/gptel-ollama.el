@@ -23,12 +23,13 @@
 ;; This file adds support for the Ollama LLM API to gptel
 
 ;;; Code:
-(require 'gptel)
 (require 'cl-generic)
+(eval-and-compile (require 'gptel-request))
 
 (declare-function json-read "json" ())
 (declare-function gptel-context--wrap "gptel-context")
 (declare-function gptel-context--collect-media "gptel-context")
+
 (defvar json-object-type)
 
 ;;; Ollama

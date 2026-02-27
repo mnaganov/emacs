@@ -301,9 +301,9 @@
         (setq my-gemini-backend (gptel-make-gemini "Gemini"
                 :key api-key
                 :stream t
-                :models '(gemini-3-pro-preview gemini-3-flash-preview)))
+                :models '(gemini-pro-latest gemini-flash-latest)))
         (setq-default gptel-backend my-gemini-backend)
-        (setq-default gptel-model 'gemini-3-pro-preview)))
+        (setq-default gptel-model 'gemini-pro-latest)))
     (require 'gptel-context)
     (require 'gptel-transient)))
 
