@@ -167,7 +167,7 @@
                   (comint-9term-write-chunk (substring text idx chunk-end))
                   (setq idx (1- chunk-end))
                   (set-marker pm (point))))))
-          (setq idx (1+ idx))))))))
+            (setq idx (1+ idx))))))))
 
 (defun comint-9term-write-chunk (chunk)
   "Write a chunk of normal text, using fast path if possible."
@@ -200,15 +200,16 @@
               ;; Initialize origin if needed
               (unless comint-9term-origin
                 (setq comint-9term-origin (1- (line-number-at-pos (process-mark proc)))))
-                
-              (line-number-at-pos (point-max)) ; Trigger pending signals (e.g. SIGWINCH) once per chunk
+
+              (sleep-for 0) ; Process signals to prevent massive chunk buffering
 
               ;; Prepend any partial sequence from previous run
               (when (and comint-9term-partial-seq (> (length comint-9term-partial-seq) 0))
-                            (when (buffer-live-p comint-9term-trace-buffer)
-                              (with-current-buffer comint-9term-trace-buffer
-                                (goto-char (point-max))
-                                (insert ";; PARTIAL_SEQ_SAVED\n")))                (setq string (concat comint-9term-partial-seq string))
+                (when (buffer-live-p comint-9term-trace-buffer)
+                  (with-current-buffer comint-9term-trace-buffer
+                    (goto-char (point-max))
+                    (insert ";; PARTIAL_SEQ_SAVED\n")))
+                (setq string (concat comint-9term-partial-seq string))
                 (setq comint-9term-partial-seq ""))
 
               (comint-watch-for-password-prompt string)
@@ -284,7 +285,6 @@
                   size)
                 '((name . comint-9term-resize)))
   (add-hook 'comint-preoutput-filter-functions 'comint-9term-filter nil t)
-
   (add-hook 'after-change-major-mode-hook
             (lambda ()
               (setq-local comint-output-filter-functions
@@ -318,7 +318,7 @@
             (emacs-lisp-mode)
             (insert (format ";; Trace started at %s\n" (current-time-string)))
             (let ((h (or comint-9term-term-height (frame-height))))
-               (insert (format "(setq comint-9term-height-override %S)\n" h)))
+              (insert (format "(setq comint-9term-height-override %S)\n" h)))
             (insert (format "(setq width %S)\n" (window-width)))))
         (add-hook 'comint-preoutput-filter-functions 'comint-9term-trace-filter nil t))
     (remove-hook 'comint-preoutput-filter-functions 'comint-9term-trace-filter t)))
