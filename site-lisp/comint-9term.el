@@ -3,6 +3,9 @@
 ;; Restriction: do not add `(require 'ansi-color)`
 ;; Restriction: do not add `(provide 'comint-9term)`
 
+(defvar comint-9term-trace-buffer nil
+  "Buffer to store trace logs.")
+
 (defvar-local comint-9term-saved-pos nil)
 (defvar-local comint-9term-scroll-bottom nil)
 (defvar-local comint-9term-lines-below-scroll 0)
@@ -292,9 +295,6 @@
             nil t))
 
 ;; Trace mode
-
-(defvar comint-9term-trace-buffer nil
-  "Buffer to store trace logs.")
 
 (defun comint-9term-trace-filter (string)
   "Log STRING to trace buffer if active."
