@@ -1,7 +1,7 @@
 ;;; comint-9term.el --- Advanced ANSI escape sequences for comint-mode -*- lexical-binding: t -*-
 
-;; Restriction: do not add `(require 'ansi-color)`
-;; Restriction: do not add `(provide 'comint-9term)`
+(require 'comint)
+(require 'compile)
 
 (defvar comint-9term-trace-buffer nil
   "Buffer to store trace logs.")
@@ -345,3 +345,7 @@
 
 (add-hook 'comint-mode-hook 'comint-9term-setup)
 (add-hook 'compilation-shell-minor-mode-hook 'comint-9term-setup)
+
+(provide 'comint-9term)
+
+;;; comint-9term.el ends here

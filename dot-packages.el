@@ -49,7 +49,9 @@
 (add-to-list 'load-path (concat emacs-root "site-lisp/haskell-mode"))
 (add-to-list 'load-path (concat emacs-root "site-lisp/rust-mode"))
 (setq packages-root (concat emacs-root "site-lisp/"))
-(load "comint-9term.el")
+
+;; Handle more ANSI escape sequences in shell-mode and compile-with-comint
+(require 'comint-9term)
 
 ;; Swap contents of the buffers
 (require 'buffer-move)
