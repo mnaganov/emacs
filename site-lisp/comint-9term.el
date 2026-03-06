@@ -17,7 +17,7 @@
 (defvar-local comint-9term-term-height nil)
 
 (defconst comint-9term-control-seq-regexp
-  "\e\\(\\[\\([?0-9;]*\\)\\([A-Za-z]\\)\\|]\\(?:.*?\\)\\(?:\a\\|\e\\\\\\)\\|\\([78]\\)\\)"
+  "\e\\(\\[\\([?0-9;]*\\)\\([A-Za-z]\\)\\|]\\(?:.*?\\)\\(?:\a\\|\e\\\\\\)\\|\\([78JK]\\)\\)"
   "Regexp matching supported ANSI escape sequences.")
 
 (defun comint-9term-parse-params (params-str &optional default)
@@ -245,7 +245,9 @@
                         (let ((m (point-marker)))
                           (set-marker-insertion-type m nil)
                           (setq comint-9term-saved-pos m)))
-                       ((eq esc-char ?8) (when comint-9term-saved-pos (goto-char comint-9term-saved-pos)))))))
+                       ((eq esc-char ?8) (when comint-9term-saved-pos (goto-char comint-9term-saved-pos)))
+                       ((eq esc-char ?J) (comint-9term-handle-csi ?J '(0)))
+                       ((eq esc-char ?K) (comint-9term-handle-csi ?K '(0)))))))
                   (setq min-p (min min-p (point)))
                   (setq max-p (max max-p (point)))
                   (set-marker (process-mark proc) (point))
