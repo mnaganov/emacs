@@ -387,7 +387,7 @@
  '(mode-line ((t (:foreground "white" :background "black"))))
  '(mode-line-inactive ((t (:foreground "black" :background "white"))))
  '(region ((t (:background "brightcyan"))))
- '(secondary-selection ((t (:background "brightblue"))))
+ '(secondary-selection ((t (:background "brightyellow"))))
  '(shadow ((t (:foreground "brightblack"))))
  '(show-paren-match ((t (:bold t))))
  '(show-paren-mismatch ((t (:inherit isearch-fail))))
