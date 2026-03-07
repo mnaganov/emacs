@@ -188,6 +188,13 @@
 (add-hook 'java-mode-hook 'flyspell-prog-mode)
 (add-hook 'js2-mode-hook 'flyspell-prog-mode)
 
+;; Enable spell checking for Git commit message editing
+(add-hook 'find-file-hook
+          (lambda ()
+            (when (and (buffer-file-name)
+                       (string-match-p "COMMIT_EDITMSG\\'" (buffer-file-name)))
+              (flyspell-mode 1))))
+
 ;; Expand region: press Alt-= repeatedly to expand the region
 ;; starting from inside.
 ;; I've chosen Alt-= because it used to run 'count-words-region'.
