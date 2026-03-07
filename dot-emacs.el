@@ -252,6 +252,18 @@
       (goto-line line-number))))
 (advice-add 'find-file-at-point :around #'my-ffap-jump-to-line)
 
+;; Engage diff-mode automatically for output from Git commands
+(defun auto-enable-diff-mode-in-shell-output (&rest _)
+  "Enable `diff-mode` in `*Shell Command Output*` if a diff is detected."
+  (when-let ((buf (get-buffer "*Shell Command Output*")))
+    (with-current-buffer buf
+      (save-excursion
+        (goto-char (point-min))
+        ;; Search the first 1000 characters for common diff headers
+        (when (re-search-forward "^\\(?:diff --git\\|---\\|Index:\\) " 1000 t)
+          (diff-mode))))))
+(advice-add 'shell-command :after #'auto-enable-diff-mode-in-shell-output)
+
 ;; == Set up packages ==
 
 (load-file (concat emacs-root "dot-packages.el"))
