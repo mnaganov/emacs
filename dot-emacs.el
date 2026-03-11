@@ -98,6 +98,11 @@
 (setq bell-volume 0)
 (setq sound-alist nil)
 
+;; Make completion ignore case by default
+(setq completion-ignore-case t
+      read-buffer-completion-ignore-case t
+      read-file-name-completion-ignore-case t)
+
 ;; Frame title: <compact host name>:<one-of full-file-path dired-directory buffer-name>
 (setq system-name-for-frame-title (when (string-match (concat (user-login-name) "[.-]?") (system-name))
                                     (replace-match "" nil nil (system-name))))
