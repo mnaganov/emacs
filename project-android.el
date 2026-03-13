@@ -116,3 +116,13 @@
 ;;                                        ". build/envsetup.sh && lunch tokay-trunk_staging-userdebug && "
 ;;                                        "export ANDROID_SERIAL=43021FDAQ000PK "
 ;;                                        "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r22d"))))
+
+;; Save / restore desktop
+(setq desktop-dirname "~/.emacs_desktop")
+(make-directory desktop-dirname t)
+(desktop-save-mode t)
+(setq desktop-save t)
+(setq desktop-restore-eager 10)
+(setq desktop-auto-save-timeout 5) ;; 5 seconds
+;; Only restore buffers, do not touch windows arrangement
+(setq desktop-restore-frames nil)
