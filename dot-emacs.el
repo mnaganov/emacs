@@ -63,20 +63,21 @@
 (defun my-turn-off-slow-funcs ()
   (set (make-local-variable 'global-hl-line-mode) nil)
   (buffer-disable-undo))
+(defun my-compile-mode-tweaks ()
+  ;; Allow moving between compile command and its output by words
+  (setq-local inhibit-field-text-motion t)
+  ;; Do now show column to avoid status line thrashing during compilation
+  (setq-local column-number-mode nil))
 (require 'compile)
 (add-hook 'compilation-mode-hook 'my-turn-off-slow-funcs)
-;; Allow moving between compile command and its output by words
-(add-hook 'compilation-mode-hook
-          (lambda ()
-            (setq-local inhibit-field-text-motion t)))
+(add-hook 'compilation-mode-hook 'my-compile-mode-tweaks)
 (require 'comint)
 (add-hook 'comint-mode-hook 'my-turn-off-slow-funcs)
-;; For "compile with comint" only, allow moving between compile command and its
-;; output by words
 (add-hook 'comint-mode-hook
           (lambda ()
+            ;; For "compile with comint" only
             (when (eq major-mode 'comint-mode)
-              (setq-local inhibit-field-text-motion t))))
+              (my-compile-mode-tweaks))))
 
 ;; Instead of 'yes or no' use 'y or n'
 (fset 'yes-or-no-p 'y-or-n-p)
