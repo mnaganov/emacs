@@ -2,8 +2,10 @@
 (require 'google)
 (require 'google3-eglot)
 (google3-eglot-setup)
-(if (string-match "android" use-project)
-    (setq google3-eglot-c++-server 'clangd))
+(when (string-match "android" use-project)
+    (setq google3-eglot-c++-server 'clangd)
+    (add-hook 'c++-mode-hook 'eglot-ensure)
+    (add-hook 'java-mode-hook 'eglot-ensure))
 
 ;; Turn off flycheck since flymake is also active
 (global-flycheck-mode -1)

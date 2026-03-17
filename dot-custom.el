@@ -7,7 +7,7 @@
  '(company-idle-delay 3)
  '(compilation-scroll-output t)
  '(eat-term-name "eat-256color")
- '(eglot-ignored-server-capabilities '(:inlayHintProvider))
+ '(eglot-ignored-server-capabilities '(:inlayHintProvider :semanticTokensProvider))
  '(eldoc-echo-area-prefer-doc-buffer t)
  '(eldoc-echo-area-use-multiline-p nil)
  '(js2-auto-indent-p nil)
