@@ -89,6 +89,10 @@
 (setq-default bidi-paragraph-direction 'left-to-right)
 (setq bidi-inhibit-bpa t)
 
+;; Max out buffering of process outputs to reduce flickering
+;; Should not exceed /proc/sys/fs/pipe-max-size
+(setq read-process-output-max (* 1024 1024))
+
 ;; Don't unsplit windows on ESC ESC ESC
 (defadvice keyboard-escape-quit (around my-keyboard-escape-quit activate)
   (let (orig-one-window-p)
