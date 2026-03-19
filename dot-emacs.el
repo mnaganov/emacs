@@ -93,6 +93,10 @@
 ;; Should not exceed /proc/sys/fs/pipe-max-size
 (setq read-process-output-max (* 1024 1024))
 
+;; Enable recursive minibuffer
+(setq enable-recursive-minibuffers t)
+(minibuffer-depth-indicate-mode 1)
+
 ;; Don't unsplit windows on ESC ESC ESC
 (defadvice keyboard-escape-quit (around my-keyboard-escape-quit activate)
   (let (orig-one-window-p)
