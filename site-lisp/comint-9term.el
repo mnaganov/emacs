@@ -291,14 +291,6 @@
   "")
 
 (defun comint-9term-setup ()
-  (make-local-variable 'comint-9term-saved-pos)
-  (make-local-variable 'comint-9term-scroll-bottom)
-  (make-local-variable 'comint-9term-lines-below-scroll)
-  (make-local-variable 'comint-9term-scroll-offset)
-  (make-local-variable 'comint-9term-virtual-col)
-  (make-local-variable 'comint-9term-partial-seq)
-  (make-local-variable 'comint-9term-height-override)
-  (make-local-variable 'comint-9term-term-height)
   (add-function :filter-return
                 (local 'window-adjust-process-window-size-function)
                 (lambda (size)
