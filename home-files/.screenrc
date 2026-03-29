@@ -15,6 +15,10 @@ bind ^C eval writebuf "exec !!! xclip -in -selection clipboard /tmp/screen-excha
 bind ^K eval "clear" "scrollback 0" "scrollback 100000"
 # Does not work well with emacs 28
 unsetenv COLORTERM
+# Increase the output buffer size to reduce flickering
+obuflimit 256000
+# Optimize line clearing
+defbce on
 
 # Scripted creation of pre-configured shells
 screen -t emacs emacs -nw
