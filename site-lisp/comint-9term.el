@@ -28,6 +28,41 @@
 ;; allowing the Emacs user to enjoy the benefits of a full, persistent command
 ;; history that standard terminal emulators often discard or hide in a separate
 ;; scrollback buffer.
+;;
+;; The following sequences are handled:
+;;
+;; 1. CSI (Control Sequence Introducer) Sequences
+;; These start with \e[ followed by parameters and a terminating character.
+;;  * Cursor Movement:
+;;      * CUU (A/B/C/D): Cursor Up/Down/Forward/Backward
+;;      * CPL (F): Cursor Previous Line
+;;      * CHA (G): Cursor Horizontal Absolute
+;;      * CUP / HVP (H or f): Cursor Position (Absolute positioning)
+;;  * Erasure:
+;;      * ED (J): Erase in Display (clear screen / below cursor)
+;;      * EL (K): Erase in Line (clear line / to end of line)
+;;  * Viewport / Scrolling:
+;;      * DECSTBM (r): Set Scrolling Region (used by tools like ninja to pin status bars)
+;;  * Styling (SGR - Select Graphic Rendition):
+;;      * SGR (m): Text formatting and colors (delegated to standard Emacs ansi-color-apply-on-region)
+;;  * Window / Metadata:
+;;      * Window Manipulation (t): Used by CSI 8;h;wt to set terminal height (mapped to `comint-9term-height-override`)
+;;      * Magic String: Supporting `9TERM_SET_HEIGHT=n` as a human-readable alternative for viewport sizing.
+;;
+;; 2. OSC (Operating System Command) Sequences
+;; These start with \e] and are terminated by either a Bell (\a) or a String Terminator (\e\).
+;;  * Instead of parsing these directly, comint-9term matches the entire sequence and delegates it to Emacs' built-in OSC handlers
+;;    (ansi-osc-apply-on-region or comint-osc-process-output). This enables support for advanced terminal features like Directory
+;;    Tracking and Hyperlinks.
+;;
+;; 3. Independent / Standalone Escape Sequences
+;; These start with a simple \e followed immediately by a specific character (no [ bracket).
+;;  * Cursor State:
+;;      * DECSC (\e7): Save Cursor Position
+;;      * DECRC (\e8): Restore Cursor Position
+;;  * Short-form Erasure (ZLE extensions):
+;;      * \eJ: Erase in Display (Z-Shell Line Editor short sequence)
+;;      * \eK: Erase in Line (Z-Shell Line Editor short sequence)
 
 (require 'comint)
 (require 'compile)
@@ -66,7 +101,7 @@
                        (condition-case nil
                            (frame-height)
                          (error 24)))))))
-        (if (and h (> h 0)) (max 10 h) 24))))
+        (if (and h (> h 0)) h 24))))
 
 (defvar-local comint-9term--max-start-line nil)
 
@@ -171,7 +206,37 @@
               (setq comint-9term-scroll-bottom bottom)
               (setq comint-9term-lines-below-scroll 1))
           (setq comint-9term-scroll-bottom nil)
-          (setq comint-9term-lines-below-scroll 0)))))))
+          (setq comint-9term-lines-below-scroll 0))))
+     ((eq char ?t) ; Window manipulation
+      (when (= n 8)
+        (let ((h (nth 1 params)))
+          (when (and h (> h 0))
+            (setq comint-9term-height-override h))))))))
+
+(defun comint-9term--insert-newline-and-scroll ()
+  "Insert a newline and update scroll offset if at the bottom of the viewport."
+  (let* ((max-h (comint-9term-max-height))
+         (effective-h (if (eq comint-9term-scroll-bottom 1) 1 max-h))
+         (curr-line (line-number-at-pos))
+         (start-line (comint-9term-start-line))
+         (at-v-bottom (>= (- curr-line start-line) effective-h)))
+    (if (and (> comint-9term-lines-below-scroll 0)
+             (>= (- curr-line start-line) comint-9term-scroll-bottom))
+        (progn
+          (end-of-line)
+          (insert "\n")
+          (setq comint-9term-scroll-offset (1+ comint-9term-scroll-offset)))
+      (let ((lines-left (forward-line 1)))
+        (if (> lines-left 0)
+            (progn
+              (insert "\n")
+              (when at-v-bottom
+                (setq comint-9term-scroll-offset (1+ comint-9term-scroll-offset))))
+          (if (and (eobp) (not (eq (char-before) ?\n)))
+              (progn
+                (insert "\n")
+                (when at-v-bottom
+                  (setq comint-9term-scroll-offset (1+ comint-9term-scroll-offset))))))))))
 
 (defun comint-9term-insert-and-overwrite (text &optional start end)
   "Insert TEXT at process-mark, from START to END."
@@ -195,26 +260,7 @@
             (cond
              ((eq c ?\n)
               (setq comint-9term-virtual-col nil)
-              (let* ((max-h (comint-9term-max-height))
-                     (effective-h (if (eq comint-9term-scroll-bottom 1) 1 max-h))
-                     (at-v-bottom (>= (- (line-number-at-pos) (comint-9term-start-line)) effective-h)))
-                (if (and (> comint-9term-lines-below-scroll 0)
-                         (>= (- (line-number-at-pos) (comint-9term-start-line)) comint-9term-scroll-bottom))
-                    (progn
-                      (end-of-line)
-                      (insert "\n")
-                      (setq comint-9term-scroll-offset (1+ comint-9term-scroll-offset)))
-                  (let ((lines-left (forward-line 1)))
-                    (if (> lines-left 0)
-                        (progn
-                          (insert "\n")
-                          (when at-v-bottom
-                            (setq comint-9term-scroll-offset (1+ comint-9term-scroll-offset))))
-                      (if (and (eobp) (not (eq (char-before) ?\n)))
-                          (progn
-                            (insert "\n")
-                            (when at-v-bottom
-                              (setq comint-9term-scroll-offset (1+ comint-9term-scroll-offset)))))))))
+              (comint-9term--insert-newline-and-scroll)
               (set-marker pm (point)))
              ((eq c ?\r)
               (setq comint-9term-virtual-col nil)
@@ -258,8 +304,8 @@
                   (start 0)
                   (min-p (marker-position (process-mark proc)))
                   (max-p (marker-position (process-mark proc))))
-              ;; Check for LINES= override
-              (when (string-match "LINES=\\([0-9]+\\)" string)
+              ;; Check for height override
+              (when (string-match "9TERM_SET_HEIGHT=\\([0-9]+\\)" string)
                 (setq comint-9term-height-override (string-to-number (match-string 1 string))))
 
               (sleep-for 0) ; Process signals to prevent massive chunk buffering
