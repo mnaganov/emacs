@@ -103,10 +103,17 @@
                          (error 24)))))))
         (if (and h (> h 0)) h 24))))
 
+(defvar-local comint-9term--last-tick nil)
+(defvar-local comint-9term--cached-total-lines nil)
 (defvar-local comint-9term--max-start-line nil)
 
 (defun comint-9term-start-line ()
-  (let* ((total (line-number-at-pos (point-max)))
+  (let* ((tick (buffer-chars-modified-tick))
+         (total (if (and comint-9term--last-tick
+                         (eq tick comint-9term--last-tick))
+                    comint-9term--cached-total-lines
+                  (setq comint-9term--last-tick tick)
+                  (setq comint-9term--cached-total-lines (line-number-at-pos (point-max)))))
          (max-h (comint-9term-max-height))
          (effective-h (if (eq comint-9term-scroll-bottom 1) 1 max-h))
          (origin (or comint-9term-origin 1))
@@ -346,9 +353,10 @@
                     (let ((esc-char (aref (match-string 4 string) 0)))
                       (cond
                        ((eq esc-char ?7)
-                        (let ((m (point-marker)))
-                          (set-marker-insertion-type m nil)
-                          (setq comint-9term-saved-pos m)))
+                        (unless comint-9term-saved-pos
+                          (setq comint-9term-saved-pos (make-marker))
+                          (set-marker-insertion-type comint-9term-saved-pos nil))
+                        (set-marker comint-9term-saved-pos (point)))
                        ((eq esc-char ?8) (when comint-9term-saved-pos (goto-char comint-9term-saved-pos)))
                        ((eq esc-char ?J) (comint-9term-handle-csi ?J '(0)))
                        ((eq esc-char ?K) (comint-9term-handle-csi ?K '(0))))))
