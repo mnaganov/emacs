@@ -92,25 +92,6 @@
 ;; Test command to check whether DCS-wrapped OSC52 works:
 ;; printf "\033P\033]52;c;$(printf testOSC52DCS | base64)\a\033\\"
 
-;; This is a fallback in case the terminal stack does not support OSC52.
-;; The usual suspects are the stable release of mosh (1.4.0), and Gnome terminal.
-;; In order to enable clipboard exchange, after starting the "xclip server" one
-;; must establish a reverse SSH tunnel to the remote machine for the port 3333:
-;;   ssh -R 3333:localhost:3333 <remote-host>
-(setq xclip-tunnel-port 3333)
-(defun xclip-server-start ()
-  (interactive)
-  (setq xclip-server-process (start-process "xclip-server"
-                 nil
-                 "bash"
-                 "-c"
-                 (format "while [ true ]; do nc -l 127.0.0.1 %s | xclip -selection clipboard; done" xclip-tunnel-port))))
-(defun remote-xclip-cut-function (text &optional push)
-  (let ((temp-file (make-temp-file "clip")))
-    ;; Use a temp file to avoid issues with large selections.
-    (write-region text nil temp-file nil 0)
-    (call-process "bash" nil 0 nil "-c" (format "cat %s > /dev/tcp/127.0.0.1/%s" temp-file xclip-tunnel-port))))
-
 ;; If emacs runs as a console program in a terminal or under screen
 ;; clipboard functions need to be set up in order to interact with
 ;; external clipboards
@@ -128,11 +109,6 @@
              (cond ((eq system-type 'darwin) (call-process "pbcopy" temp-file))
                    ((is-windows-wsl) (call-process "clip.exe" temp-file))
                    (t (call-process "xclip" temp-file 0 nil "-in" "-selection" "clipboard")))))
-         (defun osc52-then-xsel-cut-function (text &optional push)
-           ;; For remote sessions, this allows using remote's clipboard for pasting.
-           ;; Otherwise, after copying from remote via OSC52 one has to paste using terminal.
-           (osc52-select-text-dcs text)
-           (xsel-cut-function text))
          (defun xsel-paste-function ()
            ;; Find out what is current selection by xsel. If it is different
            ;; from the top of the kill-ring (car kill-ring), then return
@@ -142,18 +118,13 @@
                   (shell-command-to-string (if (eq system-type 'darwin) "pbpaste" "xsel --clipboard --output"))))
              (unless (string= (car kill-ring) xsel-output)
                xsel-output)))
-         (setq interprogram-cut-function 'osc52-then-xsel-cut-function)
-         (setq interprogram-paste-function 'xsel-paste-function)
-         (when (getenv "DISPLAY") (xclip-server-start)))
+         (setq interprogram-cut-function 'osc52-select-text-dcs)
+         (setq interprogram-paste-function 'xsel-paste-function))
         ((getenv "STY")
          ;; On the host, X is not running, emacs runs under screen remotely.
          ;; We assume that on the client side a graphical terminal is used.
-         ;; Also apply the fallback via "xclip server".
          ;; Paste from external clipboard has to be done using the terminal.
-         (defun osc52-then-remote-xclip-cut-function (text &optional push)
-           (osc52-select-text-dcs text)
-           (remote-xclip-cut-function text))
-         (setq interprogram-cut-function 'osc52-then-remote-xclip-cut-function))
+         (setq interprogram-cut-function 'osc52-select-text-dcs))
         ))
 
 (require 'eat)
