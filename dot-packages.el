@@ -123,7 +123,7 @@
              (setq interprogram-cut-function 'osc52-select-text)
            (setq interprogram-cut-function 'osc52-select-text-dcs))
          (setq interprogram-paste-function 'xsel-paste-function))
-        ((getenv "STY")
+        ((getenv "SSH_TTY")
          ;; On the host, X is not running, emacs runs under screen/tmux remotely.
          ;; We assume that on the client side a graphical terminal is used.
          ;; Paste from external clipboard has to be done using the terminal.
