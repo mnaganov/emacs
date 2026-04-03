@@ -97,7 +97,8 @@
 ;; external clipboards
 (unless window-system
   (cond ((or (getenv "DISPLAY") (is-windows-wsl))
-         ;; In this case the host has X running. We assume that emacs runs under screen.
+         ;; In this case the host has X running. We assume that emacs is running
+         ;; under screen or tmux.
          (defun xsel-cut-function (text &optional push)
            ;; I used to use a temp buffer and `call-process-region` here,
            ;; but for really large selections this could end up with some
@@ -118,13 +119,17 @@
                   (shell-command-to-string (if (eq system-type 'darwin) "pbpaste" "xsel --clipboard --output"))))
              (unless (string= (car kill-ring) xsel-output)
                xsel-output)))
-         (setq interprogram-cut-function 'osc52-select-text-dcs)
+         (if (getenv "TMUX")
+             (setq interprogram-cut-function 'osc52-select-text)
+           (setq interprogram-cut-function 'osc52-select-text-dcs))
          (setq interprogram-paste-function 'xsel-paste-function))
         ((getenv "STY")
-         ;; On the host, X is not running, emacs runs under screen remotely.
+         ;; On the host, X is not running, emacs runs under screen/tmux remotely.
          ;; We assume that on the client side a graphical terminal is used.
          ;; Paste from external clipboard has to be done using the terminal.
-         (setq interprogram-cut-function 'osc52-select-text-dcs))
+         (if (getenv "TMUX")
+             (setq interprogram-cut-function 'osc52-select-text)
+           (setq interprogram-cut-function 'osc52-select-text-dcs)))
         ))
 
 (require 'eat)
