@@ -4,7 +4,7 @@
       '(". build/envsetup.sh && lunch aosp_cf_x86_64_only_phone-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP SOONG_INCREMENTAL_ANALYSIS=true m"
         ". build/envsetup.sh && lunch aosp_cf_x86_64_only_phone-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP SOONG_INCREMENTAL_ANALYSIS=true ROLLING_TF_SUBPROCESS_OUTPUT=0 atest VtsHalAudioCoreTargetTest"
         ". build/envsetup.sh && lunch tokay-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP SOONG_INCREMENTAL_ANALYSIS=true m"
-        ". build/envsetup.sh && lunch tokay-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP SOONG_INCREMENTAL_ANALYSIS=true ANDROID_SERIAL=43021FDAQ000PK ROLLING_TF_SUBPROCESS_OUTPUT=0 atest CtsMediaAudioTestCases"
+        ". build/envsetup.sh && lunch tokay-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP SOONG_INCREMENTAL_ANALYSIS=true ROLLING_TF_SUBPROCESS_OUTPUT=0 atest CtsMediaAudioTestCases"
         "ANDROID_HOME=~/Android ANDROID_NDK_HOME=~/android-ndk-r22b ./gradlew assembleDebug"))
 (setq compile-command
    ". build/envsetup.sh && lunch tokay-trunk_staging-userdebug && . build/make/rbesetup.sh && SOONG_GEN_COMPDB=1 SOONG_LINK_COMPDB_TO=$ANDROID_BUILD_TOP SOONG_INCREMENTAL_ANALYSIS=true m")
