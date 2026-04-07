@@ -164,12 +164,13 @@
 (add-hook 'java-mode-hook 'flyspell-prog-mode)
 (add-hook 'js2-mode-hook 'flyspell-prog-mode)
 
-;; Enable spell checking for Git commit message editing
+;; Handle Git commit message editing in a special way
 (add-hook 'find-file-hook
           (lambda ()
             (when (and (buffer-file-name)
                        (string-match-p "COMMIT_EDITMSG\\'" (buffer-file-name)))
-              (flyspell-mode 1))))
+              (flyspell-mode 1)
+              (set-fill-column 72))))
 
 ;; Expand region: press Alt-= repeatedly to expand the region
 ;; starting from inside.
