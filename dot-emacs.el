@@ -93,6 +93,9 @@
 ;; Should not exceed /proc/sys/fs/pipe-max-size
 (setq read-process-output-max (* 1024 1024))
 
+;; Increase GC trigger threshold to 100MB
+(setq gc-cons-threshold (* 100 1024 1024))
+
 ;; Enable recursive minibuffer
 (setq enable-recursive-minibuffers t)
 (minibuffer-depth-indicate-mode 1)
