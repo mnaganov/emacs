@@ -6,6 +6,7 @@
  '(ag-reuse-buffers t)
  '(company-idle-delay 3)
  '(compilation-scroll-output t)
+ '(eat-minimum-latency 0.05)
  '(eat-term-name "eat-256color")
  '(eglot-ignored-server-capabilities '(:inlayHintProvider :semanticTokensProvider))
  '(eldoc-echo-area-prefer-doc-buffer t)

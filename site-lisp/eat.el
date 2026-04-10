@@ -6931,14 +6931,15 @@ of window displaying PROCESS's buffer."
             (height (max (cdr size) 1))
             (inhibit-read-only t)
             (sync-windows (eat--synchronize-scroll-windows)))
-        (eat-term-resize eat-terminal width height)
-        (eat-term-redisplay eat-terminal)
-        (funcall eat--synchronize-scroll-function sync-windows))
-      (pcase major-mode
-        ('eat-mode
-         (run-hooks 'eat-update-hook))
-        ('eshell-mode
-         (run-hooks 'eat-eshell-update-hook))))
+        (unless (equal (cons width height) (eat-term-size eat-terminal))
+          (eat-term-resize eat-terminal width height)
+          (eat-term-redisplay eat-terminal)
+          (funcall eat--synchronize-scroll-function sync-windows)
+          (pcase major-mode
+            ('eat-mode
+             (run-hooks 'eat-update-hook))
+            ('eshell-mode
+             (run-hooks 'eat-eshell-update-hook))))))
     size))
 
 (defun eat--kill-buffer (_process)
