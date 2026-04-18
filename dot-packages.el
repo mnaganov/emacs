@@ -96,7 +96,7 @@
 ;; clipboard functions need to be set up in order to interact with
 ;; external clipboards
 (unless window-system
-  (cond ((or (getenv "DISPLAY") (is-windows-wsl))
+  (cond ((or (getenv "DISPLAY") (getenv "TERM_PROGRAM") (is-windows-wsl))
          ;; In this case the host has X running. We assume that emacs is running
          ;; under screen or tmux.
          (defun xsel-cut-function (text &optional push)
@@ -119,9 +119,9 @@
                   (shell-command-to-string (if (eq system-type 'darwin) "pbpaste" "xsel --clipboard --output"))))
              (unless (string= (car kill-ring) xsel-output)
                xsel-output)))
-         (if (getenv "TMUX")
-             (setq interprogram-cut-function 'osc52-select-text)
-           (setq interprogram-cut-function 'osc52-select-text-dcs))
+         (cond ((getenv "TMUX") (setq interprogram-cut-function 'osc52-select-text))
+               ((getenv "STY") (setq interprogram-cut-function 'osc52-select-text-dcs))
+               (t (setq interprogram-cut-function 'xsel-cut-function)))
          (setq interprogram-paste-function 'xsel-paste-function))
         ((getenv "SSH_TTY")
          ;; On the host, X is not running, emacs runs under screen/tmux remotely.
