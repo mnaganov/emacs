@@ -96,7 +96,9 @@
 ;; clipboard functions need to be set up in order to interact with
 ;; external clipboards
 (unless window-system
-  (cond ((or (getenv "DISPLAY") (getenv "TERM_PROGRAM") (is-windows-wsl))
+  (cond ((or (getenv "DISPLAY") ;; X/Wayland
+             (and (getenv "TERM_PROGRAM") (eq system-type 'darwin))
+             (is-windows-wsl))
          ;; In this case the host has X running. We assume that emacs is running
          ;; under screen or tmux.
          (defun xsel-cut-function (text &optional push)
