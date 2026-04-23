@@ -305,99 +305,107 @@
         (if (not proc)
             string
           (with-current-buffer (process-buffer proc)
-            (let* ((inhibit-read-only t)
-                   (inhibit-field-text-motion t)
-                   (pm (process-mark proc))
-                   (true-pm (or comint-9term--true-pm
-                                (setq comint-9term--true-pm
-                                      (let ((m (copy-marker pm)))
-                                        (set-marker-insertion-type m t)
-                                        m))))
-                   (start 0))
-              (goto-char true-pm)
-              (let ((min-p (point))
-                    (max-p (point)))
-                ;; Check for height override
-                (when (string-match "9TERM_SET_HEIGHT=\\([0-9]+\\)" string)
-                  (setq comint-9term-height-override (string-to-number (match-string 1 string))))
+            (save-match-data
+              (let* ((inhibit-read-only t)
+                     (inhibit-field-text-motion t)
+                     (pm (process-mark proc))
+                     (saved-point (copy-marker (point) t))
+                     (true-pm (or comint-9term--true-pm
+                                  (setq comint-9term--true-pm
+                                        (let ((m (copy-marker pm)))
+                                          (set-marker-insertion-type m t)
+                                          m))))
+                     (start 0))
+                (unwind-protect
+                    (progn
+                      (goto-char true-pm)
+                      (let ((min-p (point))
+                            (max-p (point)))
+                        ;; Check for height override
+                        (when (string-match "9TERM_SET_HEIGHT=\\([0-9]+\\)" string)
+                          (setq comint-9term-height-override (string-to-number (match-string 1 string))))
 
-                (sleep-for 0) ; Process signals to prevent massive chunk buffering
+                        (sleep-for 0) ; Process signals to prevent massive chunk buffering
 
-                ;; Prepend any partial sequence from previous run
-                (when (and comint-9term-partial-seq (> (length comint-9term-partial-seq) 0))
-                  (when (buffer-live-p comint-9term-trace-buffer)
-                    (with-current-buffer comint-9term-trace-buffer
-                      (goto-char (point-max))
-                      (insert ";; PARTIAL_SEQ_SAVED\n")))
-                  (setq string (concat comint-9term-partial-seq string))
-                  (setq comint-9term-partial-seq ""))
+                        ;; Prepend any partial sequence from previous run
+                        (when (and comint-9term-partial-seq (> (length comint-9term-partial-seq) 0))
+                          (when (buffer-live-p comint-9term-trace-buffer)
+                            (with-current-buffer comint-9term-trace-buffer
+                              (goto-char (point-max))
+                              (insert ";; PARTIAL_SEQ_SAVED\n")))
+                          (setq string (concat comint-9term-partial-seq string))
+                          (setq comint-9term-partial-seq ""))
 
-                (comint-watch-for-password-prompt string)
+                        (comint-watch-for-password-prompt string)
 
-                (while (string-match comint-9term-control-seq-regexp string start)
-                  (let* ((pre-end (match-beginning 0))
-                         (is-csi (match-beginning 2))
-                         (is-sc (match-beginning 4))
-                         (seq-end (match-end 0)))
-                    (comint-9term-insert-and-overwrite true-pm string start pre-end)
-                    (setq min-p (min min-p (point)))
-                    (setq max-p (max max-p (point)))
-                    (cond
-                     (is-csi
-                      (let ((char (aref (match-string 3 string) 0))
-                            (params (match-string 2 string)))
-                        (cond
-                         ((memq char '(?A ?B ?C ?D ?F ?G ?H ?f ?J ?K ?r))
-                          (comint-9term-handle-csi char (comint-9term-parse-params params (if (memq char '(?J ?K)) 0 1))))
-                         ((eq char ?m)
-                          (let ((start-p (point))
-                                (sgr (match-string 0 string)))
-                            (insert sgr)
-                            (when (fboundp 'ansi-color-apply-on-region)
-                              (ansi-color-apply-on-region start-p (point))))))))
-                     (is-sc
-                      (let ((esc-char (aref (match-string 4 string) 0)))
-                        (cond
-                         ((eq esc-char ?7)
-                          (unless comint-9term-saved-pos
-                            (setq comint-9term-saved-pos (make-marker))
-                            (set-marker-insertion-type comint-9term-saved-pos nil))
-                          (set-marker comint-9term-saved-pos (point)))
-                         ((eq esc-char ?8) (when comint-9term-saved-pos (goto-char comint-9term-saved-pos)))
-                         ((eq esc-char ?J) (comint-9term-handle-csi ?J '(0)))
-                         ((eq esc-char ?K) (comint-9term-handle-csi ?K '(0))))))
-                     (t ;; OSC sequence
-                      (let ((start-p (point)))
-                        (insert (match-string 0 string))
-                        (cond
-                         ((fboundp 'ansi-osc-apply-on-region)
-                          (ansi-osc-apply-on-region start-p (point)))
-                         ((fboundp 'comint-osc-process-output)
-                          (let ((comint-last-output-start (1+ start-p)))
-                            (comint-osc-process-output nil)))))))
-                    (setq min-p (min min-p (point)))
-                    (setq max-p (max max-p (point)))
-                    (set-marker true-pm (point))
-                    (setq start seq-end)))
+                        (while (string-match comint-9term-control-seq-regexp string start)
+                          (let* ((pre-end (match-beginning 0))
+                                 (is-csi (match-beginning 2))
+                                 (is-sc (match-beginning 4))
+                                 (seq-end (match-end 0)))
+                            (comint-9term-insert-and-overwrite true-pm string start pre-end)
+                            (setq min-p (min min-p (point)))
+                            (setq max-p (max max-p (point)))
+                            (cond
+                             (is-csi
+                              (let ((char (aref (match-string 3 string) 0))
+                                    (params (match-string 2 string)))
+                                (cond
+                                 ((memq char '(?A ?B ?C ?D ?F ?G ?H ?f ?J ?K ?r))
+                                  (comint-9term-handle-csi char (comint-9term-parse-params params (if (memq char '(?J ?K)) 0 1))))
+                                 ((eq char ?m)
+                                  (let ((start-p (point))
+                                        (sgr (match-string 0 string)))
+                                    (insert sgr)
+                                    (when (fboundp 'ansi-color-apply-on-region)
+                                      (ansi-color-apply-on-region start-p (point))))))))
+                             (is-sc
+                              (let ((esc-char (aref (match-string 4 string) 0)))
+                                (cond
+                                 ((eq esc-char ?7)
+                                  (unless comint-9term-saved-pos
+                                    (setq comint-9term-saved-pos (make-marker))
+                                    (set-marker-insertion-type comint-9term-saved-pos nil))
+                                  (set-marker comint-9term-saved-pos (point)))
+                                 ((eq esc-char ?8) (when comint-9term-saved-pos (goto-char comint-9term-saved-pos)))
+                                 ((eq esc-char ?J) (comint-9term-handle-csi ?J '(0)))
+                                 ((eq esc-char ?K) (comint-9term-handle-csi ?K '(0))))))
+                             (t ;; OSC sequence
+                              (let ((start-p (point)))
+                                (insert (match-string 0 string))
+                                (cond
+                                 ((fboundp 'ansi-osc-apply-on-region)
+                                  (ansi-osc-apply-on-region start-p (point)))
+                                 ((fboundp 'comint-osc-process-output)
+                                  (let ((comint-last-output-start (1+ start-p)))
+                                    (comint-osc-process-output nil)))))))
+                            (setq min-p (min min-p (point)))
+                            (setq max-p (max max-p (point)))
+                            (set-marker true-pm (point))
+                            (setq start seq-end)))
 
-                ;; Handle remainder and check for partial sequence
-                (if (string-match "\e" string start)
-                    (let ((esc-idx (match-beginning 0)))
-                      (comint-9term-insert-and-overwrite true-pm string start esc-idx)
-                      (setq comint-9term-partial-seq (substring string esc-idx)))
-                  (comint-9term-insert-and-overwrite true-pm string start)
-                  (setq comint-9term-partial-seq ""))
+                        ;; Handle remainder and check for partial sequence
+                        (if (string-match "\e" string start)
+                            (let ((esc-idx (match-beginning 0)))
+                              (comint-9term-insert-and-overwrite true-pm string start esc-idx)
+                              (setq comint-9term-partial-seq (substring string esc-idx)))
+                          (comint-9term-insert-and-overwrite true-pm string start)
+                          (setq comint-9term-partial-seq ""))
 
-                (setq min-p (min min-p (point)))
-                (setq max-p (max max-p (point)))
-                (set-marker true-pm (point))
-                (set-marker pm (point))
+                        (setq min-p (min min-p (point)))
+                        (setq max-p (max max-p (point)))
+                        (set-marker true-pm (point))
+                        (set-marker pm (point))
 
-                (let ((clamped-max (min max-p (point-max))))
-                  (when (and (fboundp 'comint--mark-as-output)
-                             (not comint-use-prompt-regexp)
-                             (< min-p clamped-max))
-                    (comint--mark-as-output min-p clamped-max))))))))
+                        (let ((clamped-max (min max-p (point-max))))
+                          (when (and (fboundp 'comint--mark-as-output)
+                                     (not comint-use-prompt-regexp)
+                                     (< min-p clamped-max))
+                            (comint--mark-as-output min-p clamped-max))))
+                  (progn
+                    (goto-char saved-point)
+                    (set-marker saved-point nil))))))))
+)
     (error (message "Filter error: %S" err) nil))
   "")
 
