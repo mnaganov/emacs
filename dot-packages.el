@@ -293,7 +293,16 @@
         (setq-default gptel-backend my-gemini-backend)
         (setq-default gptel-model 'gemini-pro-latest)))
     (require 'gptel-context)
-    (require 'gptel-transient)))
+    (require 'gptel-transient)
+    (defvar gptel-prefix-map
+      (define-keymap
+        ;; Caveat! With 'cua-mode', when adding a selection to context,
+        ;; double-tap 'C-x' to avoid invoking "cut" function.
+        "a" #'gptel-add
+        "m" #'gptel-menu
+        "r" #'gptel-context-remove-all)
+      "Map for gptel commands.")
+    (keymap-set global-map "C-x g" gptel-prefix-map)))
 
 ;; NOTE: If at some point you decide you need `xterm-color`,
 ;; here is how to set it up:
