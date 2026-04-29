@@ -6,6 +6,8 @@
 (global-set-key [delete] 'delete-char)
 (global-set-key [kp-delete] 'delete-char)
 
+(global-set-key (kbd "C-c d") 'delete-trailing-whitespace)
+
 ;; I love to use diff mode and use it more often than macros,
 ;; but it's a disaster when it's applied to a wrong buffer.
 (defun my-switch-fundamental-to-diff-mode ()
