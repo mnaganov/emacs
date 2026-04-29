@@ -6,9 +6,6 @@
 (global-set-key [delete] 'delete-char)
 (global-set-key [kp-delete] 'delete-char)
 
-;; Use C-h as delete instead of invoking help. For help, use M-x help-command
-(global-set-key "\C-h" 'delete-backward-char)
-
 ;; I love to use diff mode and use it more often than macros,
 ;; but it's a disaster when it's applied to a wrong buffer.
 (defun my-switch-fundamental-to-diff-mode ()
