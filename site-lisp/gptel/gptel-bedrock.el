@@ -38,6 +38,27 @@
                              (:include gptel-backend))
   model-region)
 
+(defun gptel--bedrock-update-tokens (usage info)
+  "Update token usage information from USAGE.
+USAGE is part of the response, INFO is the request plist.
+
+This function accumulates token counts across multiple turns in a
+multi-turn request (e.g., during tool use where results are fed
+back to the LLM)."
+  (when usage
+    (let ((input (or (plist-get usage :inputTokens) 0))
+          (output (or (plist-get usage :outputTokens) 0))
+          (cached (or (plist-get usage :cacheReadInputTokens) 0))
+          (cache (or (plist-get usage :cacheWriteInputTokens) 0)))
+      ;; Total input is input + cache (creation) + cached.  We combine input and
+      ;; cache (not cached!) because gptel's UI doesn't distinguish between them.
+      (let ((tokens (list :input (+ input cache) :output output
+                          :cached cached :cache cache)))
+        (plist-put info :tokens tokens) ;Tokens for this turn
+        (plist-put info :tokens-full    ;Tokens for full request
+                   (gptel--sum-plists (plist-get info :tokens-full)
+                                      tokens))))))
+
 (defconst gptel-bedrock--prompt-type
   ;; For documentation purposes only -- this describes the type of prompt objects that get passed
   ;; around. https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Message.html
@@ -96,10 +117,7 @@ TOOLS is a list of `gptel-tool' structs, which see."
 
 Mutate state INFO with response metadata."
   (plist-put info :stop-reason (plist-get response :stopReason))
-  (plist-put info :input-tokens
-             (map-nested-elt response '(:usage :inputTokens)))
-  (plist-put info :output-tokens
-             (map-nested-elt response '(:usage :outputTokens)))
+  (gptel--bedrock-update-tokens (plist-get response :usage) info)
 
   (let* ((message (map-nested-elt response '(:output :message)))
          (content-strs (thread-last (plist-get message :content)
@@ -180,8 +198,7 @@ INFO is a plist containing the request context."
               (push event (car acc-cell)))
             (pcase event-type
               ("metadata"
-               (plist-put info :input-tokens (map-nested-elt event '(:payload :usage :inputTokens)))
-               (plist-put info :output-tokens (map-nested-elt event '(:payload :usage :outputTokens))))
+               (gptel--bedrock-update-tokens (map-nested-elt event '(:payload :usage)) info))
               ("contentBlockDelta"
                (when-let ((delta-text (map-nested-elt event '(:payload :delta :text))))
                  (push delta-text strings)))
@@ -352,16 +369,19 @@ received."
                   (start (car block-events))
                   (deltas (cdr block-events)))
              (when-let ((tool-use (map-nested-elt start '(:payload :start :toolUse))))
-               (let ((id (plist-get tool-use :toolUseId))
-                     (name (plist-get tool-use :name))
-                     (input (gptel--json-read-string
-                             (mapconcat
-                              (lambda (delta) (map-nested-elt delta '(:payload :delta :toolUse :input)))
-                              deltas))))
+               (let* ((id (plist-get tool-use :toolUseId))
+                      (name (plist-get tool-use :name))
+                      (input-str
+                       (mapconcat (lambda (delta) (map-nested-elt
+                                              delta '(:payload :delta :toolUse :input)))
+                                  deltas))
+                      (input (unless (string-blank-p input-str)
+                               (gptel--json-read-string input-str))))
                  (push
                   (list :toolUse (list :input input :name name :toolUseId id))
                   contents)))
-             (when-let ((texts (delq nil (mapcar (lambda (d) (map-nested-elt d '(:payload :delta :text))) deltas))))
+             (when-let ((texts (delq nil (mapcar (lambda (d) (map-nested-elt d '(:payload :delta :text)))
+                                                 deltas))))
                (push (list :text (apply #'concat texts)) contents))
              ;; Currently we discard any reasoning content but this would be the spot to handle it
              ))
@@ -458,6 +478,44 @@ The output is a vector of entries in Bedrock API format."
 
 ;; gptel--inject-prompt not needed since the default implementation works here
 
+(cl-defmethod gptel--inject-tool-call ((_backend gptel-bedrock) data tool-call new-call)
+  "Replace TOOL-CALL in query DATA with NEW-CALL.
+
+BACKEND is the `gptel-backend'.  See the generic function documentation
+for details.  This implementation handles the AWS Bedrock API."
+  ;; FIXME: We currently assume that the tool call being modified is in the last
+  ;; position in the messages array.
+  (if-let* ((messages (plist-get data :messages))
+            (entry (aref messages (1- (length messages))))
+            (contents (plist-get entry :content))
+            (id (plist-get tool-call :id))
+            (indexed-call
+             (cl-loop for chunk across contents
+                      for i upfrom 0
+                      for tool-use = (plist-get chunk :toolUse)
+                      if (and tool-use (equal (plist-get tool-use :toolUseId) id))
+                      return (list i chunk tool-use)
+                      finally return nil))
+            (index (nth 0 indexed-call))
+            (chunk (nth 1 indexed-call))
+            (call (nth 2 indexed-call)))
+      (if (null new-call)
+          (if (= (length contents) 1)
+              (plist-put data :messages (substring messages nil -1))
+            (plist-put entry :content
+                       (vconcat (substring contents 0 index)
+                                (substring contents (1+ index)))))
+        (when-let* ((args (plist-get new-call :args)))
+          (setq call (plist-put call :input args)))
+        (when-let* ((name (plist-get new-call :name)))
+          (setq call (plist-put call :name name)))
+        (plist-put chunk :toolUse call))
+    (display-warning
+     '(gptel tool-call)
+     (format "Could not inject updated tool-call arguments for tool call %s, %s"
+             (plist-get tool-call :name)
+             (truncate-string-to-width (prin1-to-string new-call) 50 nil nil t)))))
+
 (cl-defmethod gptel--parse-tool-results ((_backend gptel-bedrock) tool-use-requests)
   "Return a backend-appropriate prompt containing tool call results.
 
@@ -478,6 +536,12 @@ conversation."
 (defvar gptel-bedrock--aws-profile-cache nil
   "Cache for AWS profile credentials in the form of (PROFILE . CREDS).")
 
+(defvar gptel-bedrock-aws-cli-command (executable-find "aws")
+  "Path to the AWS CLI command.
+
+Can be customized to use a specific AWS CLI installation,
+e.g. \"/usr/local/bin/aws\".")
+
 (defun gptel-bedrock--fetch-aws-profile-credentials (profile &optional clear-cache)
   "Fetch & cache AWS credentials for PROFILE using aws-cli.
 
@@ -491,7 +555,8 @@ Non-nil CLEAR-CACHE will refresh credentials."
              (or (and (not clear-cache) (cdr cell))
                  (setf (cdr cell)
                        (with-temp-buffer
-		           (unless (zerop (apply #'call-process "aws" nil t nil "configure" "export-credentials"
+		           (unless (zerop (apply #'call-process gptel-bedrock-aws-cli-command
+                                                 nil t nil "configure" "export-credentials"
                                                  (unless (eql profile :static) (list (format "--profile=%s" profile)))))
 		             (user-error "Failed to get AWS credentials from profile"))
 		         (json-parse-string (buffer-string)))))))
@@ -606,7 +671,8 @@ export-credentials.  BEARER-TOKEN is the token used for authentication."
 
 (defun gptel-bedrock--curl-version ()
   "Check Curl version required for gptel-bedrock."
-  (let* ((output (shell-command-to-string "curl --version"))
+  (let* ((output (shell-command-to-string
+                  (concat (gptel--curl-path) " --version")))
          (version (and (string-match "^curl \\([0-9.]+\\)" output)
                        (match-string 1 output))))
     version))
@@ -653,7 +719,7 @@ parameters (as plist keys) and values supported by the API."
            :curl-args (lambda () (append curl-args (gptel-bedrock--curl-args region aws-profile aws-bearer-token)))
            :request-params request-params
            :url
-           (lambda ()
+           (lambda (_info)
              (concat protocol "://" host
                      "/model/" (gptel-bedrock--get-model-id gptel-model model-region)
                      "/" (if stream "converse-stream" "converse")))))))

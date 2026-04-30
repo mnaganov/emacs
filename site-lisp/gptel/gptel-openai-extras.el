@@ -112,8 +112,9 @@
 (cl-defun gptel-make-privategpt
     (name &key curl-args stream key request-params
           (header
-           (lambda () (when-let* ((key (gptel--get-api-key)))
-		   `(("Authorization" . ,(concat "Bearer " key))))))
+           (lambda (_info)
+             (when-let* ((key (gptel--get-api-key)))
+	       `(("Authorization" . ,(concat "Bearer " key))))))
           (host "localhost:8001")
           (protocol "http")
 	  (models '(private-gpt))
@@ -190,7 +191,7 @@ for."
 
 (cl-defmethod gptel--parse-response ((_backend gptel-perplexity) response _info)
   "Parse Perplexity response RESPONSE."
-  (let ((response-string (map-nested-elt response '(:choices 0 :message :content)))
+  (let ((response-string (cl-call-next-method))
         (citations-string (when-let* ((citations (map-elt response :citations)))
 			    (gptel--perplexity-parse-citations citations))))
     (concat response-string citations-string)))
@@ -204,7 +205,7 @@ the response."
     (unless (plist-get info :citations)
       (save-excursion
         (goto-char (point-max))
-        (when (search-backward (plist-get info :token)
+        (when (search-backward (plist-get info :uuid)
                                (line-beginning-position) t)
           (forward-line 0)
           (when (re-search-backward "^data: " nil t)
@@ -221,8 +222,9 @@ the response."
 (cl-defun gptel-make-perplexity
     (name &key curl-args stream key
           (header
-           (lambda () (when-let* ((key (gptel--get-api-key)))
-                   `(("Authorization" . ,(concat "Bearer " key))))))
+           (lambda (_info)
+             (when-let* ((key (gptel--get-api-key)))
+               `(("Authorization" . ,(concat "Bearer " key))))))
           (host "api.perplexity.ai")
           (protocol "https")
           ;; https://docs.perplexity.ai/guides/model-cards
@@ -292,30 +294,44 @@ The Deepseek API requires strictly alternating roles (user/assistant) in message
               (rest (cdr index)))
           (when (and p2 (equal (plist-get p1 :role)
                                (plist-get p2 :role)))
-            (setf (plist-get p1 :content)
-                  (concat (plist-get p1 :content) "\n"
-                          (plist-get p2 :content)))
-            (setcdr index (cdr rest)))
+            ;; Blocks to be merged must both be text blocks
+            ;; and not tool calls
+            (when-let* ((content1 (plist-get p1 :content))
+                        (content2 (plist-get p2 :content)))
+              (plist-put p1 :content
+                         (concat content1 "\n" content2))
+              (setcdr index (cdr rest))))
           (setq index (cdr index)))))))
 
 ;;;###autoload
 (cl-defun gptel-make-deepseek
     (name &key curl-args stream key request-params
-          (header (lambda () (when-let* ((key (gptel--get-api-key)))
-                          `(("Authorization" . ,(concat "Bearer " key))))))
+          (header (lambda (_info)
+                    (when-let* ((key (gptel--get-api-key)))
+                      `(("Authorization" . ,(concat "Bearer " key))))))
           (host "api.deepseek.com")
           (protocol "https")
           (endpoint "/v1/chat/completions")
           (models '((deepseek-reasoner
                      :capabilities (tool reasoning)
                      :context-window 128
-                     :input-cost 0.56
-                     :output-cost 1.68)
+                     :input-cost 0.28
+                     :output-cost 0.42)
                     (deepseek-chat
                      :capabilities (tool)
                      :context-window 128
-                     :input-cost 0.56
-                     :output-cost 1.68))))
+                     :input-cost 0.28
+                     :output-cost 0.42)
+		    (deepseek-v4-flash
+                     :capabilities (tool reasoning)
+                     :context-window 1000
+                     :input-cost 0.14
+                     :output-cost 0.28)
+                    (deepseek-v4-pro
+                     :capabilities (tool reasoning)
+                     :context-window 1000
+                     :input-cost 1.74
+                     :output-cost 3.48))))
   "Register a DeepSeek backend for gptel with NAME.
 
 For the meanings of the keyword arguments, see `gptel-make-openai'."
@@ -339,18 +355,26 @@ For the meanings of the keyword arguments, see `gptel-make-openai'."
 ;;;###autoload
 (cl-defun gptel-make-xai
     (name &key curl-args stream key request-params
-          (header (lambda () (when-let* ((key (gptel--get-api-key)))
-                          `(("Authorization" . ,(concat "Bearer " key))))))
+          (header (lambda (_info)
+                    (when-let* ((key (gptel--get-api-key)))
+                      `(("Authorization" . ,(concat "Bearer " key))))))
           (host "api.x.ai")
           (protocol "https")
           (endpoint "/v1/chat/completions")
           (models
-           '((grok-4
-              :description "Grok Flagship model"
+           '((grok-4-1-fast-reasoning
+              :description "Fast tool-calling model"
               :capabilities (tool-use json reasoning)
-              :context-window 256
-              :input-cost 3
-              :output-cost 15)
+              :context-window 2000
+              :input-cost 0.2
+              :output-cost 0.5)
+
+             (grok-4-1-fast-non-reasoning
+              :description "Fast tool-calling model (non-reasoning)"
+              :capabilities (tool-use json)
+              :context-window 2000
+              :input-cost 0.2
+              :output-cost 0.5)
 
              (grok-code-fast-1
               :description "Fast reasoning model for agentic coding"
@@ -359,19 +383,26 @@ For the meanings of the keyword arguments, see `gptel-make-openai'."
               :input-cost 0.2
               :output-cost 1.5)
 
-             (grok-3
-              :description "Grok 3"
+             (grok-4-fast-reasoning
+              :description "Fast tool-calling model"
               :capabilities (tool-use json reasoning)
-              :context-window 131
+              :context-window 2000
+              :input-cost 0.2
+              :output-cost 0.5)
+
+             (grok-4-fast-non-reasoning
+              :description "Fast tool-calling model (non-reasoning)"
+              :capabilities (tool-use json)
+              :context-window 2000
+              :input-cost 0.2
+              :output-cost 0.5)
+
+             (grok-4
+              :description "Grok Flagship model"
+              :capabilities (tool-use json reasoning)
+              :context-window 256
               :input-cost 3
               :output-cost 15)
-
-             (grok-3-fast
-              :description "Faster Grok 3"
-              :capabilities (tool-use json reasoning)
-              :context-window 131
-              :input-cost 5
-              :output-cost 25)
 
              (grok-3-mini
               :description "Mini Grok 3"
@@ -380,18 +411,18 @@ For the meanings of the keyword arguments, see `gptel-make-openai'."
               :input-cost 0.3
               :output-cost 0.5)
 
-             (grok-3-mini-fast
-              :description "Faster mini Grok 3"
+             (grok-3
+              :description "Grok 3"
               :capabilities (tool-use json reasoning)
-              :context-window 131072
-              :input-cost 0.6
-              :output-cost 4)
+              :context-window 131
+              :input-cost 3
+              :output-cost 15)
 
              (grok-2-vision-1212
               :description "Grok 2 Vision"
               :capabilities (tool-use json media)
               :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp")
-              :context-window 32768
+              :context-window 32
               :input-cost 2
               :output-cost 10))))
   "Register an xAI backend for gptel with NAME.
