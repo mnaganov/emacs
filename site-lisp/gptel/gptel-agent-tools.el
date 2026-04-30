@@ -1413,7 +1413,7 @@ PROMPT is the detailed prompt instructing the agent on what is required."
                    (copy-sequence
                     (cl-etypecase gptel-agent-preset
                       (symbol (gptel-get-preset gptel-agent-preset))
-                      (plist gptel-agent-preset))))
+                      (list gptel-agent-preset))))
               (cdr (assoc agent-type gptel-agent--agents)))
     (let* ((info (gptel-fsm-info gptel--fsm-last))
            (where (or (plist-get info :tracking-marker)
