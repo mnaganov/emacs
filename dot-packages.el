@@ -299,6 +299,7 @@
         ;; Caveat! With 'cua-mode', when adding a selection to context,
         ;; double-tap 'C-x' to avoid invoking "cut" function.
         "a" #'gptel-add
+        "g" #'gptel
         "m" #'gptel-menu
         "r" #'gptel-context-remove-all)
       "Map for gptel commands.")
