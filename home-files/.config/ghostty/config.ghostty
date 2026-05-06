@@ -41,3 +41,6 @@ palette = 15=#fdf6e4
 # Bell settings
 desktop-notifications = false
 bell-features = false
+
+# Notifications
+app-notifications = false
