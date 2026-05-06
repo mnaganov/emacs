@@ -3,11 +3,12 @@ term = xterm-16color
 
 # Font
 font-family = "Noto Sans Mono"
-font-style = "SemiBold"
+font-style = "Medium"
 font-size = 13
 
 # Visuals
 bold-is-bright = false
+minimum-contrast = 1.01
 
 # Colors - Foreground & Background
 background = #fdf6e4
