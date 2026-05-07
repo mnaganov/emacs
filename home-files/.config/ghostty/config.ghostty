@@ -5,9 +5,19 @@ term = xterm-256color
 font-family = "Noto Sans Mono SemiCondensed"
 font-style = "Medium"
 font-size = 9.5
+# Bold Font (Switch family to drop 'SemiCondensed')
+font-family-bold = "Noto Sans Mono"
+font-style-bold = "Bold"
+
+# Disable Italic (Force it to use the exact same font as regular text)
+font-family-italic = "Noto Sans Mono SemiCondensed"
+font-style-italic = "Medium"
+
+# Disable Bold Italic (Force it to use the exact same font as bold text)
+font-family-bold-italic = "Noto Sans Mono"
+font-style-bold-italic = "Bold"
 
 # Visuals
-bold-is-bright = false
 minimum-contrast = 1.01
 
 # Colors - Foreground & Background
