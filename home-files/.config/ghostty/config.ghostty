@@ -18,7 +18,7 @@ font-family-bold-italic = "Noto Sans Mono"
 font-style-bold-italic = "Bold"
 
 # Visuals
-minimum-contrast = 1.01
+minimum-contrast = 1.67
 
 # Colors - Foreground & Background
 background = #fdf6e4
