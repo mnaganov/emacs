@@ -9,6 +9,7 @@ font-size = 13
 # Visuals
 bold-is-bright = false
 minimum-contrast = 1.01
+window-colorspace = display-p3
 
 # Colors - Foreground & Background
 background = #fdf6e4
