@@ -2694,25 +2694,26 @@ TOP defaults to 1 and BOTTOM defaults to the height of the display."
                 nil t)))))
     ;; Update face according to the attributes.
     (setf (eat--t-face-face face)
-          `(,@(and-let* ((fg (or (if (eat--t-face-conceal face)
-                                     (eat--t-face-bg face)
-                                   (eat--t-face-fg face))
-                                 (cond
-                                  ((eat--t-face-inverse face)
-                                   (face-foreground 'default))
-                                  ((eat--t-face-conceal face)
-                                   (face-background 'default))))))
-                (list (if (eat--t-face-inverse face)
-                          :background
-                        :foreground)
-                      fg))
-            ,@(and-let* ((bg (or (eat--t-face-bg face)
-                                 (and (eat--t-face-inverse face)
-                                      (face-background 'default)))))
-                (list (if (eat--t-face-inverse face)
-                          :foreground
-                        :background)
-                      bg))
+          `(
+            ;; ,@(and-let* ((fg (or (if (eat--t-face-conceal face)
+            ;;                          (eat--t-face-bg face)
+            ;;                        (eat--t-face-fg face))
+            ;;                      (cond
+            ;;                       ((eat--t-face-inverse face)
+            ;;                        (face-foreground 'default))
+            ;;                       ((eat--t-face-conceal face)
+            ;;                        (face-background 'default))))))
+            ;;     (list (if (eat--t-face-inverse face)
+            ;;               :background
+            ;;             :foreground)
+            ;;           fg))
+            ;; ,@(and-let* ((bg (or (eat--t-face-bg face)
+            ;;                      (and (eat--t-face-inverse face)
+            ;;                           (face-background 'default)))))
+            ;;     (list (if (eat--t-face-inverse face)
+            ;;               :foreground
+            ;;             :background)
+            ;;           bg))
             ,@(and-let* ((underline (eat--t-face-underline face)))
                 (list
                  :underline

@@ -7,7 +7,7 @@
  '(company-idle-delay 3)
  '(compilation-scroll-output t)
  '(eat-minimum-latency 0.05)
- '(eat-term-name "eat-256color")
+ '(eat-term-name "eat-mono")
  '(eglot-ignored-server-capabilities '(:inlayHintProvider :semanticTokensProvider))
  '(eldoc-echo-area-prefer-doc-buffer t)
  '(eldoc-echo-area-use-multiline-p nil)
