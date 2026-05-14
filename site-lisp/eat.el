@@ -2714,6 +2714,12 @@ TOP defaults to 1 and BOTTOM defaults to the height of the display."
             ;;               :foreground
             ;;             :background)
             ;;           bg))
+            ;;
+            ;; Apply inverse-video if a background color is set,
+            ;; or if the terminal explicitly requested inverse video.
+            ,@(and-let* ((inverse (or (eat--t-face-bg face)
+                                      (eat--t-face-inverse face))))
+                `(:inverse-video t))
             ,@(and-let* ((underline (eat--t-face-underline face)))
                 (list
                  :underline
