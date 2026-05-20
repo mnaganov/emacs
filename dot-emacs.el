@@ -286,6 +286,30 @@
           (diff-mode))))))
 (advice-add 'shell-command :after #'auto-enable-diff-mode-in-shell-output)
 
+;; Remember the command and the directory for shell command output
+;; so that the command can be re-run (similar to compile buffer).
+
+(defvar-local my-shell-command-string nil)
+(defvar-local my-shell-command-dir nil)
+
+(defun my-shell-command-revert-fn (&rest _)
+  (when (and my-shell-command-string my-shell-command-dir)
+    (let ((default-directory my-shell-command-dir))
+      (shell-command my-shell-command-string (current-buffer)))))
+
+(defun my-shell-command-remember (command &optional output-buffer &rest _)
+  (let ((buf-name (cond ((bufferp output-buffer) (buffer-name output-buffer))
+                        ((stringp output-buffer) output-buffer)
+                        (t "*Shell Command Output*"))))
+    (when-let ((buf (get-buffer buf-name)))
+      (with-current-buffer buf
+        (setq my-shell-command-string command)
+        (setq my-shell-command-dir default-directory)
+        ;; Bind 'g' to revert/refresh the buffer
+        (local-set-key (kbd "g") #'revert-buffer)))))
+
+(advice-add 'shell-command :after #'my-shell-command-remember)
+
 ;; == Set up packages ==
 
 (load-file (concat emacs-root "dot-packages.el"))
