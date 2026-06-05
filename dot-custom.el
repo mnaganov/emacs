@@ -6,6 +6,7 @@
  '(ag-reuse-buffers t)
  '(company-idle-delay 3)
  '(compilation-scroll-output t)
+ '(eat-enable-shell-prompt-annotation nil)
  '(eat-minimum-latency 0.05)
  '(eat-term-name "eat-mono")
  '(eglot-ignored-server-capabilities '(:inlayHintProvider :semanticTokensProvider))
