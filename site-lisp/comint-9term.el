@@ -63,6 +63,15 @@
 ;;  * Short-form Erasure (ZLE extensions):
 ;;      * \eJ: Erase in Display (Z-Shell Line Editor short sequence)
 ;;      * \eK: Erase in Line (Z-Shell Line Editor short sequence)
+;;  * Cursor Scrolling:
+;;      * RI (\eM): Reverse Index (move cursor up one logical line). Used by tools like
+;;        the Zig build system to rewind to the top of an in-place progress tree.
+;;
+;; 4. Character Set Selection (SCS)
+;;  * \e(0 designates the DEC Special Graphics set into G0 (line-drawing). \e(B (or any
+;;    other final byte) restores US-ASCII. While graphics is active, the line-drawing
+;;    bytes (e.g. t/q/m/x) are translated to their Unicode box-drawing equivalents,
+;;    so trees drawn by Zig/Cargo render as ├─ └─ │ rather than leaking literal `tq`.
 
 (require 'comint)
 (require 'compile)
@@ -80,10 +89,33 @@
 (defvar-local comint-9term-height-override nil)
 (defvar-local comint-9term-origin nil)
 (defvar-local comint-9term-term-height nil)
+(defvar-local comint-9term--charset nil
+  "Active G0 character set: nil for ASCII, `graphics' for DEC Special Graphics.")
 
 (defconst comint-9term-control-seq-regexp
-  "\e\\(\\[\\([?0-9;]*\\)\\([A-Za-z]\\)\\|]\\(?:.*?\\)\\(?:\a\\|\e\\\\\\)\\|\\([78JK]\\)\\)"
-  "Regexp matching supported ANSI escape sequences.")
+  "\e\\(\\[\\([?0-9;]*\\)\\([A-Za-z]\\)\\|]\\(?:.*?\\)\\(?:\a\\|\e\\\\\\)\\|\\([78JKM]\\)\\|(\\(.\\)\\)"
+  "Regexp matching supported ANSI escape sequences.
+Group 2/3 capture CSI params and the final byte; group 4 captures a
+standalone escape (DECSC/DECRC, short ZLE erase, or RI); group 5
+captures the designator byte of a G0 character-set selection (\\e(X).")
+
+(defconst comint-9term--dec-graphics-map
+  '((?j . ?┘) (?k . ?┐) (?l . ?┌) (?m . ?└) (?n . ?┼)
+    (?q . ?─) (?t . ?├) (?u . ?┤) (?v . ?┴) (?w . ?┬) (?x . ?│)
+    (?a . ?▒) (?\` . ?◆) (?~ . ?·) (?o . ?⎺) (?s . ?⎽)
+    (?0 . ?█) (?{ . ?π) (?} . ?£) (?, . ?←) (?+ . ?→) (?. . ?↓) (?- . ?↑))
+  "Translation of DEC Special Graphics bytes to Unicode (used by \\e(0).")
+
+(defun comint-9term--apply-charset (str)
+  "Translate STR according to the active G0 character set.
+For ASCII (the common case) STR is returned unchanged; only when DEC
+Special Graphics is active are the line-drawing bytes mapped to Unicode."
+  (if (eq comint-9term--charset 'graphics)
+      (mapconcat (lambda (c)
+                   (let ((m (assq c comint-9term--dec-graphics-map)))
+                     (string (if m (cdr m) c))))
+                 str "")
+    str))
 
 (defun comint-9term-parse-params (params-str &optional default)
   (setq default (or default 1))
@@ -281,7 +313,8 @@
            (t
             (let ((pos (string-match-p "[\n\r\b]" text idx)))
               (let ((chunk-end (if (and pos (< pos end)) pos end)))
-                (comint-9term-write-chunk (substring text idx chunk-end))
+                (comint-9term-write-chunk
+                 (comint-9term--apply-charset (substring text idx chunk-end)))
                 (setq idx (1- chunk-end))
                 (set-marker marker (point))))))
           (setq idx (1+ idx)))))))
@@ -342,6 +375,7 @@
                           (let* ((pre-end (match-beginning 0))
                                  (is-csi (match-beginning 2))
                                  (is-sc (match-beginning 4))
+                                 (is-charset (match-beginning 5))
                                  (seq-end (match-end 0)))
                             (comint-9term-insert-and-overwrite true-pm string start pre-end)
                             (setq min-p (min min-p (point)))
@@ -369,7 +403,14 @@
                                   (set-marker comint-9term-saved-pos (point)))
                                  ((eq esc-char ?8) (when comint-9term-saved-pos (goto-char comint-9term-saved-pos)))
                                  ((eq esc-char ?J) (comint-9term-handle-csi ?J '(0)))
-                                 ((eq esc-char ?K) (comint-9term-handle-csi ?K '(0))))))
+                                 ((eq esc-char ?K) (comint-9term-handle-csi ?K '(0)))
+                                 ;; RI - Reverse Index: move up one logical line.
+                                 ((eq esc-char ?M) (comint-9term-handle-csi ?A '(1))))))
+                             (is-charset
+                              ;; SCS - designate G0 charset (\e(0 graphics, \e(B ASCII).
+                              (setq comint-9term--charset
+                                    (when (eq (aref (match-string 5 string) 0) ?0)
+                                      'graphics)))
                              (t ;; OSC sequence
                               (let ((start-p (point)))
                                 (insert (match-string 0 string))
