@@ -332,6 +332,28 @@ Special Graphics is active are the line-drawing bytes mapped to Unicode."
           (delete-region p (+ p to-delete))
           (insert chunk))))))
 
+(defun comint-9term--pending-input-start (anchor)
+  "Return the start of trailing user type-ahead after ANCHOR, or nil if none.
+
+When the user types while a command is still running, the typed characters
+sit in the buffer after the process mark as pending input.  We must keep
+that text intact and *after* any output that subsequently arrives, exactly
+as `comint-output-filter' does.  ANCHOR is the real process mark, which
+(having insertion type nil) stays put before such type-ahead even though
+the internal output cursor `comint-9term--true-pm' floats past it.
+
+Type-ahead is distinguished from in-place redraws (where the application
+moved the cursor up and left its own output below ANCHOR) by the absence of
+the `field' = output text property, which `comint--mark-as-output' applies
+to everything the filter writes."
+  (let ((anchor (if (markerp anchor) (marker-position anchor) anchor))
+        (pmax (point-max)))
+    (when (and (< anchor pmax)
+               (not (eq (get-text-property (1- pmax) 'field) 'output)))
+      ;; Trailing text is user input; find where that run begins, but never
+      ;; reach before ANCHOR.
+      (or (previous-single-property-change pmax 'field nil anchor) anchor))))
+
 (defun comint-9term-filter (string)
   (condition-case err
       (let ((proc (get-buffer-process (current-buffer))))
@@ -348,7 +370,16 @@ Special Graphics is active are the line-drawing bytes mapped to Unicode."
                                         (let ((m (copy-marker pm)))
                                           (set-marker-insertion-type m t)
                                           m))))
-                     (start 0))
+                     (start 0)
+                     ;; Shield any user type-ahead: detach it now so the
+                     ;; terminal-overwrite logic operates only on output, then
+                     ;; restore it after the output, as pending input.  The
+                     ;; real process mark PM stays before type-ahead, whereas
+                     ;; `true-pm' (insertion type t) floats past it.
+                     (pending-start (comint-9term--pending-input-start pm))
+                     (pending (when pending-start
+                                (prog1 (buffer-substring pending-start (point-max))
+                                  (delete-region pending-start (point-max))))))
                 (unwind-protect
                     (progn
                       (goto-char true-pm)
@@ -442,7 +473,18 @@ Special Graphics is active are the line-drawing bytes mapped to Unicode."
                           (when (and (fboundp 'comint--mark-as-output)
                                      (not comint-use-prompt-regexp)
                                      (< min-p clamped-max))
-                            (comint--mark-as-output min-p clamped-max))))
+                            (comint--mark-as-output min-p clamped-max)))
+
+                        ;; Restore the shielded type-ahead after the freshly
+                        ;; written output.  `pm' has insertion type nil, so it
+                        ;; stays before the pending input (which therefore gets
+                        ;; sent on the next RET).  `saved-point' (insertion type
+                        ;; t) floats along with the text it was on, so a user
+                        ;; actively typing follows the pending input while a user
+                        ;; reviewing history stays put.
+                        (when pending
+                          (goto-char pm)
+                          (insert pending)))
                   (progn
                     (goto-char saved-point)
                     (set-marker saved-point nil))))))))
