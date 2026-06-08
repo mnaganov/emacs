@@ -484,11 +484,9 @@ to everything the filter writes."
                         ;; reviewing history stays put.
                         (when pending
                           (goto-char pm)
-                          (insert pending)))
-                  (progn
+                          (insert pending))))
                     (goto-char saved-point)
-                    (set-marker saved-point nil))))))))
-)
+                    (set-marker saved-point nil)))))))
     (error (message "Filter error: %S" err) nil))
   "")
 
