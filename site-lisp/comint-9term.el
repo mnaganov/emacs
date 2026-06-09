@@ -140,6 +140,14 @@ Special Graphics is active are the line-drawing bytes mapped to Unicode."
 (defvar-local comint-9term--cached-total-lines nil)
 (defvar-local comint-9term--max-start-line nil)
 
+(defvar comint-9term--hwm nil
+  "High-water mark: the furthest buffer position written during the current
+filter pass. Dynamically bound by `comint-9term-filter'. The plain output
+cursor cannot be used to bound the region marked as output, because carriage
+returns and cursor-up sequences move it back over text the same chunk just
+wrote; that text must still be marked as output so it is not later mistaken
+for user type-ahead.")
+
 (defun comint-9term-start-line ()
   (let* ((tick (buffer-chars-modified-tick))
          (total (if (and comint-9term--last-tick
@@ -299,7 +307,9 @@ Special Graphics is active are the line-drawing bytes mapped to Unicode."
            ((eq c ?\n)
             (setq comint-9term-virtual-col nil)
             (comint-9term--insert-newline-and-scroll)
-            (set-marker marker (point)))
+            (set-marker marker (point))
+            (when comint-9term--hwm
+              (setq comint-9term--hwm (max comint-9term--hwm (point)))))
            ((eq c ?\r)
             (setq comint-9term-virtual-col nil)
             (beginning-of-line)
@@ -316,7 +326,9 @@ Special Graphics is active are the line-drawing bytes mapped to Unicode."
                 (comint-9term-write-chunk
                  (comint-9term--apply-charset (substring text idx chunk-end)))
                 (setq idx (1- chunk-end))
-                (set-marker marker (point))))))
+                (set-marker marker (point))
+                (when comint-9term--hwm
+                  (setq comint-9term--hwm (max comint-9term--hwm (point))))))))
           (setq idx (1+ idx)))))))
 
 (defun comint-9term-write-chunk (chunk)
@@ -384,7 +396,8 @@ to everything the filter writes."
                     (progn
                       (goto-char true-pm)
                       (let ((min-p (point))
-                            (max-p (point)))
+                            (max-p (point))
+                            (comint-9term--hwm (point)))
                         ;; Check for height override
                         (when (string-match "9TERM_SET_HEIGHT=\\([0-9]+\\)" string)
                           (setq comint-9term-height-override (string-to-number (match-string 1 string))))
@@ -465,7 +478,11 @@ to everything the filter writes."
                           (setq comint-9term-partial-seq ""))
 
                         (setq min-p (min min-p (point)))
-                        (setq max-p (max max-p (point)))
+                        ;; Use the high-water mark, not the final cursor: a
+                        ;; chunk that ends with CR/cursor-up (e.g. git/repo
+                        ;; progress bars) leaves the cursor back over text it
+                        ;; just wrote, which must still be marked as output.
+                        (setq max-p (max max-p comint-9term--hwm (point)))
                         (set-marker true-pm (point))
                         (set-marker pm (point))
 
