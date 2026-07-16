@@ -900,8 +900,13 @@ Treat LINE FEED (?\\n) as the line delimiter."
             (goto-char (match-end 0)))
         0)
     (let* ((start-n n)
-           (left (forward-line n)))
-      (- start-n left))))
+           (left (forward-line n))
+           (moved (- start-n left)))
+      (if (and (> n 0)
+               (eobp)
+               (not (eq (char-before) ?\n)))
+          (max 0 (1- moved))
+        moved))))
 
 (defun eat--t-goto-eol (&optional n)
   "Go to the end of current line.
@@ -3363,7 +3368,7 @@ If NULLIFY is non-nil, nullify flushed part of Sixel buffer."
                (?\t
                 (eat--t-horizontal-tab 1))
                (?\n
-                (eat--t-line-feed))
+                (eat--t-index))
                (?\v
                 (eat--t-index))
                (?\f
@@ -3372,9 +3377,7 @@ If NULLIFY is non-nil, nullify flushed part of Sixel buffer."
                 ;; Avoid going to line home just before a line feed,
                 ;; we can just insert a new line if we are at the
                 ;; end of display.
-                (unless (and (/= index (length output))
-                             (= (aref output index) ?\n))
-                  (eat--t-carriage-return)))
+                (eat--t-carriage-return))
                (?\C-n
                 (eat--t-change-charset 'g1))
                (?\C-o
