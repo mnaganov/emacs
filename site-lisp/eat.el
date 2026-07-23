@@ -5782,6 +5782,120 @@ EVENT is the mouse event."
   (eat-term-send-string eat-terminal (read-passwd "Password: "))
   (eat-self-input 1 'return))
 
+(defun eat--resolve-markdown-styles (face-prop)
+  "Resolve FACE-PROP into a list of booleans (IS-CODE IS-BOLD IS-ITALIC).
+IS-CODE is t if face has `:inverse-video' property.
+IS-BOLD is t if face has `eat-term-bold' or `:weight \\='bold'.
+IS-ITALIC is t if face has `eat-term-italic' or `:slant \\='italic'.
+If IS-CODE is t, IS-BOLD and IS-ITALIC are set to nil."
+  (let (code-p bold-p italic-p)
+    (cl-labels
+        ((inspect (spec)
+           (cond
+            ((null spec) nil)
+            ((symbolp spec)
+             (cond
+              ((eq spec 'eat-term-bold) (setq bold-p t))
+              ((eq spec 'eat-term-italic) (setq italic-p t))
+              ((eq spec 'bold) (setq bold-p t))
+              ((eq spec 'italic) (setq italic-p t))
+              ((eq spec 'oblique) (setq italic-p t))
+              ((facep spec)
+               (let ((inv (ignore-errors (face-attribute spec :inverse-video nil nil)))
+                     (w (ignore-errors (face-attribute spec :weight nil nil)))
+                     (s (ignore-errors (face-attribute spec :slant nil nil))))
+                 (when (and inv (not (eq inv 'unspecified)))
+                   (setq code-p t))
+                 (when (memq w '(bold extra-bold semi-bold heavy ultra-bold))
+                   (setq bold-p t))
+                 (when (memq s '(italic oblique))
+                   (setq italic-p t))))))
+            ((listp spec)
+             (if (keywordp (car spec))
+                 (progn
+                   (when (plist-get spec :inverse-video)
+                     (setq code-p t))
+                   (let ((w (plist-get spec :weight)))
+                     (when (memq w '(bold extra-bold semi-bold heavy ultra-bold))
+                       (setq bold-p t)))
+                   (let ((s (plist-get spec :slant)))
+                     (when (memq s '(italic oblique))
+                       (setq italic-p t)))
+                   (when (plist-member spec :inherit)
+                     (inspect (plist-get spec :inherit))))
+               (dolist (item spec)
+                 (inspect item)))))))
+      (inspect face-prop)
+      (if code-p
+          (list t nil nil)
+        (list (and code-p t) (and bold-p t) (and italic-p t))))))
+
+(defun eat--format-state-tags (state)
+  "Return a pair (OPEN-TAG . CLOSE-TAG) for formatting STATE."
+  (pcase state
+    ('(t nil nil) '("`" . "`"))
+    ('(nil t nil) '("**" . "**"))
+    ('(nil nil t) '("*" . "*"))
+    ('(nil t t) '("***" . "***"))
+    (_ '("" . ""))))
+
+(defun eat--region-to-markdown (beg end)
+  "Convert buffer region BEG to END with `eat' text properties to Markdown."
+  (let ((pos beg)
+        (curr-state '(nil nil nil))
+        (output nil))
+    (while (< pos end)
+      (let* ((next-prop (next-property-change pos nil end))
+             (next-nl (save-excursion
+                        (goto-char pos)
+                        (if (search-forward "\n" end t)
+                            (1- (match-beginning 0))
+                          end)))
+             (next-pos (min end next-prop (if (= next-nl pos) (1+ pos) next-nl))))
+        (if (= (char-after pos) ?\n)
+            (progn
+              (unless (equal curr-state '(nil nil nil))
+                (push (cdr (eat--format-state-tags curr-state)) output)
+                (setq curr-state '(nil nil nil)))
+              (push "\n" output)
+              (setq pos (1+ pos)))
+          (let* ((face (get-text-property pos 'face))
+                 (font-lock-face (get-text-property pos 'font-lock-face))
+                 (combined-face (cond
+                                 ((and face font-lock-face) (list face font-lock-face))
+                                 (face face)
+                                 (font-lock-face font-lock-face)
+                                 (t nil)))
+                 (next-state (eat--resolve-markdown-styles combined-face))
+                 (chunk-text (buffer-substring-no-properties pos next-pos)))
+            (unless (equal curr-state next-state)
+              (let ((old-close (cdr (eat--format-state-tags curr-state)))
+                    (new-open (car (eat--format-state-tags next-state))))
+                (push old-close output)
+                (push new-open output)
+                (setq curr-state next-state)))
+            (push chunk-text output)
+            (setq pos next-pos)))))
+    (unless (equal curr-state '(nil nil nil))
+      (push (cdr (eat--format-state-tags curr-state)) output))
+    (let ((raw-md (apply #'concat (nreverse output))))
+      (mapconcat
+       (lambda (line)
+         (let ((trimmed (replace-regexp-in-string "[ \t]+\\([*`]*\\)$" "\\1" line)))
+           (setq trimmed (replace-regexp-in-string "^\\([ \t]*\\)[•◦▪]\\([ \t]+\\)" "\\1-\\2" trimmed))
+           (if (string-match-p "^[*` \t]*$" trimmed)
+               ""
+             trimmed)))
+       (split-string raw-md "\n")
+       "\n"))))
+
+(defun eat-copy-region-as-markdown (beg end)
+  "Copy the region from BEG to END as Markdown to the kill ring."
+  (interactive "r")
+  (let ((md (eat--region-to-markdown beg end)))
+    (kill-new md)
+    (message "Region copied as Markdown")))
+
 ;; When changing these keymaps, be sure to update the manual, README
 ;; and commentary.
 (defvar eat-mode-map
@@ -5793,6 +5907,7 @@ EVENT is the mouse event."
     (define-key map [?\C-c ?\C-p] #'eat-previous-shell-prompt)
     (define-key map [?\C-c ?\C-n] #'eat-next-shell-prompt)
     (define-key map [?\C-x ?n ?d] #'eat-narrow-to-shell-prompt)
+    (define-key map [?\C-c ?\M-w] #'eat-copy-region-as-markdown)
     (define-key map [xterm-paste] #'ignore)
     map)
   "Keymap for Eat mode.")
