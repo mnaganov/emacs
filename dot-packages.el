@@ -260,6 +260,33 @@
 (add-to-list 'auto-mode-alist '("README\\.md\\'" . gfm-mode))
 (add-hook 'gfm-mode-hook 'visual-line-mode)
 
+(defun mdtrap ()
+  "Generate a markdown transcript from a GUID at point."
+  (interactive)
+  (let* ((guid (or (thing-at-point 'uuid t)
+                   (save-excursion
+                     (skip-chars-backward "0-9a-fA-F-")
+                     (buffer-substring-no-properties
+                      (point) (progn (skip-chars-forward "0-9a-fA-F-") (point))))))
+         (transcript (expand-file-name (format "~/.gemini/jetski/brain/%s/.system_generated/logs/transcript_full.jsonl" guid)))
+         (script (concat emacs-root "tools/transcript_to_md.py"))
+         (buf (get-buffer-create (format "*%s-transcript*" guid))))
+    (unless (file-exists-p transcript)
+      (user-error "Transcript not found: %s" transcript))
+    (with-current-buffer buf
+      ;; Store paths in buffer-local variables to ensure they are available on revert
+      (setq-local mdtrap--script script)
+      (setq-local mdtrap--transcript transcript)
+      (setq-local revert-buffer-function
+                  (lambda (&rest _)
+                    (let ((inhibit-read-only t))
+                      (erase-buffer)
+                      (call-process mdtrap--script nil t nil mdtrap--transcript))))
+      ;; Execute for the first time
+      (funcall revert-buffer-function)
+      (markdown-mode))
+    (switch-to-buffer buf)))
+
 ;; String Inflection: switch between various naming styles.
 (require 'string-inflection)
 (global-set-key (kbd "C-c C-b") 'string-inflection-all-cycle)
