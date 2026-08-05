@@ -268,23 +268,27 @@
                      (skip-chars-backward "0-9a-fA-F-")
                      (buffer-substring-no-properties
                       (point) (progn (skip-chars-forward "0-9a-fA-F-") (point))))))
-         (transcript (expand-file-name (format "~/.gemini/jetski/brain/%s/.system_generated/logs/transcript_full.jsonl" guid)))
+         (transcript
+          (expand-file-name
+           (format "~/.gemini/jetski/brain/%s/.system_generated/logs/transcript_full.jsonl" guid)))
          (script (concat emacs-root "tools/transcript_to_md.py"))
          (buf (get-buffer-create (format "*%s-transcript*" guid))))
     (unless (file-exists-p transcript)
       (user-error "Transcript not found: %s" transcript))
     (with-current-buffer buf
-      ;; Store paths in buffer-local variables to ensure they are available on revert
+      ;; 1. Enable major mode first (this resets local variables)
+      (markdown-mode)
+      ;; 2. Set buffer-local variables
       (setq-local mdtrap--script script)
       (setq-local mdtrap--transcript transcript)
+      ;; 3. Setup revert function
       (setq-local revert-buffer-function
                   (lambda (&rest _)
                     (let ((inhibit-read-only t))
                       (erase-buffer)
                       (call-process mdtrap--script nil t nil mdtrap--transcript))))
-      ;; Execute for the first time
-      (funcall revert-buffer-function)
-      (markdown-mode))
+      ;; 4. Execute for the first time
+      (funcall revert-buffer-function))
     (switch-to-buffer buf)))
 
 ;; String Inflection: switch between various naming styles.
