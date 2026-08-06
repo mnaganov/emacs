@@ -2,8 +2,11 @@
 """Convert Jetski transcript.jsonl into a clean Markdown document."""
 
 import argparse
+import io
 import json
+import os
 import re
+import subprocess
 import sys
 
 
@@ -100,12 +103,47 @@ def main():
     out_f = sys.stdout
 
   try:
+    # Buffer the markdown output
+    buffer = io.StringIO()
     convert_transcript_to_markdown(
         in_f,
-        out_f,
+        buffer,
         clean_user_tags=not args.raw_user_prompt,
         include_metadata=args.metadata,
     )
+
+    markdown_content = buffer.getvalue()
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    lua_filter_path = os.path.join(script_dir, "strip-math.lua")
+
+    pandoc_cmd = [
+        "pandoc",
+        f"--lua-filter={lua_filter_path}",
+        "--wrap=preserve",
+        "-f", "markdown",
+        "-t", "markdown"
+    ]
+
+    try:
+      # Try running generated markdown through pandoc
+      result = subprocess.run(
+          pandoc_cmd,
+          input=markdown_content,
+          capture_output=True,
+          text=True,
+          check=True
+      )
+      final_output = result.stdout
+    except (FileNotFoundError, subprocess.CalledProcessError) as e:
+      # Fallback to unfiltered markdown if pandoc is missing or fails
+      err_msg = getattr(e, 'stderr', str(e)).strip()
+      sys.stderr.write(f"Warning: Pandoc filter failed ({err_msg}). Falling back to unfiltered markdown.\n")
+      final_output = markdown_content
+
+    # Write the final output to the destination
+    out_f.write(final_output)
+
   finally:
     if in_f is not sys.stdin:
       in_f.close()
