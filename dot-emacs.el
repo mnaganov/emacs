@@ -260,6 +260,8 @@
 (if (eq system-type 'gnu/linux)
    (add-hook 'shell-mode-hook 'shell-procfs-dirtrack-mode))
 
+;; Make `ffap` always open the file in a different window
+(setq ffap-file-finder #'find-file-other-window)
 ;; Make `ffap` to navigate to the line if it is specified
 (defun my-ffap-jump-to-line (orig-fun &rest args)
   "Advice to jump to the line number if the filename at point ends with :LINENUM."

@@ -289,7 +289,7 @@
                       (call-process mdtrap--script nil t nil mdtrap--transcript))))
       ;; 4. Execute for the first time
       (funcall revert-buffer-function))
-    (switch-to-buffer buf)))
+    (pop-to-buffer buf)))
 
 ;; String Inflection: switch between various naming styles.
 (require 'string-inflection)
