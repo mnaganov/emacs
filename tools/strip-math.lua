@@ -9,8 +9,12 @@ function Math(elem)
   -- 4. Strip the trailing newline that the plain text writer automatically appends
   plain_text = plain_text:gsub("%s+$", "")
   -- 5. Explicitly remove narrow spaces
-  -- This strips the thin math gaps inside numbers.
+  -- This strips the thin math gaps inside numbers and converts special whitespaces into regular ones.
+  plain_text = plain_text:gsub("\u{2001}", " ")
+  plain_text = plain_text:gsub("\u{2004}", " ")
+  plain_text = plain_text:gsub("\u{2005}", " ")
   plain_text = plain_text:gsub("\u{2006}", "")
+  plain_text = plain_text:gsub("\u{200a}", "")
   -- 6. Return it as a normal plain markdown text string
   return pandoc.Str(plain_text)
 end
