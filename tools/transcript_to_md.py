@@ -121,8 +121,8 @@ def main():
         "pandoc",
         f"--lua-filter={lua_filter_path}",
         "--wrap=preserve",
-        "-f", "markdown",
-        "-t", "markdown"
+        "-f", "gfm",
+        "-t", "gfm"
     ]
 
     try:

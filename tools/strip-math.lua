@@ -10,6 +10,7 @@ function Math(elem)
   plain_text = plain_text:gsub("%s+$", "")
   -- 5. Explicitly remove narrow spaces
   -- This strips the thin math gaps inside numbers and converts special whitespaces into regular ones.
+  plain_text = plain_text:gsub("\u{00a0}", " ")
   plain_text = plain_text:gsub("\u{2001}", " ")
   plain_text = plain_text:gsub("\u{2004}", " ")
   plain_text = plain_text:gsub("\u{2005}", " ")
