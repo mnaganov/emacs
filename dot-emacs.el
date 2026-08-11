@@ -264,16 +264,23 @@
 (setq ffap-file-finder #'find-file-other-window)
 ;; Make `ffap` to navigate to the line if it is specified
 (defun my-ffap-jump-to-line (orig-fun &rest args)
-  "Advice to jump to the line number if the filename at point ends with :LINENUM."
-  (let* ((string-at-point (thing-at-point 'symbol))
-         (line-number (and (stringp string-at-point)
-                           (string-match ":\\([0-9]+\\)\\'" string-at-point)
-                           (string-to-number (match-string 1 string-at-point)))))
-    ;; Call the original ffap function (which switches buffers)
+  "Advice to jump to the line number if the filename at point has :LINENUM or #LLINENUM."
+  (let* (;; Grab url or filename to safely capture the full file:///... string
+         (string-at-point (or (thing-at-point 'url)
+                              (thing-at-point 'filename)
+                              (thing-at-point 'symbol)
+                              ""))
+         ;; Match either ":123" at the end of the string, or "#L123" anywhere
+         (line-number (when (string-match "\\(?::\\([0-9]+\\)\\'\\|#L\\([0-9]+\\)\\)" string-at-point)
+                        (string-to-number (or (match-string 1 string-at-point)
+                                              (match-string 2 string-at-point))))))
+    ;; Call the original ffap function
     (apply orig-fun args)
-    ;; If we found a line number, jump to it in the new buffer
+    ;; If we found a line number, jump to it
     (when line-number
-      (goto-line line-number))))
+      ;; forward-line is preferred over goto-line in Lisp scripts
+      (goto-char (point-min))
+      (forward-line (1- line-number)))))
 (advice-add 'find-file-at-point :around #'my-ffap-jump-to-line)
 
 ;; Engage diff-mode automatically for output from Git commands
