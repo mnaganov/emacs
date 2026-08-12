@@ -150,6 +150,12 @@
   (kill-new (file-name-nondirectory (buffer-file-name))))
 (global-set-key (kbd "C-c n") 'kill-buffer-file-name-nondirectory)
 
+;; Copy the buffer name to clipboard on C-C b
+(defun kill-buffer-name ()
+  (interactive)
+  (kill-new (buffer-name)))
+(global-set-key (kbd "C-c b") 'kill-buffer-name)
+
 ;; Quit without annoying confirmation
 (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
   "Prevent annoying \"Active processes exist\" query when you quit Emacs."
