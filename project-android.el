@@ -113,6 +113,17 @@
 (open-shell-buffer "=blazer=" (lambda() (insert-file-contents "~/screen/blazer.cfg" nil)))
 (open-shell-buffer "=cuttlefish=" (lambda() (insert-file-contents "~/screen/cuttlefish.cfg" nil)))
 
+;; When launching 'eat' from the Android source directory, execute the setup script
+(defun my-eat-exec-hook (process)
+  "Push directory-specific init script into Eat process if matched."
+  (let ((target-dir (expand-file-name "~/code/master"))
+        (init-file (expand-file-name "~/screen/cuttlefish.cfg")))
+    ;; Check if current directory matches target and init file exists
+    (when (and (string-prefix-p target-dir (expand-file-name default-directory))
+               (file-exists-p init-file))
+      (process-send-string process (format "source %s\n" (shell-quote-argument init-file))))))
+(add-hook 'eat-exec-hook #'my-eat-exec-hook)
+
 ;; Save / restore desktop
 (setq desktop-dirname "~/.emacs_desktop")
 (make-directory desktop-dirname t)
