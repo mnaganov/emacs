@@ -1,6 +1,6 @@
 ;;; gptel-ollama.el --- Ollama support for gptel     -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2023-2025  Karthik Chikmagalur
+;; Copyright (C) 2023-2026  Karthik Chikmagalur
 
 ;; Author: Karthik Chikmagalur <karthikchikmagalur@gmail.com>
 ;; Keywords: hypermedia
@@ -38,8 +38,7 @@
                             (:include gptel-backend)))
 
 (defun gptel--ollama-update-tokens (usage info)
-  "Update token usage information from USAGE.
-USAGE is part of the response, INFO is the request plist.
+  "Update token usage in INFO from USAGE.
 
 This function accumulates token counts across multiple turns in a
 multi-turn request (e.g., during tool use where results are fed
@@ -54,7 +53,7 @@ back to the LLM)."
                                     tokens)))))
 
 (cl-defmethod gptel-curl--parse-stream ((_backend gptel-ollama) info)
-  "Parse response stream for the Ollama API."
+  "Parse response stream for the Ollama API, storing state in INFO."
   (when (and (bobp) (re-search-forward "^{" nil t))
     (forward-line 0))
   (let* ((content-strs) (content) (pt (point)))
@@ -72,13 +71,15 @@ back to the LLM)."
                (plist-get info :backend) (plist-get info :data)
                `(:role "assistant" :content :null :tool_calls ,(vconcat tool-calls)))
               (cl-loop
-               for tool-call across tool-calls  ;replace ":arguments" with ":args"
+               for tool-call across tool-calls ;replace ":arguments" with ":args"
                for call-spec = (copy-sequence (plist-get tool-call :function))
                do (plist-put call-spec :args
                              (plist-get call-spec :arguments))
                (plist-put call-spec :arguments nil)
                collect call-spec into tool-use
-               finally (plist-put info :tool-use tool-use)))
+               finally
+               (plist-put info :tool-use
+                          (append (plist-get info :tool-use) tool-use))))
             (if (and reasoning (not (eq reasoning :null)))
                 (plist-put info :reasoning
                            (concat (plist-get info :reasoning) reasoning))
@@ -120,10 +121,10 @@ Store response metadata in state INFO."
       content)))
 
 (cl-defmethod gptel--request-data ((backend gptel-ollama) prompts)
-  "JSON encode PROMPTS for sending to Ollama."
-  (when gptel--system-message
+  "JSON encode PROMPTS for sending to Ollama with BACKEND."
+  (when gptel-system-prompt
     (push (list :role "system"
-                :content gptel--system-message)
+                :content gptel-system-prompt)
           prompts))
   (let* ((prompts-plist
           (gptel--merge-plists
@@ -204,6 +205,7 @@ for details.  This implementation handles the Ollama API."
              (truncate-string-to-width (prin1-to-string new-call) 50 nil nil t)))))
 
 (cl-defmethod gptel--parse-list ((backend gptel-ollama) prompt-list)
+  "Parse PROMPT-LIST into a list of messages for BACKEND."
   (if (consp (car prompt-list))
       (let ((full-prompt))              ; Advanced format, list of lists
         (dolist (entry prompt-list)
@@ -229,6 +231,8 @@ for details.  This implementation handles the Ollama API."
              (list :role (if role "user" "assistant") :content text))))
 
 (cl-defmethod gptel--parse-buffer ((backend gptel-ollama) &optional max-entries)
+  "Parse the current buffer into a list of messages for BACKEND.
+Include up to MAX-ENTRIES queries/responses."
   (let ((prompts) (prev-pt (point)))
     (if (or gptel-mode gptel-track-response)
         (while (and (or (not max-entries) (>= max-entries 0))

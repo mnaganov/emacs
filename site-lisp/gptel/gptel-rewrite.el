@@ -1,6 +1,6 @@
 ;;; gptel-rewrite.el --- Refactoring functions for gptel  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024  Karthik Chikmagalur
+;; Copyright (C) 2024-2026  Karthik Chikmagalur
 
 ;; Author: Karthik Chikmagalur <karthikchikmagalur@gmail.com>
 ;; Keywords: hypermedia, convenience, tools
@@ -186,6 +186,20 @@ which see."
 ;; * Helper functions
 
 ;; ** UI Indicators
+
+(defun gptel--rewrite-request-context (&optional buffer)
+  "Set up the rewrite overlay and buffer for request in BUFFER.
+Returns a cons cell of the overlay and request buffer."
+  (with-current-buffer (or buffer (current-buffer))
+    (let ((ov (or (cdr-safe (get-char-property-and-overlay (point) 'gptel-rewrite))
+                  (make-overlay
+                   (if (use-region-p) (region-beginning) (point-min))
+                   (if (use-region-p) (region-end) (point))
+                   nil t))))
+      (overlay-put ov 'evaporate t)
+      ;; NOTE: Switch to `generate-new-buffer' after we drop Emacs 27.1 (#724)
+      (cons ov (gptel--temp-buffer " *gptel-rewrite*")))))
+
 (defun gptel--rewrite-update-tool-call (fsm)
   "Update the rewrite overlay to indicate tool call progress for FSM."
   (when-let* ((info (gptel-fsm-info fsm))
@@ -210,16 +224,18 @@ which see."
               (model (gptel--model-name
                       (or (plist-get info :model) gptel-model)))
               (hint-str (concat "[" model "]\n")))
-    (overlay-put
-     ov 'status
-     (list (propertize "REWRITE" 'face '(warning default))     ;status element 0
-           (propertize " Waiting..." 'face '(warning default)) ;status element 1
-           (propertize                                         ;status element 2
-            " " 'display
-            (if (fboundp 'string-pixel-width)
-                `(space :align-to (- right (,(string-pixel-width hint-str))))
-              `(space :align-to (- right ,(+ 1 (string-width hint-str))))))
-           (propertize hint-str 'face '(warning default)))) ;status element 3
+    (unless (overlay-get ov 'status)
+      (overlay-put
+       ov 'status
+       (list (propertize "REWRITE" 'face '(warning default)) ;status element 0
+             (propertize " Waiting..." 'face '(warning default)) ;status element 1
+             (propertize                ;status element 2
+              " " 'display
+              (if (and (fboundp 'string-pixel-width)
+                       (display-graphic-p))
+                  `(space :align-to (- right (,(string-pixel-width hint-str))))
+                `(space :align-to (- right ,(+ 1 (string-width hint-str))))))
+             (propertize hint-str 'face '(warning default))))) ;status element 3
     (overlay-put ov 'before-string (apply #'concat (overlay-get ov 'status)))))
 
 (defun gptel--rewrite-update-status (ov msg &optional face)
@@ -575,6 +591,12 @@ INFO is the async communication channel for the rewrite request."
                (plist-get info :status) (plist-get info :buffer))
       (gptel--rewrite-callback 'abort info))
 
+     ((eq (car-safe response) 'reasoning) ;Reasoning redirection to other buffer
+      (and-let* ((rbuf (plist-get info :include-reasoning))
+                 ((stringp rbuf)))
+        (gptel--display-reasoning-stream (cdr response) info))
+      t)
+
      ((consp response))             ;reasoning or tool call result -- don't care
 
      (t
@@ -650,6 +672,7 @@ By default, gptel uses the directive associated with the `rewrite'
 ;;;###autoload (autoload 'gptel-rewrite "gptel-rewrite" nil t)
 (transient-define-prefix gptel-rewrite ()
   "Rewrite or refactor text region using an LLM."
+  :environment #'gptel--transient-fix-evil-visual
   [:description
    (lambda ()
      (gptel--describe-directive
@@ -770,7 +793,10 @@ generated from functions."
       :setup #'activate-mark)))
 
 (transient-define-suffix gptel--suffix-rewrite (&optional rewrite-message dry-run)
-  "Rewrite or refactor region contents."
+"Rewrite or refactor region contents.
+REWRITE-MESSAGE is the instruction for the LLM describing the change
+to make; it defaults to `gptel--rewrite-message'.  If DRY-RUN is
+non-nil, don't send the request but return the state machine instead."
   :key "r"
   :description (lambda () (if (get-char-property (point) 'gptel-rewrite) "Iterate" "Rewrite"))
   (interactive (list gptel--rewrite-message))
@@ -790,12 +816,7 @@ generated from functions."
              :dry-run dry-run
              :system gptel--rewrite-directive
              :stream gptel-stream
-             :context
-             (let ((ov (or (cdr-safe (get-char-property-and-overlay (point) 'gptel-rewrite))
-                           (make-overlay (region-beginning) (region-end) nil t))))
-               (overlay-put ov 'evaporate t)
-               ;; NOTE: Switch to `generate-new-buffer' after we drop Emacs 27.1 (#724)
-               (cons ov (gptel--temp-buffer " *gptel-rewrite*")))
+             :context (gptel--rewrite-request-context)
              :transforms gptel-prompt-transform-functions
              :fsm (gptel-make-fsm :handlers gptel--rewrite-handlers)
              :callback #'gptel--rewrite-callback)
@@ -846,6 +867,24 @@ generated from functions."
   :description "Clear pending rewrites"
   (interactive)
   (gptel--rewrite-reject gptel--rewrite-overlays))
+
+;; * gptel preset for rewrite actions
+(gptel-make-preset 'gptel-rewrite
+  :description "INLINE: Replace the prompt with the LLM's response."
+  :pre (lambda () (gptel--parse-list-and-insert
+              (list ""
+                    "What is the required change?  \
+I will generate only the final replacement.\n")))
+  :prompt-transform-functions
+  `(:prepend
+    (list
+     ,(lambda (fsm)
+        (let ((info (gptel-fsm-info fsm)))
+          (setf (gptel-fsm-handlers fsm) gptel--rewrite-handlers)
+          (plist-put info :callback #'gptel--rewrite-callback)
+          (plist-put info :context (gptel--rewrite-request-context
+                                    (plist-get info :buffer)))))))
+  :system gptel--rewrite-directive)
 
 (provide 'gptel-rewrite)
 ;;; gptel-rewrite.el ends here

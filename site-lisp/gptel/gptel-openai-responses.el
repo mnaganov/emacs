@@ -126,12 +126,18 @@ information if the stream contains it."
                                     :call_id (plist-get tc :id)
                                     :name (plist-get tc :name)
                                     :arguments
-                                    (gptel--json-encode (plist-get tc :args))))
+                                    (decode-coding-string
+                                     (gptel--json-encode (plist-get tc :args))
+                                     'utf-8 t)))
                             tool-use)))
                  (when-let* ((resp (plist-get data :response)))
                    (plist-put info :stop-reason (plist-get resp :status))
                    (gptel--openai-responses-update-tokens
-                    (plist-get resp :usage) info)))))))
+                    (plist-get resp :usage) info)))
+                ;; Errors in streaming responses show up as data events with
+                ;; HTTP status 200, so we have to catch them here
+                ("error" (when-let* ((err (plist-get data :error)))
+                           (plist-put info :error err)))))))
       (error (goto-char (match-beginning 0))))
     (apply #'concat (nreverse content-strs))))
 
@@ -214,7 +220,7 @@ Mutate state INFO with response metadata."
       (apply #'concat (nreverse content-strs)))))
 
 (cl-defmethod gptel--request-data ((backend gptel-openai-responses) prompts)
-  "JSON encode PROMPTS for sending to OpenAI Responses API."
+  "JSON encode PROMPTS for sending to the OpenAI Responses API with BACKEND."
   (let ((prompts-plist
          `( :model ,(gptel--model-name gptel-model)
             :input ,(vconcat prompts)
@@ -224,8 +230,8 @@ Mutate state INFO with response metadata."
             :stream ,(or gptel-stream :json-false)))
         (o-model-p (memq gptel-model '(o1 o1-preview o1-mini o3-mini o3 o4-mini))))
     ;; System message becomes instructions
-    (when gptel--system-message
-      (plist-put prompts-plist :instructions gptel--system-message))
+    (when gptel-system-prompt
+      (plist-put prompts-plist :instructions gptel-system-prompt))
     ;; Temperature
     (when (and gptel-temperature (not o-model-p))
       (plist-put prompts-plist :temperature gptel-temperature))
@@ -379,6 +385,7 @@ If POSITION is
                                        (substring prompts position)))))))
 
 (cl-defmethod gptel--parse-list ((backend gptel-openai-responses) prompt-list)
+  "Parse PROMPT-LIST into a list of messages for BACKEND."
   (if (consp (car prompt-list))
       (let ((full-prompt))              ; Advanced format, list of lists
         (dolist (entry prompt-list)
@@ -406,6 +413,8 @@ If POSITION is
              (list :role (if role "user" "assistant") :content text))))
 
 (cl-defmethod gptel--parse-buffer ((backend gptel-openai-responses) &optional max-entries)
+  "Parse the current buffer into a list of messages for BACKEND.
+Include up to MAX-ENTRIES queries/responses."
   (let ((prompts) (prev-pt (point)))
     (if (or gptel-mode gptel-track-response)
         (while (and (or (not max-entries) (>= max-entries 0))

@@ -310,31 +310,46 @@
       completion-category-overrides '((file (styles partial-completion))))
 (setq orderless-matching-styles '(orderless-flex))
 
-;; gptel for Gemini
+;; gptel
+;; Helper to read API keys from files
+(defun my-read-api-key (file)
+  (let ((path (expand-file-name file)))
+    (when (file-exists-p path)
+      (with-temp-buffer
+        (insert-file-contents path)
+        (string-trim (buffer-string))))))
+
+(require 'gptel-anthropic)
 (require 'gptel-gemini)
-(let ((key-file (expand-file-name "~/gemini.key")))
-  (when (file-exists-p key-file)
-    (with-temp-buffer
-      (insert-file-contents key-file)
-      (let ((api-key (string-trim (buffer-string))))
-        (setq my-gemini-backend (gptel-make-gemini "Gemini"
-                :key api-key
-                :stream t
-                :models '(gemini-pro-latest gemini-flash-latest)))
-        (setq-default gptel-backend my-gemini-backend)
-        (setq-default gptel-model 'gemini-pro-latest)))
-    (require 'gptel-context)
-    (require 'gptel-transient)
-    (defvar gptel-prefix-map
-      (define-keymap
-        ;; Caveat! With 'cua-mode', when adding a selection to context,
-        ;; double-tap 'C-x' to avoid invoking "cut" function.
-        "a" #'gptel-add
-        "g" #'gptel
-        "m" #'gptel-menu
-        "r" #'gptel-context-remove-all)
-      "Map for gptel commands.")
-    (keymap-set global-map "C-x g" gptel-prefix-map)))
+
+(when-let ((key (my-read-api-key "~/gemini.key")))
+  (setq my-gemini-backend 
+        (gptel-make-gemini "Gemini"
+          :key key
+          :stream t
+          :models '(gemini-pro-latest gemini-flash-latest)))
+  (setq-default gptel-backend my-gemini-backend
+                gptel-model 'gemini-pro-latest))
+
+(when-let ((key (my-read-api-key "~/claude.key")))
+  (setq my-claude-backend 
+        (gptel-make-anthropic "Claude"
+          :key key
+          :stream t
+          :models '(claude-fable-5 claude-opus-5 claude-sonnet-5))))
+
+(require 'gptel-context)
+(require 'gptel-transient)
+(defvar gptel-prefix-map
+  (define-keymap
+    ;; Caveat! With 'cua-mode', when adding a selection to context,
+    ;; double-tap 'C-x' to avoid invoking "cut" function.
+    "a" #'gptel-add
+    "g" #'gptel
+    "m" #'gptel-menu
+    "r" #'gptel-context-remove-all)
+  "Map for gptel commands.")
+(keymap-set global-map "C-x g" gptel-prefix-map)
 
 ;; NOTE: If at some point you decide you need `xterm-color`,
 ;; here is how to set it up:
