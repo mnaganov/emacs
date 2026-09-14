@@ -60,11 +60,14 @@
 (global-set-key (kbd "C-b") 'buf-move-left)
 (global-set-key (kbd "C-f") 'buf-move-right)
 
+(require 'term/xterm)
+;; Bracketed paste replaces the active region, if it is set (same behavior as yank)
+(put 'xterm-paste 'delete-selection t)
+
 ;; == OS-specific setup ==
 (if (eq system-type 'windows-nt)
     (load-file (concat emacs-root "dot-windows.el")))
 (when (not window-system)
-  (require 'term/xterm)
   (unless (fboundp 'xterm-set-window-title)
     (defun xterm-set-window-title (&optional terminal)
       "Set the window title of the Xterm TERMINAL. The title is constructed from `frame-title-format'."
