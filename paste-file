@@ -1,0 +1,35 @@
+#!/bin/bash
+set -euo pipefail
+
+file="${1:?Usage: paste-file <file> <buffer>}"
+buffer="${2:?Usage: paste-file <file> <buffer>}"
+
+[[ -f "$file" ]] || { echo "File not found: $file" >&2; exit 1; }
+
+abs_file="$(realpath "$file")"
+
+# Escape backslashes and quotes for Elisp string literals
+esc_file="${abs_file//\\/\\\\}"
+esc_file="${esc_file//\"/\\\"}"
+esc_buf="${buffer//\\/\\\\}"
+esc_buf="${esc_buf//\"/\\\"}"
+
+emacsclient -u -e "
+  (let ((buf (get-buffer \"$esc_buf\"))
+        (path \"$esc_file\"))
+    (unless buf
+      (user-error \"Buffer not found: %s\" \"$esc_buf\"))
+    (with-current-buffer buf
+      (let ((text (with-temp-buffer
+                    (insert-file-contents path)
+                    (buffer-string))))
+        (if (bound-and-true-p eat-terminal)
+            (progn
+              (when (bound-and-true-p eat--synchronize-scroll-function)
+                (funcall eat--synchronize-scroll-function
+                         (eat--synchronize-scroll-windows 'force-selected)))
+              (eat-term-send-string-as-yank eat-terminal (list text))
+              (eat-term-send-string eat-terminal \"\\r\"))
+          (if (get-buffer-process (current-buffer))
+              (process-send-string (get-buffer-process (current-buffer)) (concat text \"\\n\"))
+            (insert text \"\\n\"))))))"
