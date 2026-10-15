@@ -90,6 +90,17 @@
 
 (require 'osc52)
 
+(defmacro my-define-osc52-fallback (name osc-func fallback-func)
+  "Emit a cut function named NAME that uses OSC-FUNC, falling back to FALLBACK-FUNC."
+  `(defun ,name (text &optional replace yank-handler)
+     (let ((b64-length (+ (* (length text) 3) 2))
+           (max-size (if (boundp 'osc52-max-sequence)
+                         osc52-max-sequence
+                       100000)))
+       (if (<= b64-length max-size)
+           (,osc-func text replace yank-handler)
+         (,fallback-func text)))))
+
 ;; Test command to check whether "direct" OSC52 works:
 ;; printf "\033]52;c;$(printf testOSC52 | base64)\a"
 ;; Test command to check whether DCS-wrapped OSC52 works:
@@ -124,17 +135,19 @@
                   (shell-command-to-string (if (eq system-type 'darwin) "pbpaste" "xsel --clipboard --output"))))
              (unless (string= (car kill-ring) xsel-output)
                xsel-output)))
-         (cond ((getenv "TMUX") (setq interprogram-cut-function 'osc52-select-text))
-               ((getenv "STY") (setq interprogram-cut-function 'osc52-select-text-dcs))
-               (t (setq interprogram-cut-function 'xsel-cut-function)))
-         (setq interprogram-paste-function 'xsel-paste-function))
+         (my-define-osc52-fallback my-hybrid-cut-tmux osc52-select-text xsel-cut-function)
+         (my-define-osc52-fallback my-hybrid-cut-screen osc52-select-text-dcs xsel-cut-function)
+         (cond ((getenv "TMUX") (setq interprogram-cut-function #'my-hybrid-cut-tmux))
+               ((getenv "STY") (setq interprogram-cut-function #'my-hybrid-cut-screen))
+               (t (setq interprogram-cut-function #'xsel-cut-function)))
+         (setq interprogram-paste-function #'xsel-paste-function))
         ((getenv "SSH_TTY")
          ;; On the host, X is not running, emacs runs under screen/tmux remotely.
          ;; We assume that on the client side a graphical terminal is used.
          ;; Paste from external clipboard has to be done using the terminal.
          (if (getenv "TMUX")
-             (setq interprogram-cut-function 'osc52-select-text)
-           (setq interprogram-cut-function 'osc52-select-text-dcs)))
+             (setq interprogram-cut-function #'osc52-select-text)
+           (setq interprogram-cut-function #'osc52-select-text-dcs)))
         ))
 
 (require 'eat)
