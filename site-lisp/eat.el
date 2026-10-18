@@ -1749,12 +1749,15 @@ character to actually show.")
                      ;; is necessary.
                      nil)
                     ((eq charset 'dec-line-drawing)
-                     (save-excursion
-                       (goto-char start-pos)
-                       (dotimes (_ s-len)
-                         (when-let* ((r (gethash (char-after) eat--t-dec-line-drawing-chars)))
-                           (delete-char 1)
-                           (insert r))
+                     ;; Convert the inserted text in place, leaving
+                     ;; point at its end.
+                     (goto-char start-pos)
+                     (dotimes (_ s-len)
+                       (if-let* ((r (gethash (char-after)
+                                             eat--t-dec-line-drawing-chars)))
+                           (progn
+                             (delete-char 1)
+                             (insert r))
                          (forward-char 1))))
                     (t (error "No clause matching `%S'" charset)))
                    ;; Add face.
@@ -2712,6 +2715,15 @@ TOP defaults to 1 and BOTTOM defaults to the height of the display."
             ,@(and-let* ((inverse (or (eat--t-face-bg face)
                                       (eat--t-face-inverse face))))
                 `(:inverse-video t))
+            ;; Conceal text by drawing it with the color of the
+            ;; background it's displayed on.  With inverse video, the
+            ;; background is drawn with the foreground color and the
+            ;; text with the background color.
+            ,@(when (eat--t-face-conceal face)
+                (if (or (eat--t-face-bg face)
+                        (eat--t-face-inverse face))
+                    `(:background ,(face-foreground 'default nil t))
+                  `(:foreground ,(face-background 'default nil t))))
             ,@(and-let* ((underline (eat--t-face-underline face)))
                 (list
                  :underline
@@ -6917,6 +6929,7 @@ END if it's safe to do so."
           eat--pending-output-chunks
           eat--output-queue-first-chunk-time
           eat--process-output-queue-timer
+          eat--text-properties-start
           eat--shell-prompt-annotation-correction-timer))
   ;; This is intended; input methods don't work on read-only buffers.
   (setq buffer-read-only nil)
@@ -7046,6 +7059,12 @@ The output chunks are pushed, so last output appears first.")
 (defvar eat--output-queue-first-chunk-time nil
   "Time when the first chunk in the current output queue was pushed.")
 
+(defvar eat--text-properties-start nil
+  "Marker to the beginning of display after last output processing.
+
+Text before it is in the scrollback and already has the text properties
+of the terminal.")
+
 (defvar eat--process-output-queue-timer nil
   "Timer to process output queue.")
 
@@ -7119,25 +7138,31 @@ OS's."
                    eat-shell-prompt-annotation-correction-delay
                    nil #'eat--correct-shell-prompt-mark-overlays
                    buffer))
-            (let ((beg (eat-term-beginning eat-terminal))
-                  (end (eat-term-end eat-terminal)))
-              ;; Only add properties if the region has grown or properties are missing at the end
-              ;; Actually, just adding them to the *newly inserted* text at the end would be much faster.
-              ;; Since eat-term appends to the end most of the time, we can track the last processed end.
-              (unless (and (local-variable-p 'eat--last-processed-end)
-                           (= eat--last-processed-end end))
-                (let ((start-prop (if (and (local-variable-p 'eat--last-processed-end)
-                                           (<= beg eat--last-processed-end)
-                                           (<= eat--last-processed-end end))
-                                      eat--last-processed-end
-                                    beg)))
-                  (when (< start-prop end)
-                    (add-text-properties
-                     start-prop end
-                     `( read-only t field eat-terminal
-                        ,@(when eat--line-mode
-                            '(front-sticky t rear-nonsticky t))))
-                    (setq-local eat--last-processed-end end)))))))
+            ;; Adding properties to the whole terminal is slow when
+            ;; the scrollback is large.  The terminal only modifies
+            ;; the display, so add properties starting from where
+            ;; the display began after the last time; anything
+            ;; before that was already in the scrollback then, so
+            ;; it already has them.
+            (let* ((beg (eat-term-beginning eat-terminal))
+                   (end (eat-term-end eat-terminal))
+                   (start (if (and eat--text-properties-start
+                                   (eq (marker-buffer
+                                        eat--text-properties-start)
+                                       (current-buffer)))
+                              (max beg (min eat--text-properties-start
+                                            end))
+                            beg)))
+              (when (< start end)
+                (add-text-properties
+                 start end
+                 `( read-only t field eat-terminal
+                    ,@(when eat--line-mode
+                        '(front-sticky t rear-nonsticky t)))))
+              (unless eat--text-properties-start
+                (setq eat--text-properties-start (make-marker)))
+              (set-marker eat--text-properties-start
+                          (eat-term-display-beginning eat-terminal)))))
         (eat--line-mode-do-toggles)
         (funcall eat--synchronize-scroll-function sync-windows))
       (run-hooks 'eat-update-hook))))
