@@ -18,7 +18,7 @@
 (setq uniquify-buffer-name-style 'reverse)
 (setq uniquify-separator "|")
 (setq uniquify-after-kill-buffer t)
-(setq uniquify-ignore-buffers-ru "^\\*")
+(setq uniquify-ignore-buffers-re "^\\*")
 
 ;; Support ANSI control sequences in shell
 (require 'ansi-color)
@@ -219,7 +219,20 @@
     (require 'google-c-style)
     (unless (or (string-match "chrome" use-project) (string-match "v8" use-project) (string-match "android" use-project))
             (add-hook 'c-mode-common-hook 'google-set-c-style))
-    (add-hook 'c-mode-common-hook 'google-make-newline-indent))
+    (add-hook 'c-mode-common-hook 'google-make-newline-indent)
+    ;; Train shell to hide SSO passwords.
+    (setq comint-password-prompt-regexp
+          (concat
+           "\\("
+           comint-password-prompt-regexp
+           "\\)\\|[Ee]nter \\(same \\)?passphrase"
+           "\\|SSO password"
+           "\\|Enter password"
+           "\\|Please enter the pass-phrase to decrypt these private key(s)"
+           "\\|Please enter your unix login (kerberos) password:"
+           "\\|Password for"))
+    (add-hook 'comint-output-filter-functions 'comint-watch-for-password-prompt))
+
 (add-hook 'c-mode-common-hook
           (lambda ()
             (local-set-key (kbd "M-*") 'c-style-comment-dwim)))
@@ -243,20 +256,6 @@
 ;; Groovy
 (autoload 'groovy-mode "groovy-mode" "Major mode for editing Groovy code." t)
 (add-to-list 'auto-mode-alist '("\\.\\(groovy\\|gradle\\)\\'" . groovy-mode))
-
-;; Train shell to hide SSO passwords.
-(unless use-google-stuff
-        (setq comint-password-prompt-regexp
-              (concat
-               "\\("
-               comint-password-prompt-regexp
-               "\\)\\|[Ee]nter \\(same \\)?passphrase"
-               "\\|SSO password"
-               "\\|Enter password"
-               "\\|Please enter the pass-phrase to decrypt these private key(s)"
-               "\\|Please enter your unix login (kerberos) password:"
-               "\\|Password for"))
-        (add-hook 'comint-output-filter-functions 'comint-watch-for-password-prompt))
 
 ;; Shell completion
 (require 'native-complete)
