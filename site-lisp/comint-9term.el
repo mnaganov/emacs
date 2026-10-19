@@ -76,6 +76,15 @@
 (require 'comint)
 (require 'compile)
 
+(defvar comint-9term-disable-adaptive-read-buffering t
+  "If non-nil, start comint processes with adaptive read buffering disabled.
+`process-adaptive-read-buffering' delays reading after every short read.
+A pty never returns reads of `read-process-output-max' bytes, so once the
+delay kicks in it never decays (see process.c), and chatty programs that
+emit many small writes (progress bars, apt) are read very slowly.  The
+variable is sampled by `make-process', so it is set buffer-locally from
+`comint-mode-hook', which runs before `comint-exec' starts the process.")
+
 (defvar-local comint-9term-trace-buffer nil
   "Buffer to store trace logs.")
 
@@ -515,6 +524,8 @@ to everything the filter writes."
   "")
 
 (defun comint-9term-setup ()
+  (when comint-9term-disable-adaptive-read-buffering
+    (setq-local process-adaptive-read-buffering nil))
   (add-function :filter-return
                 (local 'window-adjust-process-window-size-function)
                 (lambda (size)
