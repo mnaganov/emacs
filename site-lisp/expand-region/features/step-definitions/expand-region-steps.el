@@ -1,3 +1,4 @@
+;;; -*- no-byte-compile: t; lexical-binding: nil -*-
 (Given "^mark is inactive by default$"
        (lambda ()
          (setq set-mark-default-inactive t)))

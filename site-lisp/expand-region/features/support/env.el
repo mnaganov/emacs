@@ -1,3 +1,4 @@
+;;; -*- no-byte-compile: t; lexical-binding: nil -*-
 (let* ((current-directory (file-name-directory load-file-name))
        (features-directory (expand-file-name ".." current-directory))
        (project-directory (expand-file-name ".." features-directory)))
