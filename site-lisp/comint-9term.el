@@ -38,6 +38,9 @@
 ;;      * CPL (F): Cursor Previous Line
 ;;      * CHA (G): Cursor Horizontal Absolute
 ;;      * CUP / HVP (H or f): Cursor Position (Absolute positioning)
+;;    Vertical motion (CUU, CUD, CPL, RI) performs lazy auto-wrap emulation:
+;;    if the current line's display width exceeds the terminal width, it is split
+;;    into rows before moving, preserving pending-wrap cursor semantics.
 ;;  * Erasure:
 ;;      * ED (J): Erase in Display (clear screen / below cursor)
 ;;      * EL (K): Erase in Line (clear line / to end of line)
@@ -98,6 +101,8 @@ variable is sampled by `make-process', so it is set buffer-locally from
 (defvar-local comint-9term-height-override nil)
 (defvar-local comint-9term-origin nil)
 (defvar-local comint-9term-term-height nil)
+(defvar-local comint-9term-term-width nil)
+(defvar-local comint-9term-width-override nil)
 (defvar-local comint-9term--charset nil
   "Active G0 character set: nil for ASCII, `graphics' for DEC Special Graphics.")
 
@@ -145,6 +150,17 @@ Special Graphics is active are the line-drawing bytes mapped to Unicode."
                          (error 24)))))))
         (if (and h (> h 0)) h 24))))
 
+(defun comint-9term-max-width ()
+  (or comint-9term-width-override
+      (let ((w (or comint-9term-term-width
+                   (let ((env-cols (getenv "COLUMNS")))
+                     (if env-cols
+                         (string-to-number env-cols)
+                       (condition-case nil
+                           (frame-width)
+                         (error 80)))))))
+        (if (and w (> w 0)) w 80))))
+
 (defvar-local comint-9term--last-tick nil)
 (defvar-local comint-9term--cached-total-lines nil)
 (defvar-local comint-9term--max-start-line nil)
@@ -162,6 +178,14 @@ write log text at an earlier buffer position -- which shifts the bar forward.
 The marker floats with that shift; an integer would under-count and leave the
 shifted bar tail unmarked, so the type-ahead shield would grab it and leak it
 onto the next line.")
+
+(defvar comint-9term--lwm nil
+  "Low-water mark: a marker at earliest buffer position modified during current
+filter pass, or nil. Dynamically bound by `comint-9term-filter' to a marker
+with insertion type nil. When `comint-9term--maybe-split-line' splits an
+over-wide line, it lowers this marker to `(line-beginning-position)' so that
+`mark-as-output' covers the newly inserted newlines even if the cursor
+subsequently moves downward (CUD) and never visits the top of the split line.")
 
 (defun comint-9term-start-line ()
   (let* ((tick (buffer-chars-modified-tick))
@@ -200,16 +224,43 @@ onto the next line.")
       (setq comint-9term-virtual-col col)
     (setq comint-9term-virtual-col nil)))
 
+(defun comint-9term--maybe-split-line ()
+  "Split current line into terminal-width rows if display width exceeds max-width.
+Only the line currently containing the cursor is split. Preserves cursor on the
+correct row: a cursor sitting exactly on a boundary column stays at the end of
+the preceding row (VT pending-wrap semantics)."
+  (let* ((width (comint-9term-max-width))
+         (line-width (save-excursion (end-of-line) (current-column))))
+    (when (> line-width width)
+      (comint-9term-pad-to-virtual-col)
+      (when comint-9term--lwm
+        (let ((bol (line-beginning-position)))
+          (when (< bol (marker-position comint-9term--lwm))
+            (set-marker comint-9term--lwm bol))))
+      (let ((orig-pos (point)))
+        (beginning-of-line)
+        (while (> (save-excursion (end-of-line) (current-column)) width)
+          (move-to-column width)
+          (when (and (> (current-column) width)
+                     (> (1- (point)) (line-beginning-position)))
+            (backward-char 1))
+          (when (< (point) orig-pos)
+            (setq orig-pos (1+ orig-pos)))
+          (insert "\n"))
+        (goto-char orig-pos)))))
+
 (defun comint-9term-handle-csi (char params)
   (let ((n (or (nth 0 params) 1))
         (m (or (nth 1 params) 1))
         (max-h (comint-9term-max-height)))
     (cond
      ((eq char ?A) ; CUU - Cursor Up
+      (comint-9term--maybe-split-line)
       (let ((col (or comint-9term-virtual-col (current-column))))
         (forward-line (- (max 1 n)))
         (comint-9term-move-to-column col)))
      ((eq char ?B) ; CUD - Cursor Down
+      (comint-9term--maybe-split-line)
       (let ((col (or comint-9term-virtual-col (current-column))))
         (forward-line (max 1 n))
         (comint-9term-move-to-column col)))
@@ -220,6 +271,7 @@ onto the next line.")
       (let ((curr (or comint-9term-virtual-col (current-column))))
         (comint-9term-move-to-column (max 0 (- curr (max 1 n))))))
      ((eq char ?F) ; CPL - Cursor Previous Line
+      (comint-9term--maybe-split-line)
       (let ((inhibit-field-text-motion t))
         (forward-line (- (max 1 n)))
         (beginning-of-line)
@@ -346,18 +398,45 @@ onto the next line.")
                   (set-marker comint-9term--hwm (point)))))))
           (setq idx (1+ idx)))))))
 
+(defun comint-9term--write-slice (str)
+  "Write STR on the current line, inserting or overwriting."
+  (let ((len (length str))
+        (p (point))
+        (eol (line-end-position)))
+    (if (>= p eol)
+        (insert str)
+      (let ((to-delete (min len (- eol p))))
+        (delete-region p (+ p to-delete))
+        (insert str)))))
+
 (defun comint-9term-write-chunk (chunk)
-  "Write a chunk of normal text, using fast path if possible."
+  "Write CHUNK of normal text, wrapping onto existing lines below if needed."
   (comint-9term-pad-to-virtual-col)
-  (let ((len (length chunk))
-        (p (point)))
-    (let ((end-of-line (line-end-position)))
-      (if (>= p end-of-line)
-          (insert chunk)
-        ;; Overwrite: delete existing characters up to the chunk length or EOL.
-        (let ((to-delete (min len (- end-of-line p))))
-          (delete-region p (+ p to-delete))
-          (insert chunk))))))
+  (let ((max-w (comint-9term-max-width)))
+    (while (and (> (length chunk) 0)
+                (< (line-end-position) (point-max))
+                (let* ((len (length chunk))
+                       (w (if (= len (string-bytes chunk))
+                              len
+                            (string-width chunk))))
+                  (> (+ (current-column) w) max-w)))
+      (let* ((col (current-column))
+             (avail (max 0 (- max-w col)))
+             (prefix (if (> avail 0)
+                         (truncate-string-to-width chunk avail)
+                       ""))
+             (prefix-len (length prefix)))
+        (when (and (= col 0) (= prefix-len 0))
+          (setq prefix (substring chunk 0 1)
+                prefix-len 1))
+        (when (> prefix-len 0)
+          (comint-9term--write-slice prefix)
+          (setq chunk (substring chunk prefix-len)))
+        (forward-line 1)
+        (move-to-column 0)
+        (setq comint-9term-virtual-col nil)))
+    (when (> (length chunk) 0)
+      (comint-9term--write-slice chunk))))
 
 (defun comint-9term--pending-input-start (anchor)
   "Return the start of trailing user type-ahead after ANCHOR, or nil if none.
@@ -412,7 +491,8 @@ to everything the filter writes."
                       (goto-char true-pm)
                       (let ((min-p (point))
                             (max-p (point))
-                            (comint-9term--hwm (copy-marker (point) t)))
+                            (comint-9term--hwm (copy-marker (point) t))
+                            (comint-9term--lwm (copy-marker (point) nil)))
                         ;; Check for height override
                         (when (string-match "9TERM_SET_HEIGHT=\\([0-9]+\\)" string)
                           (setq comint-9term-height-override (string-to-number (match-string 1 string))))
@@ -492,7 +572,8 @@ to everything the filter writes."
                           (comint-9term-insert-and-overwrite true-pm string start)
                           (setq comint-9term-partial-seq ""))
 
-                        (setq min-p (min min-p (point)))
+                        (setq min-p (min min-p (marker-position comint-9term--lwm) (point)))
+                        (set-marker comint-9term--lwm nil)
                         ;; Use the high-water mark, not the final cursor: a
                         ;; chunk that ends with CR/cursor-up (e.g. git/repo
                         ;; progress bars) leaves the cursor back over text it
@@ -530,6 +611,7 @@ to everything the filter writes."
                 (local 'window-adjust-process-window-size-function)
                 (lambda (size)
                   (when size
+                    (setq comint-9term-term-width (car size))
                     (setq comint-9term-term-height (cdr size)))
                   size)
                 '((name . comint-9term-resize)))
