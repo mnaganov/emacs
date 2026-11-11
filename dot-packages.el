@@ -151,6 +151,7 @@
         ))
 
 (require 'eat)
+(define-key eat-mode-map (kbd "C-c C-k") nil)
 (add-hook 'eat-mode-hook
           (lambda ()
             (set (make-local-variable 'global-hl-line-mode) nil)))
