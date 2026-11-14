@@ -2,14 +2,15 @@
 term = xterm-16color
 
 # Font
-font-family = "Noto Sans Mono"
+font-family = "Noto Sans Mono SemiCondensed"
 font-style = "Medium"
-font-size = 13
+font-size = 12
 
 # Visuals
 bold-is-bright = false
 minimum-contrast = 1.01
 window-colorspace = display-p3
+macos-non-native-fullscreen = padded-notch
 
 # Colors - Foreground & Background
 background = #fdf6e4
