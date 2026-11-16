@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 ;; Project Android stuff
 
 (setq compile-history

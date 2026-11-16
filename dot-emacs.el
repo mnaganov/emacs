@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 ;; == My stuff ==
 
 ;; Set up the keyboard so the delete key on both the regular keyboard

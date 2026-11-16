@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 ;; == Set up bundled Emacs packages ==
 
 ;; Move between windows using M-Arrows
