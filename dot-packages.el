@@ -260,6 +260,8 @@
 (add-to-list 'auto-mode-alist '("\\.\\(groovy\\|gradle\\)\\'" . groovy-mode))
 
 ;; Shell completion
+;; Set TERM before native-complete-setup-bash, which overrides "dumb" to "vt50".
+(setq comint-terminfo-terminal "dumb-emacs-ansi")
 (require 'native-complete)
 (with-eval-after-load 'shell
   (native-complete-setup-bash))
