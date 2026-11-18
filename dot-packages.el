@@ -153,6 +153,11 @@
 
 (require 'eat)
 (define-key eat-mode-map (kbd "C-c C-k") nil)
+;; Send M-b/M-f for C-<left>/C-<right> so apps move cursor by word.
+(define-key eat-semi-char-mode-map (kbd "C-<left>")
+            (lambda (n) (interactive "p") (eat-self-input n ?\M-b)))
+(define-key eat-semi-char-mode-map (kbd "C-<right>")
+            (lambda (n) (interactive "p") (eat-self-input n ?\M-f)))
 (add-hook 'eat-mode-hook
           (lambda ()
             (set (make-local-variable 'global-hl-line-mode) nil)))
