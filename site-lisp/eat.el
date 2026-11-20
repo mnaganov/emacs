@@ -2686,21 +2686,22 @@ TOP defaults to 1 and BOTTOM defaults to the height of the display."
                  nil t))))))
     ;; Update face according to the attributes.
     (setf (eat--t-face-face face)
-          `(;; Colors aren't used.  Instead, apply inverse video if a
-            ;; background color is set, or if the terminal explicitly
-            ;; requested inverse video.
-            ,@(and-let* ((inverse (or (eat--t-face-bg face)
-                                      (eat--t-face-inverse face))))
+          `(;; Colors aren't used directly.  Render background color
+            ;; as cyan text, and keep explicit inverse video.
+            ,@(when (eat--t-face-inverse face)
                 `(:inverse-video t))
-            ;; Conceal text by drawing it with the color of the
-            ;; background it's displayed on.  With inverse video, the
-            ;; background is drawn with the foreground color and the
-            ;; text with the background color.
-            ,@(when (eat--t-face-conceal face)
-                (if (or (eat--t-face-bg face)
-                        (eat--t-face-inverse face))
+            ,@(cond
+               ((eat--t-face-conceal face)
+                ;; Conceal text by drawing it with the color of the
+                ;; background it's displayed on.  With inverse video,
+                ;; the background is drawn with the foreground color
+                ;; and the text with the background color.
+                (if (eat--t-face-inverse face)
                     `(:background ,(face-foreground 'default nil t))
                   `(:foreground ,(face-background 'default nil t))))
+               ((and (eat--t-face-bg face)
+                     (not (eat--t-face-inverse face)))
+                `(:foreground "cyan")))
             ,@(and-let* ((underline (eat--t-face-underline face)))
                 (list
                  :underline
